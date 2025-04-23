@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 // import Header from "../components/Header";
 // import Navbar from "../components/Navbar";
+// import Header from "../components/Header";
+// import Navbar from "../components/Navbar";
 import logo from "../assets/logo.jpg";
 import alarmsData from "../data/alarmsData.json";
 import HeaNavLogo from "../components/HeaNavLogo";
