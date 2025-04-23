@@ -1,0 +1,5 @@
+[
+    { "id": 1, "format": "PDF", "description": "Export as a PDF document" },
+    { "id": 2, "format": "CSV", "description": "Export as a CSV file for spreadsheets" },
+    { "id": 3, "format": "JSON", "description": "Export as a JSON file for developers" }
+  ]

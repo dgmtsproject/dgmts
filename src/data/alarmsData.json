@@ -1,0 +1,167 @@
+[
+  {
+    "timestamp": "2025-03-17 13:23:46",
+    "sensor": "VM02 VertPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 2.645,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:23:46",
+    "sensor": "VM02 TranPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 1.668,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:23:46",
+    "sensor": "VM02 LongPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 2.924,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:23:41",
+    "sensor": "VM02 VertPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 2.645,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:23:41",
+    "sensor": "VM02 TranPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 1.668,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:23:41",
+    "sensor": "VM02 LongPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 2.924,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:02:07",
+    "sensor": "VM02 TranPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 3.008,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 13:02:02",
+    "sensor": "VM02 TranPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 3.008,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 12:54:31",
+    "sensor": "VM02 VertPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 1.732,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-03-17 12:54:31",
+    "sensor": "VM02 LongPPV",
+    "limit": "Red Upper 0.3",
+    "equation": "VALUE > 0.3",
+    "value": 0.567,
+    "acknowledged": false,
+    "acknowledgedTimestamp": "N/A",
+    "user": "N/A",
+    "comment": "No comment"
+  },
+  {
+    "timestamp": "2025-04-03 11:18:33",
+    "sensor": "VM1 TranPPV",
+    "limit": "Red Upper 0.25",
+    "equation": "VALUE > 0.25",
+    "value": 0.279,
+    "acknowledged": true,
+    "acknowledgedTimestamp": "2025-04-03 17:38:16",
+    "user": "iaziz@dullesgeotechnical.com",
+    "comment": "Noted"
+  },
+  {
+    "timestamp": "2025-04-03 11:18:28",
+    "sensor": "VM1 TranPPV",
+    "limit": "Red Upper 0.25",
+    "equation": "VALUE > 0.25",
+    "value": 0.279,
+    "acknowledged": true,
+    "acknowledgedTimestamp": "2025-04-03 17:38:16",
+    "user": "iaziz@dullesgeotechnical.com",
+    "comment": "Noted"
+  },
+  {
+    "timestamp": "2025-03-27 14:05:26",
+    "sensor": "VM1 TranPPV",
+    "limit": "Red Upper 0.25",
+    "equation": "VALUE > 0.25",
+    "value": 0.683,
+    "acknowledged": true,
+    "acknowledgedTimestamp": "2025-04-01 09:25:06",
+    "user": "iaziz@dullesgeotechnical.com",
+    "comment": "Noted"
+  },
+  {
+    "timestamp": "2025-03-27 14:05:26",
+    "sensor": "VM1 VertPPV",
+    "limit": "Red Upper 0.25",
+    "equation": "VALUE > 0.25",
+    "value": 0.706,
+    "acknowledged": true,
+    "acknowledgedTimestamp": "2025-04-01 09:25:36",
+    "user": "iaziz@dullesgeotechnical.com",
+    "comment": "Noted"
+  },
+  {
+    "timestamp": "2025-03-27 14:05:26",
+    "sensor": "VM1 LongPPV",
+    "limit": "Red Upper 0.25",
+    "equation": "VALUE > 0.25",
+    "value": 0.292,
+    "acknowledged": true,
+    "acknowledgedTimestamp": "2025-04-01 09:25:36",
+    "user": "iaziz@dullesgeotechnical.com",
+    "comment": "Noted"
+  }
+]

@@ -1,0 +1,82 @@
+  [
+    {
+      "id": 1,
+      "sensor": "Temperature Sensor A1",
+      "name": "temperature_report_2025.xlsx",
+      "size": "2.5 MB",
+      "type": "xlsx",
+      "lastModified": "2025-04-10"
+    },
+    {
+      "id": 2,
+      "sensor": "Humidity Sensor B2",
+      "name": "humidity_data_2025.xlsx",
+      "size": "1.8 MB",
+      "type": "xlsx",
+      "lastModified": "2025-04-12"
+    },
+    {
+      "id": 3,
+      "sensor": "Pressure Sensor C3",
+      "name": "pressure_logs.csv",
+      "size": "500 KB",
+      "type": "csv",
+      "lastModified": "2025-04-13"
+    },
+    {
+      "id": 4,
+      "sensor": "Gas Sensor D4",
+      "name": "gas_sensor_readings_2025.pdf",
+      "size": "3.2 MB",
+      "type": "pdf",
+      "lastModified": "2025-04-15"
+    },
+    {
+      "id": 5,
+      "sensor": "CO2 Sensor E5",
+      "name": "co2_sensor_data_2025.xlsx",
+      "size": "2.1 MB",
+      "type": "xlsx",
+      "lastModified": "2025-04-16"
+    },
+    {
+      "id": 6,
+      "sensor": "Air Quality Sensor F6",
+      "name": "air_quality_report_2025.pdf",
+      "size": "4.0 MB",
+      "type": "pdf",
+      "lastModified": "2025-04-17"
+    },
+    {
+      "id": 7,
+      "sensor": "Water Level Sensor G7",
+      "name": "water_level_log.csv",
+      "size": "1.2 MB",
+      "type": "csv",
+      "lastModified": "2025-04-18"
+    },
+    {
+      "id": 8,
+      "sensor": "Smoke Detector H8",
+      "name": "smoke_incidents_2025.pdf",
+      "size": "600 KB",
+      "type": "pdf",
+      "lastModified": "2025-04-11"
+    },
+    {
+      "id": 9,
+      "sensor": "Light Sensor I9",
+      "name": "light_readings_2025.xlsx",
+      "size": "3.4 MB",
+      "type": "xlsx",
+      "lastModified": "2025-04-14"
+    },
+    {
+      "id": 10,
+      "sensor": "Motion Detector J10",
+      "name": "motion_activity_log.csv",
+      "size": "2.9 MB",
+      "type": "csv",
+      "lastModified": "2025-04-15"
+    }
+  ]

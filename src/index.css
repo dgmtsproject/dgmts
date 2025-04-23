@@ -1,0 +1,211 @@
+body, html {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+  overflow-x: hidden;
+  /* overflow-y: hidden; */
+}
+
+.page {
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #fff;
+}
+
+.logo {
+  width: 100px; /* Adjust size as needed */
+  margin-right: 20px;
+}
+
+.centered-logo {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.header-text h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.header-text p {
+  font-size: 14px;
+  margin: 0;
+  color: #666;
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  background-color: #003087;
+  padding: 10px 0;
+}
+
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  font-weight: bold;
+}
+
+.navbar a:hover {
+  background-color: #0056d2;
+}
+
+.content {
+  padding: 20px;
+}
+
+.content h2 {
+  color: #003087;
+  font-size: 24px;
+}
+
+.line-graph {
+  margin: 20px auto;
+}
+
+.data-list {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.data-list h3 {
+  font-size: 18px;
+  color: #333;
+}
+
+.data-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.data-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  background-color: #fff;
+  color: #666;
+  font-size: 12px;
+}
+.graph-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.form-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: transparent; /* Make background transparent */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-field {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.submit-btn {
+  padding: 12px;
+  background-color: #022d68; /* Red button color */
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #0056d2; /* Darker red on hover */
+}
+.form-container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 20px;
+  border: 2px solid #160c0c;
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-field {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.submit-btn {
+  padding: 12px;
+  background-color: #0056d2;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #0056d2;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  display: flex;
+  align-items: center;
+}
+/* Reset default margin and padding */
+body,
+html {
+  margin: 0;
+  padding: 0;
+}
+
+/* Optional: Ensure the header spans full width */
+.header {
+  width: 100%;
+  /* box-sizing: border-; */
+}
+.logo-bg {
+  position: fixed;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30vw;
+  opacity: 0.10;
+  z-index: 0;
+  pointer-events: none;
+}

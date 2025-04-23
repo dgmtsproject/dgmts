@@ -1,0 +1,5 @@
+[
+    { "id": 1, "topic": "How to View Graphs", "description": "Learn how to access and interpret project graphs." },
+    { "id": 2, "topic": "Managing Alarms", "description": "Steps to set up and manage alarm notifications." },
+    { "id": 3, "topic": "Exporting Data", "description": "Guide to export data in various formats." }
+  ]

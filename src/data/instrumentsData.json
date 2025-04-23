@@ -1,0 +1,17 @@
+[
+  { "id": 1, "name": "Strain Gauge", "type": "Sensor", "lastCalibrated": "2024-12-01" },
+  { "id": 2, "name": "Inclinometer", "type": "Slope Monitoring", "lastCalibrated": "2024-11-15" },
+  { "id": 3, "name": "Piezometer", "type": "Water Pressure", "lastCalibrated": "2024-10-20" },
+  { "id": 4, "name": "Accelerometer", "type": "Vibration", "lastCalibrated": "2025-01-10" },
+  { "id": 5, "name": "Displacement Transducer", "type": "Displacement", "lastCalibrated": "2024-12-22" },
+  { "id": 6, "name": "Load Cell", "type": "Force Measurement", "lastCalibrated": "2025-02-01" },
+  { "id": 7, "name": "Crack Meter", "type": "Crack Monitoring", "lastCalibrated": "2024-11-01" },
+  { "id": 8, "name": "Tiltmeter", "type": "Angular Displacement", "lastCalibrated": "2024-10-05" },
+  { "id": 9, "name": "Extensometer", "type": "Deformation Measurement", "lastCalibrated": "2024-09-18" },
+  { "id": 10, "name": "Thermocouple", "type": "Temperature Sensor", "lastCalibrated": "2024-08-30" },
+  { "id": 11, "name": "Barometer", "type": "Atmospheric Pressure", "lastCalibrated": "2024-11-28" },
+  { "id": 12, "name": "Weather Station", "type": "Environmental", "lastCalibrated": "2024-12-15" },
+  { "id": 13, "name": "Vibrating Wire Sensor", "type": "Stress Monitoring", "lastCalibrated": "2025-01-05" },
+  { "id": 14, "name": "Rain Gauge", "type": "Precipitation", "lastCalibrated": "2024-07-12" },
+  { "id": 15, "name": "Data Logger", "type": "Recording Device", "lastCalibrated": "2025-01-20" }
+]

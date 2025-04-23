@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "name": "Highway Expansion Project",
+    "values": [
+      { "time": "2025-04-01", "value": 180 },
+      { "time": "2025-04-02", "value": 165 },
+      { "time": "2025-04-03", "value": 150 },
+      { "time": "2025-04-04", "value": 190 },
+      { "time": "2025-04-05", "value": 170 }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Bridge Reinforcement",
+    "values": [
+      { "time": "2025-04-01", "value": 110 },
+      { "time": "2025-04-02", "value": 120 },
+      { "time": "2025-04-03", "value": 125 },
+      { "time": "2025-04-04", "value": 115 },
+      { "time": "2025-04-05", "value": 130 }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Tunnel Monitoring",
+    "values": [
+      { "time": "2025-04-01", "value": 80 },
+      { "time": "2025-04-02", "value": 85 },
+      { "time": "2025-04-03", "value": 90 },
+      { "time": "2025-04-04", "value": 95 },
+      { "time": "2025-04-05", "value": 92 }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Railway Electrification",
+    "values": [
+      { "time": "2025-04-01", "value": 140 },
+      { "time": "2025-04-02", "value": 150 },
+      { "time": "2025-04-03", "value": 135 },
+      { "time": "2025-04-04", "value": 145 },
+      { "time": "2025-04-05", "value": 155 }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Coastal Road Development",
+    "values": [
+      { "time": "2025-04-01", "value": 95 },
+      { "time": "2025-04-02", "value": 100 },
+      { "time": "2025-04-03", "value": 98 },
+      { "time": "2025-04-04", "value": 102 },
+      { "time": "2025-04-05", "value": 97 }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Metro Line Construction",
+    "values": [
+      { "time": "2025-04-01", "value": 175 },
+      { "time": "2025-04-02", "value": 160 },
+      { "time": "2025-04-03", "value": 155 },
+      { "time": "2025-04-04", "value": 180 },
+      { "time": "2025-04-05", "value": 170 }
+    ]
+  }
+]
