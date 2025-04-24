@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { useAdminContext } from "../context/AdminContext";
 interface User {
   username: string;
   email: string;
@@ -13,7 +14,10 @@ interface User {
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  const { setIsAdmin } = useAdminContext(); 
 
   // Preload 10 random general users if not already in localStorage
   if (!localStorage.getItem("json-users")) {
@@ -41,6 +45,7 @@ const SignIn: React.FC = () => {
     // Hardcoded admin
     if (email === "admin@gmail.com" && password === "adminadmin") {
       toast.success("Admin login successful!");
+      setIsAdmin(true); 
       setTimeout(() => navigate("/projects"), 2000);
       return;
     }

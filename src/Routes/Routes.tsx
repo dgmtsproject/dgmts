@@ -15,7 +15,8 @@ import ProjectForm from "../pages/ProjectForm";
 import DashBoard from "../pages/DashBoard";
 // import MergeTracks from "../components/MergeTracks";
 import GapRemoval from "../components/GapRemoval";
-
+import ProjectsList from "../pages/ProjectsList";
+import AddProjects from "../pages/AddProjects";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -35,6 +36,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/DashBoard" element={<DashBoard />} />
       {/* <Route path="/MergeTracks" element={<MergeTracks />} /> */}
       <Route path="/GapRemoval" element={<GapRemoval />} />
+      <Route path="/projects-list" element={<ProjectsList />} />
+      <Route path="/add-projects" element={<AddProjects />} />
 
     </Routes>
   );

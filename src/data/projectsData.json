@@ -4,41 +4,56 @@
     "name": "Highway Expansion Project",
     "status": "In Progress",
     "startDate": "2024-01-15",
-    "instrumentIds": [1, 2, 3, 4, 5]
+    "instrumentIds": [1, 2, 3, 4, 5],
+    "client":"SKANSKA ",
+    "location":"New York"
   },
   {
     "id": 2,
     "name": "Bridge Reinforcement",
     "status": "Completed",
     "startDate": "2023-06-10",
-    "instrumentIds": [6, 7, 8, 9, 10]
+    "instrumentIds": [6, 7, 8, 9, 10],
+    "client":"Kiewit Corporation",
+    "location":"Los Angeles"
+
   },
   {
     "id": 3,
     "name": "Tunnel Monitoring",
     "status": "Planning",
     "startDate": "2025-03-01",
-    "instrumentIds": [11, 12, 13, 14, 15]
+    "instrumentIds": [11, 12, 13, 14, 15],
+    "client":"Fluor Corporation",
+    "location":"Chicago"
+
   },
   {
     "id": 4,
     "name": "Railway Electrification",
     "status": "In Progress",
     "startDate": "2024-07-20",
-    "instrumentIds": [1, 3, 5, 7, 9]
+    "instrumentIds": [1, 3, 5, 7, 9],
+    "client":"Bechtel Corporation",
+    "location":"Houston"
+    
   },
   {
     "id": 5,
     "name": "Coastal Road Development",
     "status": "Not Started",
     "startDate": "2025-01-10",
-    "instrumentIds": [2, 4, 6, 8, 10]
+    "instrumentIds": [2, 4, 6, 8, 10],
+    "client":"Balfour Beatty",
+    "location":"Miami"
   },
   {
     "id": 6,
     "name": "Metro Line Construction",
     "status": "In Progress",
     "startDate": "2024-04-18",
-    "instrumentIds": [11, 13, 14, 15, 12]
+    "instrumentIds": [11, 13, 14, 15, 12],
+    "client":"Jacobs Engineering",
+    "location":"Seattle"
   }
 ]
