@@ -21,7 +21,7 @@ type Project = {
 const Projectslist: React.FC = () => {
   const [projectsData, setProjectsData] = useState<Project[]>([]);
   const navigate = useNavigate();
-  const { setSelectedProject, selectedProject } = useProjectContext();
+  const { setSelectedProject } = useProjectContext();
 
   useEffect(() => {
     const fetchProjects = async () => {
