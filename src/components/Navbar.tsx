@@ -13,6 +13,7 @@ const Navbar: React.FC = () => {
       <Link to="/ProjectForm">Form</Link>
       <Link to="/export-data">Export Data</Link>
       <Link to="/GapRemoval">MergeTracks</Link>
+      {/* <Link to="/track-graphs">TrackGraphs</Link> */}
     </nav>
   );
 };

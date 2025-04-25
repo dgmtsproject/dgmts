@@ -13,7 +13,6 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import html2canvas from "html2canvas";
 
 const GapRemoval: React.FC = () => {
@@ -32,6 +31,7 @@ const GapRemoval: React.FC = () => {
   const [selectedColumn3, setSelectedColumn3] = useState<string>("placeholder");
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
+  // seperate headers for the 
   const [showGraph, setShowGraph] = useState(false);
   const [graphData1, setGraphData1] = useState<
     { index: number; value: number; time: string }[]
@@ -51,6 +51,29 @@ const GapRemoval: React.FC = () => {
       time: string;
     }[]
   >([]);
+  const differenceOptions = headers
+  .map((header, index) => {
+    if (
+      typeof header === "string" &&
+      header.toLowerCase().includes("difference")
+    ) {
+      // Try to find matching A and B headers by walking back 1 and 2 positions
+      const aHeader = headers[index - 2];
+      const bHeader = headers[index - 1];
+
+      if (
+        typeof aHeader === "string" &&
+        typeof bHeader === "string" &&
+        aHeader.includes("A") &&
+        bHeader.includes("B")
+      ) {
+        const label = `${aHeader.split(" - ")[0]} and ${bHeader.split(" - ")[0]} - ${header}`;
+        return { label, value: header };
+      }
+    }
+    return null;
+  })
+  .filter(Boolean) as { label: string; value: string }[];
   // const [timeColumn, setTimeColumn] = useState<string[]>([]);
   const [xScale, setXScale] = useState<number>(1);
   const [yScale, setYScale] = useState<number>(1);
@@ -200,19 +223,40 @@ const GapRemoval: React.FC = () => {
     });
 
     const mapToGraphValues = (data: string[]) =>
-      data.map((value, index) => ({
-        index,
-        value: isNaN(Number(value)) ? 0 : Number(value),
-        time: timeColumn[index] || "",
-      }));
+      data.map((value, index) => {
+        const rawTime = timeColumn[index] || "";
+    
+        let usFormattedDate = rawTime;
+    
+        // Split date and time
+        const [datePart, timePart] = rawTime.split(" ");
+        const [day, month, year] = datePart.split("/");
+    
+        if (day && month && year && timePart) {
+          // Convert to MM/DD/YYYY format
+          usFormattedDate = `${month}/${day}/${year} ${timePart}`;
+        }
+    
+        return {
+          index,
+          value: isNaN(Number(value)) ? 0 : Number(value),
+          time: usFormattedDate,
+        };
+      });
 
     const gData1 = mapToGraphValues(selectedData1);
+  
     const gData2 = mapToGraphValues(selectedData2);
     const gData3 = mapToGraphValues(selectedData3);
 
-    setGraphData1(gData1);
-    setGraphData2(gData2);
-    setGraphData3(gData3);
+    
+
+    // remove 0 values from graph data so it doesn't show in the graph
+   
+    setGraphData1(gData1.filter((item) => item.value !== 0));
+    setGraphData2(gData2.filter((item) => item.value !== 0));
+    setGraphData3(gData3.filter((item) => item.value !== 0));
+    
 
     const combined = gData1.map((item, index) => ({
       index,
@@ -223,6 +267,17 @@ const GapRemoval: React.FC = () => {
     }));
     setCombinedGraphData(combined);
   };
+  const generateTicks = (scale: number) => {
+    const range = 0.5 * scale;
+    const baseStep = 0.1;
+    const step = baseStep * scale;
+    const ticks = [];
+    for (let i = -range; i <= range + 1e-9; i += step) {
+      ticks.push(Number(i.toFixed(2)));
+    }
+    return ticks;
+  };
+
 
   const handleDownloadGraph = () => {
     const chartContainer = document.getElementById("chartContainer");
@@ -236,6 +291,7 @@ const GapRemoval: React.FC = () => {
       });
     }
   };
+  
   // console.log("Headers:", headers);
 
   return (
@@ -360,11 +416,13 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
-                {headers.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
+                {headers
+                .filter((header) => typeof header === "string" && / - .*A$/i.test(header))
+                .map((header, index) => (
+              <option key={index} value={header}>
+              {header}
+              </option>
+              ))}
               </select>
             </div>
 
@@ -405,11 +463,13 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
-                {headers.map((header, index) => (
+                {headers
+                  .filter((header) => typeof header === "string" && / - .*B$/i.test(header))
+                  .map((header, index) => (
                   <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
+                  {header}
+                    </option>
+                          ))}
               </select>
             </div>
 
@@ -450,11 +510,11 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
-                {headers.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
+                {differenceOptions.map(({ label, value }, index) => (
+              <option key={index} value={value}>
+              {label}
+             </option>
+            ))}
               </select>
             </div>
 
@@ -491,6 +551,7 @@ const GapRemoval: React.FC = () => {
                   transition: "border-color 0.2s ease",
                 }}
                 min="0.1"
+                max="1.4"
                 step="0.1"
                 onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
@@ -508,7 +569,10 @@ const GapRemoval: React.FC = () => {
               <input
                 type="number"
                 value={yScale}
-                onChange={(e) => setYScale(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Math.max(0.1, Number(e.target.value));
+                  setYScale(val);
+                }}
                 style={{
                   border: "1px solid #d1d5db",
                   borderRadius: "0.375rem",
@@ -588,156 +652,130 @@ const GapRemoval: React.FC = () => {
             </div>
 
             <div id="chartContainer" style={{ marginTop: "2rem" }}>
-              <TransformWrapper>
-                <TransformComponent>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "2rem",
-                    }}
-                  >
-                    <div>
-                      <h3
-                        style={{
-                          fontWeight: "700",
-                          fontSize: "1.25rem",
-                          color: "#1f2937",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        First Graph ({selectedColumn1})
-                      </h3>
-                      <LineChart
-                        width={800 * xScale}
-                        height={300 * yScale}
-                        data={graphData1}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis domain={[-0.2, 0.2]} />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke="#8884d8"
-                          activeDot={{ r: 8 }}
-                          name={selectedColumn1}
-                        />
-                      </LineChart>
-                    </div>
+  <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    {/* First Chart */}
+    <div>
+      <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+        First Graph ({selectedColumn1})
+      </h3>
+ 
+  <LineChart
+    width={800 * xScale}
+    height={400}
+    data={graphData1}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="time" />
+    <YAxis domain={[-0.5 * yScale, 0.5 * yScale]} ticks={generateTicks(yScale)} />
+    <Tooltip />
+    <Legend />
+    <Line
+      type="monotone"
+      dataKey="value"
+      stroke="#8884d8"
+      activeDot={{ r: 8 }}
+      name={selectedColumn1}
+    />
+  </LineChart>
 
-                    <div>
-                      <h3
-                        style={{
-                          fontWeight: "700",
-                          fontSize: "1.25rem",
-                          color: "#1f2937",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        Second Graph ({selectedColumn2})
-                      </h3>
-                      <LineChart
-                        width={800 * xScale}
-                        height={300 * yScale}
-                        data={graphData2}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis domain={[-0.2, 0.2]} />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke="#82ca9d"
-                          activeDot={{ r: 8 }}
-                          name={selectedColumn2}
-                        />
-                      </LineChart>
-                    </div>
+    </div>
 
-                    <div>
-                      <h3
-                        style={{
-                          fontWeight: "700",
-                          fontSize: "1.25rem",
-                          color: "#1f2937",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        Third Graph ({selectedColumn3})
-                      </h3>
-                      <LineChart
-                        width={800 * xScale}
-                        height={300 * yScale}
-                        data={graphData3}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis domain={[-0.2, 0.2]} />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke="#ff7300"
-                          activeDot={{ r: 8 }}
-                          name={selectedColumn3}
-                        />
-                      </LineChart>
-                    </div>
+    {/* Second Chart */}
+    <div>
+      <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+        Second Graph ({selectedColumn2})
+      </h3>
+      
+  <LineChart
+    width={800 * xScale}
+    height={400}
+    data={graphData2}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="time" />
+    <YAxis domain={[-0.5 * yScale, 0.5 * yScale]} ticks={generateTicks(yScale)} />
+    <Tooltip />
+    <Legend />
+    <Line
+      type="monotone"
+      dataKey="value"
+      stroke="#82ca9d"
+      activeDot={{ r: 8 }}
+      name={selectedColumn2}
+    />
+  </LineChart>
 
-                    <div>
-                      <h3
-                        style={{
-                          fontWeight: "700",
-                          fontSize: "1.25rem",
-                          color: "#1f2937",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        Combined Graph
-                      </h3>
-                      <LineChart
-                        width={800 * xScale}
-                        height={300 * yScale}
-                        data={combinedGraphData}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis domain={[-0.2, 0.2]} />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="value1"
-                          stroke="#8884d8"
-                          activeDot={{ r: 8 }}
-                          name={selectedColumn1}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="value2"
-                          stroke="#82ca9d"
-                          activeDot={{ r: 8 }}
-                          name={selectedColumn2}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="value3"
-                          stroke="#ff7300"
-                          activeDot={{ r: 8 }}
-                          name={selectedColumn3}
-                        />
-                      </LineChart>
-                    </div>
-                  </div>
-                </TransformComponent>
-              </TransformWrapper>
-            </div>
+    </div>
+
+    {/* Third Chart */}
+    <div>
+      <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+        Third Graph ({selectedColumn3})
+      </h3>
+      
+  <LineChart
+    width={800 * xScale}
+    height={400}
+    data={graphData3}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="time" />
+    <YAxis domain={[-0.5 * yScale, 0.5 * yScale]} ticks={generateTicks(yScale)} />
+    <Tooltip />
+    <Legend />
+    <Line
+      type="monotone"
+      dataKey="value"
+      stroke="#ff7300"
+      activeDot={{ r: 8 }}
+      name={selectedColumn3}
+    />
+  </LineChart>
+
+    </div>
+
+    {/* Combined Chart */}
+    <div>
+      <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+        Combined Graph
+      </h3>
+      
+  <LineChart
+    width={800 * xScale}
+    height={400}
+    data={combinedGraphData}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="time" />
+    <YAxis domain={[-0.5 * yScale, 0.5 * yScale]} ticks={generateTicks(yScale)} />
+    <Tooltip />
+    <Legend />
+    <Line
+      type="monotone"
+      dataKey="value1"
+      stroke="#8884d8"
+      activeDot={{ r: 8 }}
+      name={selectedColumn1}
+    />
+    <Line
+      type="monotone"
+      dataKey="value2"
+      stroke="#82ca9d"
+      activeDot={{ r: 8 }}
+      name={selectedColumn2}
+    />
+    <Line
+      type="monotone"
+      dataKey="value3"
+      stroke="#ff7300"
+      activeDot={{ r: 8 }}
+      name={selectedColumn3}
+    />
+  </LineChart>
+
+    </div>
+  </div>
+</div>
           </div>
         )}
       </div>
