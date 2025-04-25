@@ -417,12 +417,15 @@ const GapRemoval: React.FC = () => {
                   Select a header
                 </option>
                 {headers
-                .filter((header) => typeof header === "string" && / - .*A$/i.test(header))
-                .map((header, index) => (
-              <option key={index} value={header}>
-              {header}
-              </option>
-              ))}
+              .filter(
+              (header) =>
+              typeof header === "string" &&
+                /^(?:[^-]*-){3}[^-]*[A](?= - )/i.test(header) )
+                    .map((header, index) => (
+                  <option key={index} value={header}>
+            {header}
+            </option>
+                     ))}
               </select>
             </div>
 
@@ -464,12 +467,17 @@ const GapRemoval: React.FC = () => {
                   Select a header
                 </option>
                 {headers
-                  .filter((header) => typeof header === "string" && / - .*B$/i.test(header))
+                  .filter(
+                    (header) =>
+                      typeof header === "string" &&
+                      /^(?:[^-]*-){3}[^-]*[B](?= - )/i.test(header)
+                  )
                   .map((header, index) => (
-                  <option key={index} value={header}>
-                  {header}
+                    <option key={index} value={header}>
+                      {header}
                     </option>
-                          ))}
+                  ))}
+                
               </select>
             </div>
 
@@ -584,8 +592,9 @@ const GapRemoval: React.FC = () => {
                   width: "100px",
                   transition: "border-color 0.2s ease",
                 }}
-                min="0.1"
+                min="0.2"
                 step="0.1"
+                max="2.0"
                 onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
               />
@@ -661,7 +670,8 @@ const GapRemoval: React.FC = () => {
  
   <LineChart
     width={800 * xScale}
-    height={400}
+    height={400 * yScale}
+    style ={{ maxHeight: "800px" }}
     data={graphData1}
   >
     <CartesianGrid strokeDasharray="3 3" />
@@ -688,7 +698,8 @@ const GapRemoval: React.FC = () => {
       
   <LineChart
     width={800 * xScale}
-    height={400}
+    height={400 * yScale}
+    style ={{ maxHeight: "800px" }}
     data={graphData2}
   >
     <CartesianGrid strokeDasharray="3 3" />
@@ -715,7 +726,8 @@ const GapRemoval: React.FC = () => {
       
   <LineChart
     width={800 * xScale}
-    height={400}
+    height={400 * yScale}
+    style ={{ maxHeight: "800px" }}
     data={graphData3}
   >
     <CartesianGrid strokeDasharray="3 3" />
@@ -742,7 +754,8 @@ const GapRemoval: React.FC = () => {
       
   <LineChart
     width={800 * xScale}
-    height={400}
+    height={400 * yScale}
+    style ={{ maxHeight: "800px" }}
     data={combinedGraphData}
   >
     <CartesianGrid strokeDasharray="3 3" />

@@ -112,8 +112,8 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
       const headerRow = ["Time"];
       const maxColumns = Math.max(headerA.length, headerB.length);
       for (let i = 1; i < maxColumns; i++) {
-        if (i < headerA.length) headerRow.push(`${headerA[i]} A`);
-        if (i < headerB.length) headerRow.push(`${headerB[i]} B`);
+        if (i < headerA.length) headerRow.push(`${headerA[i]}`);
+        if (i < headerB.length) headerRow.push(`${headerB[i]}`);
       }
       finalData.push(headerRow);
 
