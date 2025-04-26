@@ -596,7 +596,7 @@ const GapRemoval: React.FC = () => {
                 }}
                 min="0.2"
                 step="0.1"
-                max="2.0"
+                max="5.0"
                 onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
               />
