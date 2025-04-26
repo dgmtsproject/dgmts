@@ -159,7 +159,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
           flexDirection: "column",
           backgroundColor: "#f4f7fa",
           fontFamily: "'Inter', sans-serif",
-          border: "4px solid black", // Adds a black border
+          border: "4px solid black", 
           margin: "10px",
           padding: "10px",
         }}
