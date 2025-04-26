@@ -10,10 +10,10 @@ const Navbar: React.FC = () => {
       <Link to="/project-graphs">Project Graphs</Link>
       <Link to="/view-custom-graphs">View Custom Graphs</Link>
       <Link to="/file-manager">File Manager</Link>
-      <Link to="/ProjectForm">Form</Link>
+      <Link to="/ProjectForm">Admin Setup</Link>
       <Link to="/export-data">Export Data</Link>
       <Link to="/GapRemoval">MergeTracks</Link>
-      {/* <Link to="/track-graphs">TrackGraphs</Link> */}
+      <Link to="/track-graphs">TrackGraphs</Link>
     </nav>
   );
 };

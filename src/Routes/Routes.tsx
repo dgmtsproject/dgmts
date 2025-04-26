@@ -17,7 +17,7 @@ import DashBoard from "../pages/DashBoard";
 import GapRemoval from "../components/GapRemoval";
 import ProjectsList from "../pages/ProjectsList";
 import AddProjects from "../pages/AddProjects";
-// import TrackGraphs from "../pages/TrackGraphs";
+import TrackGraphs from "../pages/TrackGraphs";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -39,7 +39,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/GapRemoval" element={<GapRemoval />} />
       <Route path="/projects-list" element={<ProjectsList />} />
       <Route path="/add-projects" element={<AddProjects />} />
-      {/* <Route path="/track-graphs" element={<TrackGraphs />} /> */}
+      <Route path="/track-graphs" element={<TrackGraphs />} />
 
     </Routes>
   );

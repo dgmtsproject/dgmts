@@ -265,7 +265,8 @@ const GapRemoval: React.FC = () => {
       value3: gData3[index]?.value || 0,
       time: item.time,
     }));
-    setCombinedGraphData(combined);
+   setCombinedGraphData(
+      combined.filter((item) => item.value1 !== 0 || item.value2 !== 0 || item.value3 !== 0));
   };
   const generateTicks = (scale: number) => {
     const range = 0.5 * scale;
