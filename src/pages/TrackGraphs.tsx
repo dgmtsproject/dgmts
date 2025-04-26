@@ -25,7 +25,7 @@ const TrackGraphs: React.FC = () => {
   const [selectedRowTime1, setSelectedRowTime1] = useState<string>("placeholder");
   const [selectedRowTime2, setSelectedRowTime2] = useState<string>("placeholder");
   const [selectedRowTime3, setSelectedRowTime3] = useState<string>("placeholder");
-  const [selectedAheader1, setSelectedAheader1] = useState<string>("placeholder");  
+  const [selectedAheader1, setSelectedAheader1] = useState<string>("placeholder");
   const [selectedAheader2, setSelectedAheader2] = useState<string>("placeholder");
   const [selectedAheader3, setSelectedAheader3] = useState<string>("placeholder");
   const [selectedAheader4, setSelectedAheader4] = useState<string>("placeholder");
@@ -183,21 +183,21 @@ const TrackGraphs: React.FC = () => {
 
   const handleTimeSelects = () => {
     if (!processedData.length || !headers.length) return;
-  
+
     const matchingIndexes = headers
       .map((h, i) => ({ header: h, index: i }))
       .filter(({ header }) =>
         typeof header === "string" &&
         /LBN-TP-[A-Za-z0-9]+-\d{2}A\s-\s(?:Easting|Height|Northing)/.test(header)
       );
-  
+
     const findRow = (timestamp: string) =>
       processedData.find(row => row[0]?.toString().trim() === timestamp);
-  
+
     const buildGraphData = (timestamp: string) => {
       const row = findRow(timestamp);
       if (!row) return [];
-  
+
       return matchingIndexes.map(({ index, header }) => {
         const cellValue = row[index];
         return {
@@ -207,40 +207,40 @@ const TrackGraphs: React.FC = () => {
         };
       });
     };
-  
+
     const data1 = buildGraphData(selectedRowTime1);
     const data2 = buildGraphData(selectedRowTime2);
     const data3 = buildGraphData(selectedRowTime3);
-  
+
     let combinedData = matchingIndexes.map(({ header }, idx) => ({
       header,
-      value1: data1[idx]?.value, 
+      value1: data1[idx]?.value,
       value2: data2[idx]?.value,
       value3: data3[idx]?.value,
     }));
-  
+
     // ✅ Optional: filter out if *all* values are missing
     combinedData = combinedData.filter(item => {
       return !(item.value1 === undefined && item.value2 === undefined && item.value3 === undefined);
     });
-  
+
     setCombinedData(combinedData as { header: string; value1: number; value2: number; value3: number }[]);
     console.log("Combined Data (No zeros):", combinedData);
   };
 
-  
+
   const handleMovementSelects = () => {
     if (!processedData.length || !headers.length) return;
-  
+
     const timeIndex = headers.indexOf("Time");
     const col1Index = headers.indexOf(selectedAheader1);
     const col2Index = headers.indexOf(selectedAheader2);
     const col3Index = headers.indexOf(selectedAheader3);
     const col4Index = headers.indexOf(selectedAheader4);
     const col5Index = headers.indexOf(selectedAheader5);
-  
+
     const gData: any[] = [];
-  
+
     processedData.forEach((row) => {
       const time = row[timeIndex];
       const value1 = parseFloat(row[col1Index]);
@@ -248,7 +248,7 @@ const TrackGraphs: React.FC = () => {
       const value3 = parseFloat(row[col3Index]);
       const value4 = parseFloat(row[col4Index]);
       const value5 = parseFloat(row[col5Index]);
-  
+
       // Only if all values are real numbers
       if (
         !isNaN(value1) &&
@@ -267,7 +267,7 @@ const TrackGraphs: React.FC = () => {
         });
       }
     });
-  
+
     setGData(gData as { time: string; gvalue1: number; gvalue2: number; gvalue3: number; gvalue4: number; gvalue5: number }[]);
   };
 
@@ -301,12 +301,13 @@ const TrackGraphs: React.FC = () => {
       });
     }
   };
-  const generateTicks = (scale: number) => {
-    const range = 0.5 * scale;
-    const baseStep = 0.1;
-    const step = baseStep * scale;
+  const generateTicks = (min: number, max: number) => {
+    const range = max - min;
+    const approxSteps = 10;
+    const step = range / approxSteps;
+
     const ticks = [];
-    for (let i = -range; i <= range + 1e-9; i += step) {
+    for (let i = min; i <= max + 1e-9; i += step) {
       ticks.push(Number(i.toFixed(2)));
     }
     return ticks;
@@ -386,7 +387,7 @@ const TrackGraphs: React.FC = () => {
         )}
         {showGraph && (
           <div
-            className="graph-container"  
+            className="graph-container"
             style={{
               padding: "2rem",
               backgroundColor: "#ffffff",
@@ -396,392 +397,392 @@ const TrackGraphs: React.FC = () => {
             }}
           >
             <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
-            <h2
-              style={{
-                fontWeight: "700",
-                fontSize: "1.5rem",
-                color: "#1f2937",
-                marginBottom: "1rem",
-              }}
-            >
-              Select Headers For Prism Graph:
-            </h2>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
+              <h2
                 style={{
-                  fontWeight: "600",
+                  fontWeight: "700",
+                  fontSize: "1.5rem",
                   color: "#1f2937",
-                  fontSize: "0.9rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Select First Header:
-              </label>
-              <select
-                value={selectedRowTime1}
-                onChange={(e) => setSelectedRowTime1(e.target.value)}
+                Select Headers For Prism Graph:
+              </h2>
+              <div
                 style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
               >
-                <option value="placeholder" disabled>
-                  Select First TimeStamp
-                </option>
-                {timeColumn.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select First Header:
+                </label>
+                <select
+                  value={selectedRowTime1}
+                  onChange={(e) => setSelectedRowTime1(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select First TimeStamp
                   </option>
-                ))}
+                  {timeColumn.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
-              </select>
-            </div>
+                </select>
+              </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
+              <div
                 style={{
-                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Second TimeStamp:
+                </label>
+                <select
+                  value={selectedRowTime2}
+                  onChange={(e) => setSelectedRowTime2(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
+                  </option>
+                  {timeColumn.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+
+
+                </select>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Third TimeStamp:
+                </label>
+                <select
+                  value={selectedRowTime3}
+                  onChange={(e) => setSelectedRowTime3(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
+                  </option>
+                  {timeColumn.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+
+                </select>
+              </div>
+              <h2
+                style={{
+                  fontWeight: "700",
+                  fontSize: "1.5rem",
                   color: "#1f2937",
-                  fontSize: "0.9rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Select Second TimeStamp:
-              </label>
-              <select
-                value={selectedRowTime2}
-                onChange={(e) => setSelectedRowTime2(e.target.value)}
+                Select "A" Headers For Movement Graph:
+              </h2>
+              <div
                 style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
               >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {timeColumn.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select First Header:
+                </label>
+                <select
+                  value={selectedAheader1}
+                  onChange={(e) => setSelectedAheader1(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select First A Header
                   </option>
-                ))}
+                  {aheadersoptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-
-              </select>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
+              <div
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Select Third TimeStamp:
-              </label>
-              <select
-                value={selectedRowTime3}
-                onChange={(e) => setSelectedRowTime3(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {timeColumn.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Second A Header:
+                </label>
+                <select
+                  value={selectedAheader2}
+                  onChange={(e) => setSelectedAheader2(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
                   </option>
-                ))}
+                  {aheadersoptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              </select>
-            </div>
-            <h2
-              style={{
-                fontWeight: "700",
-                fontSize: "1.5rem",
-                color: "#1f2937",
-                marginBottom: "1rem",
-              }}
-            >
-              Select "A" Headers For Movement Graph:
-            </h2>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
+              <div
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Select First Header:
-              </label>
-              <select
-                value={selectedAheader1}
-                onChange={(e) => setSelectedAheader1(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select First A Header
-                </option>
-                {aheadersoptions.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Third A Header:
+                </label>
+                <select
+                  value={selectedAheader3}
+                  onChange={(e) => setSelectedAheader3(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
                   </option>
-                ))}
-              </select>
-            </div>
+                  {aheadersoptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
+
+                </select>
+              </div>
+              <div
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Select Second A Header:
-              </label>
-              <select
-                value={selectedAheader2}
-                onChange={(e) => setSelectedAheader2(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {aheadersoptions.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Fourth A Header:
+                </label>
+                <select
+                  value={selectedAheader4}
+                  onChange={(e) => setSelectedAheader4(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
                   </option>
-                ))}
-              </select>
-            </div>
+                  {aheadersoptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
+
+                </select>
+              </div>
+              <div
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Select Third A Header:
-              </label>
-              <select
-                value={selectedAheader3}
-                onChange={(e) => setSelectedAheader3(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {aheadersoptions.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Fifth A Header:
+                </label>
+                <select
+                  value={selectedAheader5}
+                  onChange={(e) => setSelectedAheader5(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
                   </option>
-                ))}
-                
+                  {aheadersoptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
-              </select>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select Fourth A Header:
-              </label>
-              <select
-                value={selectedAheader4}
-                onChange={(e) => setSelectedAheader4(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {aheadersoptions.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
-                
 
-              </select>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select Fifth A Header:
-              </label>
-              <select
-                value={selectedAheader5}
-                onChange={(e) => setSelectedAheader5(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {aheadersoptions.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
-                
-
-              </select>
-            </div>
+                </select>
+              </div>
             </div>
             <div
               style={{
@@ -851,7 +852,7 @@ const TrackGraphs: React.FC = () => {
                 }}
                 min="0.2"
                 step="0.1"
-                max="2.0"
+                max="5.0"
                 onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
               />
@@ -953,20 +954,21 @@ const TrackGraphs: React.FC = () => {
 
                   <LineChart
                     width={800 * xScale}
-                    height={400 * yScale}
-                    style ={{ maxHeight: "800px" }}
+                    height={500}
+                    style={{ maxHeight: "800px" }}
                     data={combinedData}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="header"
-   
+
                       scale="point"
-              
+
 
                     />
-                    <YAxis 
-                    domain={[-0.5 * yScale, 0.5 * yScale]} ticks={generateTicks(yScale)}
+                    <YAxis
+                      domain={[-0.5 / yScale, 0.5 / yScale]}
+                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
                     />
                     <Tooltip />
                     <Legend />
@@ -1007,76 +1009,67 @@ const TrackGraphs: React.FC = () => {
                   </h3>
 
                   <LineChart
-  width={800 * xScale}
-  height={400 * yScale}
-  style={{ maxHeight: "800px" }}
-  data={gdata}  // Assuming gdata is the data for the movement graph
->
-  <CartesianGrid strokeDasharray="3 3" />
-  <XAxis
-    dataKey="time"
-    type="category"  
-    scale="point"
-  />
-  <YAxis 
-    domain={[-0.5 * yScale, 0.5 * yScale]} 
-    ticks={generateTicks(yScale)}
-  />
-  <Tooltip />
-  <Legend />
+                    width={800 * xScale}
+                    height={500}
+                    style={{ maxHeight: "800px" }}
+                    data={gdata}  // Assuming gdata is the data for the movement graph
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="time"
+                      type="category"
+                      scale="point"
+                    />
+                    <YAxis
+                      domain={[-0.5 / yScale, 0.5 / yScale]}
+                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+                    />
+                    <Tooltip />
+                    <Legend />
 
-  {/* Lines for each selected header */}
-  <Line
-    type="monotone"
-    dataKey="gvalue1"
-    stroke="#8884d8"
-    name={selectedAheader1}
-    activeDot={{ r: 8 }}
-  />
-  <Line
-    type="monotone"
-    dataKey="gvalue2"
-    stroke="#82ca9d"
-    name={selectedAheader2}
-    activeDot={{ r: 8 }}
-  />
-  <Line
-    type="monotone"
-    dataKey="gvalue3"
-    stroke="#ff7300"
-    name={selectedAheader3}
-    activeDot={{ r: 8 }}
-  />
-  <Line
-    type="monotone"
-    dataKey="gvalue4"
-    stroke="#00bcd4"
-    name={selectedAheader4}
-    activeDot={{ r: 8 }}
-  />
-  <Line
-    type="monotone"
-    dataKey="gvalue5"
-    stroke="#f44336"
-    name={selectedAheader5}
-    activeDot={{ r: 8 }}
-  />
-</LineChart>
-
+                    {/* Lines for each selected header */}
+                    <Line
+                      type="monotone"
+                      dataKey="gvalue1"
+                      stroke="#8884d8"
+                      name={selectedAheader1}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="gvalue2"
+                      stroke="#82ca9d"
+                      name={selectedAheader2}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="gvalue3"
+                      stroke="#ff7300"
+                      name={selectedAheader3}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="gvalue4"
+                      stroke="#00bcd4"
+                      name={selectedAheader4}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="gvalue5"
+                      stroke="#f44336"
+                      name={selectedAheader5}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
                 </div>
               </div>
             </div>
-
-
-
-
-
           </div>
-
         )}
-
       </div>
-
     </>
   );
 }

@@ -49,11 +49,23 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
 
   const parseDateHour = (timeStr: string | number | null): string | null => {
     if (!timeStr) return null;
-    const dateObj = new Date(timeStr as string);
+
+    let dateObj: Date;
+
+    if (typeof timeStr === "string" || typeof timeStr === "number") {
+      dateObj = new Date(timeStr);
+    } else {
+      return null;
+    }
+
     if (isNaN(dateObj.getTime())) return null;
-    const date = dateObj.toLocaleDateString("en-GB");
+
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
     const hour = dateObj.getHours().toString().padStart(2, "0");
-    return `${date} ${hour}:00`;
+
+    return `${month}/${day}/${year} ${hour}:00`;
   };
 
   const groupByDateHour = (
@@ -159,7 +171,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
           flexDirection: "column",
           backgroundColor: "#f4f7fa",
           fontFamily: "'Inter', sans-serif",
-          border: "4px solid black", 
+          border: "4px solid black",
           margin: "10px",
           padding: "10px",
         }}
