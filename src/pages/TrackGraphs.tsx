@@ -11,10 +11,15 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ResponsiveContainer,
 } from "recharts";
 import html2canvas from "html2canvas"
 
-
+interface MovementData {
+  prism: string;
+  values: string[]; 
+  times: string[];
+}
 const TrackGraphs: React.FC = () => {
 
   const processSaveRef = useRef<HTMLButtonElement>(null);
@@ -25,15 +30,21 @@ const TrackGraphs: React.FC = () => {
   const [selectedRowTime1, setSelectedRowTime1] = useState<string>("placeholder");
   const [selectedRowTime2, setSelectedRowTime2] = useState<string>("placeholder");
   const [selectedRowTime3, setSelectedRowTime3] = useState<string>("placeholder");
-  const [selectedAheader1, setSelectedAheader1] = useState<string>("placeholder");
-  const [selectedAheader2, setSelectedAheader2] = useState<string>("placeholder");
-  const [selectedAheader3, setSelectedAheader3] = useState<string>("placeholder");
-  const [selectedAheader4, setSelectedAheader4] = useState<string>("placeholder");
-  const [selectedAheader5, setSelectedAheader5] = useState<string>("placeholder");
+
   const [selectedTrack, setSelectedTrack] = useState<string>("placeholder");
   const [selectedTrkColOption, setSelectedTrkColOption] = useState<string>("placeholder");
   const [tracksizeoptions, setTrackSizeOptions] = useState<string>("placeholder");
-  const [aheadersoptions, setAheadersOptions] = useState<string[]>([]);
+
+  const [movementSelectedTrack, setmovementSelectedTrack] = useState<string>("placeholder");
+  const [movementSelectedTrkColOption, setmovementSelectedTrkColOption] = useState<string>("placeholder");
+  const [movementTrackSizeoptions, setmovementTrackSizeOptions] = useState<string>("placeholder");
+
+  const [movementData, setMovementData] = useState<MovementData[]>([]);
+
+  const [combinedData, setCombinedData] = useState<
+    { header: string; value1: number; value2: number; value3: number }[]
+  >([]);
+  
   const [xScale, setXScale] = useState<number>(1.0);
   const [yScale, setYScale] = useState<number>(1.0);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -42,22 +53,6 @@ const TrackGraphs: React.FC = () => {
   const [showGraph, setShowGraph] = useState(false);
   const [timeColumn, setTimeColumn] = useState<string[]>([]);
   const [processedData, setProcessedData] = useState<string[][]>([]);
-  const [combinedData, setCombinedData] = useState<
-    { header: string; value1: number; value2: number; value3: number }[]
-  >([]);
-  // const [combinedData2, setCombinedData2] = useState<
-  //   { header: string; value1: number; value2: number; value3: number }[]
-  // >([]);
-  const [gdata, setGData] = useState<
-    {
-      time: string;
-      gvalue1: number;
-      gvalue2: number;
-      gvalue3: number;
-      gvalue4: number;
-      gvalue5: number;
-    }[]
-  >([]);
 
 
   useEffect(() => {
@@ -251,48 +246,61 @@ const TrackGraphs: React.FC = () => {
     setCombinedData(combinedData as { header: string; value1: number; value2: number; value3: number }[]);
   };
 
+  // const movementColors = [
+  //   "#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#d0ed57", "#a4de6c", "#8dd1e1",
+  // ];
+
   const handleMovementSelects = () => {
     if (!processedData.length || !headers.length) return;
-
-    const timeIndex = headers.indexOf("Time");
-    const col1Index = headers.indexOf(selectedAheader1);
-    const col2Index = headers.indexOf(selectedAheader2);
-    const col3Index = headers.indexOf(selectedAheader3);
-    const col4Index = headers.indexOf(selectedAheader4);
-    const col5Index = headers.indexOf(selectedAheader5);
-
-    const gData: any[] = [];
-
-    processedData.forEach((row) => {
-      const time = row[timeIndex];
-      const value1 = parseFloat(row[col1Index]);
-      const value2 = parseFloat(row[col2Index]);
-      const value3 = parseFloat(row[col3Index]);
-      const value4 = parseFloat(row[col4Index]);
-      const value5 = parseFloat(row[col5Index]);
-
-
-      if (
-        !isNaN(value1) &&
-        !isNaN(value2) &&
-        !isNaN(value3) &&
-        !isNaN(value4) &&
-        !isNaN(value5)
-      ) {
-        gData.push({
-          time,    // x-axis
-          gvalue1: value1,
-          gvalue2: value2,
-          gvalue3: value3,
-          gvalue4: value4,
-          gvalue5: value5,
-        });
+  
+    const track = movementSelectedTrack;
+    const columnType = movementSelectedTrkColOption;
+    const trackLimit = parseInt(movementTrackSizeoptions, 10);
+  
+    if (!track || !columnType || isNaN(trackLimit)) return;
+  
+    const trackBase = track.slice(0, track.lastIndexOf("-"));
+    const trackSuffix = track.slice(-1);
+  
+    // Get all unique time points
+    const allTimes = Array.from(new Set(
+      processedData.slice(1).map(row => row[0]?.toString().trim()).filter(Boolean)
+    )).sort();
+  
+    const newMovementData: MovementData[] = [];
+  
+    for (let prismNum = 1; prismNum <= trackLimit; prismNum++) {
+      const prism = prismNum.toString().padStart(2, '0') + trackSuffix;
+      const searchPattern = columnType.includes("Difference")
+        ? `${trackBase}-${prismNum.toString().padStart(2, '0')}A,${trackBase}-${prismNum.toString().padStart(2, '0')}B - ${columnType}`
+        : `${trackBase}-${prismNum.toString().padStart(2, '0')}${trackSuffix} - ${columnType}`;
+  
+      const columnIndex = headers.findIndex(h => h === searchPattern);
+      if (columnIndex === -1) continue;
+  
+      const timeValueMap = new Map<string, number>();
+      for (let i = 1; i < processedData.length; i++) {
+        const time = processedData[i][0]?.toString().trim();
+        const value = processedData[i][columnIndex];
+        if (time && value !== undefined && value !== "" && !isNaN(Number(value))) {
+          timeValueMap.set(time, Number(value));
+        }
       }
-    });
-
-    setGData(gData as { time: string; gvalue1: number; gvalue2: number; gvalue3: number; gvalue4: number; gvalue5: number }[]);
+  
+      newMovementData.push({
+        prism,
+        values: allTimes.map(time => timeValueMap.get(time)?.toString() ?? "No value"), //dont
+        times: [...allTimes]
+      });
+    }
+  
+    newMovementData.sort((a, b) => a.prism.localeCompare(b.prism));
+    setMovementData(newMovementData);
+    console.log("Movement Data:", newMovementData);
+    // in prism
   };
-
+  
+  
 
   useEffect(() => {
     if (processedData.length > 1) {
@@ -301,14 +309,6 @@ const TrackGraphs: React.FC = () => {
     }
   }, [processedData]);
 
-  useEffect(() => {
-    const headers = processedData[0] || [];
-    const aHeaders = headers.filter((header) =>
-      typeof header === "string" &&
-      /LBN-TP-[A-Za-z0-9]+-\d{2}A\s-\s(?:Easting|Height|Northing)/.test(header)
-    );
-    setAheadersOptions(aHeaders as string[]);
-  }, [processedData]);
 
 
   const handleDownloadGraph = () => {
@@ -367,7 +367,7 @@ const TrackGraphs: React.FC = () => {
 
 
 const selectedTrackOptions = generateTrackOptions(headers);
-console.log(selectedTrackOptions);
+
 // selectedtrackcol options Easting, Northing, Height,Easting Difference, Northing Difference, Height Difference
     const selectedTrkColOptions = [
         "Easting",
@@ -377,8 +377,15 @@ console.log(selectedTrackOptions);
         "Northing Difference",
         "Height Difference",
         ];
-// selectedtrack size options 1,2,3,4,5 to 32
+
     const trackSizeOptions = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32"];
+
+    const extendedColors = [
+      '#ff7300', '#82ca9d', '#8884d8', 
+      '#ffc658', '#a4de6c', '#8dd1e1',
+      '#ff8042', '#d0ed57', '#ffbb28',
+      '#00c49f', '#ff6b6b', '#a28dff'
+    ];
   return (
     <>
       <HeaNavLogo />
@@ -901,18 +908,11 @@ console.log(selectedTrackOptions);
                   marginBottom: "1rem",
                 }}
               >
-                <label
-                  style={{
-                    fontWeight: "600",
-                    color: "#1f2937",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Select First Header:
-                </label>
+
+
                 <select
-                  value={selectedAheader1}
-                  onChange={(e) => setSelectedAheader1(e.target.value)}
+                  value={movementSelectedTrack}
+                  onChange={(e) => setmovementSelectedTrack(e.target.value)}
                   style={{
                     border: "1px solid #d1d5db",
                     borderRadius: "0.375rem",
@@ -928,127 +928,18 @@ console.log(selectedTrackOptions);
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select First A Header
+                    Select a Track
                   </option>
-                  {aheadersoptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    fontWeight: "600",
-                    color: "#1f2937",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Select Second A Header:
-                </label>
-                <select
-                  value={selectedAheader2}
-                  onChange={(e) => setSelectedAheader2(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select a header
-                  </option>
-                  {aheadersoptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    fontWeight: "600",
-                    color: "#1f2937",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Select Third A Header:
-                </label>
-                <select
-                  value={selectedAheader3}
-                  onChange={(e) => setSelectedAheader3(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select a header
-                  </option>
-                  {aheadersoptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
+                    {selectedTrackOptions.map((header, index) => (
+                        <option key={index} value={header}>
+                        {header}
+                        </option>
+                    ))}
 
                 </select>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    fontWeight: "600",
-                    color: "#1f2937",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Select Fourth A Header:
-                </label>
                 <select
-                  value={selectedAheader4}
-                  onChange={(e) => setSelectedAheader4(e.target.value)}
+                  value={movementSelectedTrkColOption}
+                  onChange={(e) => setmovementSelectedTrkColOption(e.target.value)}
                   style={{
                     border: "1px solid #d1d5db",
                     borderRadius: "0.375rem",
@@ -1064,37 +955,18 @@ console.log(selectedTrackOptions);
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select a header
+                    Select Easting/Northing/Height
                   </option>
-                  {aheadersoptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
+                    {selectedTrkColOptions.map((header, index) => (
+                        <option key={index} value={header}>
+                        {header}
+                        </option>
+                    ))}
 
                 </select>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    fontWeight: "600",
-                    color: "#1f2937",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Select Fifth A Header:
-                </label>
                 <select
-                  value={selectedAheader5}
-                  onChange={(e) => setSelectedAheader5(e.target.value)}
+                  value={movementTrackSizeoptions}
+                  onChange={(e) => setmovementTrackSizeOptions(e.target.value)}
                   style={{
                     border: "1px solid #d1d5db",
                     borderRadius: "0.375rem",
@@ -1110,14 +982,13 @@ console.log(selectedTrackOptions);
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select a header
+                    Select Track Prism Size
                   </option>
-                  {aheadersoptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
+                    {trackSizeOptions.map((header, index) => (
+                        <option key={index} value={header}>
+                        {header}
+                        </option>
+                    ))}
 
                 </select>
               </div>
@@ -1184,73 +1055,66 @@ console.log(selectedTrackOptions);
               </button>
             </div>
             <div id="chartContainer" style={{ marginTop: "2rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-
-                {/* Second Chart */}
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    Movements Graph
-                  </h3>
-
-                  <LineChart
-                    width={800 * xScale}
-                    height={500}
-                    style={{ maxHeight: "800px" }}
-                    data={gdata}  
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="time"
-                      type="category"
-                      scale="point"
-                    />
-                    <YAxis
-                      domain={[-0.5 / yScale, 0.5 / yScale]}
-                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                    />
-                    <Tooltip />
-                    <Legend />
-
-                    {/* Lines for each selected header */}
-                    <Line
-                      type="monotone"
-                      dataKey="gvalue1"
-                      stroke="#8884d8"
-                      name={selectedAheader1}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="gvalue2"
-                      stroke="#82ca9d"
-                      name={selectedAheader2}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="gvalue3"
-                      stroke="#ff7300"
-                      name={selectedAheader3}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="gvalue4"
-                      stroke="#00bcd4"
-                      name={selectedAheader4}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="gvalue5"
-                      stroke="#f44336"
-                      name={selectedAheader5}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </div>
-              </div>
-            </div>
+  <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    {/* Movements Graph */}
+    <div>
+      <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+        Movements Graph
+      </h3>
+      <div style={{ height: 400 }}>
+        {movementData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={movementData[0].times.map((time, i) => ({
+                time,
+                ...Object.fromEntries(
+                  movementData.map(data => [
+                    data.prism, 
+                    i < data.values.length ? data.values[i] : null
+                  ])
+                )
+              }))}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="time" 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+               domain={[-0.5 / yScale, 0.5 / yScale]}
+               ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+              />
+              <Tooltip />
+              <Legend />
+              {movementData.map((data, index) => (
+                <Line
+                  key={data.prism}
+                  type="monotone"
+                  dataKey={data.prism}
+                  stroke={extendedColors[index % extendedColors.length]}
+     
+                  activeDot={{ r: 8}}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div style={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px dashed #ccc"
+          }}>
+            Select track,easting northing etc prism size
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         )}
       </div>
