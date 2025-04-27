@@ -15,7 +15,7 @@ import {
 import html2canvas from "html2canvas"
 
 
-const TrackGraphs: React.FC = () => {
+const NewTrackGraphs: React.FC = () => {
 
   const processSaveRef = useRef<HTMLButtonElement>(null);
   const handleMergeClick = () => {
@@ -1258,4 +1258,4 @@ console.log(selectedTrackOptions);
   );
 }
 
-export default TrackGraphs;
+export default NewTrackGraphs;
