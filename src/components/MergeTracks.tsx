@@ -18,12 +18,12 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
       reader.onload = (e: ProgressEvent<FileReader>) => {
         const result = e.target?.result;
         if (!result) return reject("File read error: No result");
-
+  
         const data = new Uint8Array(result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array", cellDates: true });
         const firstSheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[firstSheetName];
-
+  
         const json: (string | number | null)[][] = [];
         const range = XLSX.utils.decode_range(sheet["!ref"]!);
         for (let row = range.s.r; row <= range.e.r; row++) {
@@ -35,7 +35,8 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
               rowData.push(null);
               continue;
             }
-            const value = cell.w !== undefined ? cell.w : cell.v;
+            // Preserve numbers as numbers, everything else as before
+            const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
             rowData.push(value);
           }
           json.push(rowData);
@@ -118,9 +119,9 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
       const allKeys = Array.from(
         new Set([...groupedA.keys(), ...groupedB.keys()])
       ).sort();
-
+  
       const finalData: (string | number | null)[][] = [];
-
+  
       const headerRow = ["Time"];
       const maxColumns = Math.max(headerA.length, headerB.length);
       for (let i = 1; i < maxColumns; i++) {
@@ -128,7 +129,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
         if (i < headerB.length) headerRow.push(`${headerB[i]}`);
       }
       finalData.push(headerRow);
-
+  
       for (const key of allKeys) {
         const row: (string | number | null)[] = [key];
         const firstA = groupedA.get(key)
@@ -137,13 +138,21 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
         const firstB = groupedB.get(key)
           ? pickFirstValue(groupedB.get(key)!)
           : Array(headerB.length).fill(null);
+        
+        // Ensure numeric strings are converted to numbers
         for (let i = 1; i < maxColumns; i++) {
-          if (i < firstA.length) row.push(firstA[i]);
-          if (i < firstB.length) row.push(firstB[i]);
+          if (i < firstA.length) {
+            const val = firstA[i];
+            row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+          }
+          if (i < firstB.length) {
+            const val = firstB[i];
+            row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+          }
         }
         finalData.push(row);
       }
-
+  
       const ws = XLSX.utils.aoa_to_sheet(finalData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Merged");
@@ -154,12 +163,8 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
       toast.error("Error merging files");
       console.error(err);
     }
-
+  
     onMergeSave();
-    //  catch (err) {
-    //   toast.error("Error merging files");
-    //   console.error(err);
-    //  }
   };
 
   return (
