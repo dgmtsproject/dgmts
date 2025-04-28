@@ -11,7 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
 } from "recharts";
 import html2canvas from "html2canvas"
 
@@ -47,6 +46,8 @@ const TrackGraphs: React.FC = () => {
   
   const [xScale, setXScale] = useState<number>(1.0);
   const [yScale, setYScale] = useState<number>(1.0);
+  const [primsxScale, setprismxScale] = useState<number>(1.0);
+  const [prismyScale, setprismYScale] = useState<number>(1.0);
   const [headers, setHeaders] = useState<string[]>([]);
 
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
@@ -690,7 +691,7 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select Track Prism Size
+                    Select Track Prism No.
                   </option>
                     {trackSizeOptions.map((header, index) => (
                         <option key={index} value={header}>
@@ -982,7 +983,7 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select Track Prism Size
+                    Select Track Prism No.
                   </option>
                     {trackSizeOptions.map((header, index) => (
                         <option key={index} value={header}>
@@ -992,6 +993,79 @@ const selectedTrackOptions = generateTrackOptions(headers);
 
                 </select>
               </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "1rem",
+                marginTop: "1rem",
+              }}
+            >
+              <label
+                style={{
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  fontSize: "0.9rem",
+                }}
+              >
+                X Scale:
+              </label>
+              <input
+                type="number"
+                value={primsxScale}
+                onChange={(e) => setprismxScale(Number(e.target.value))}
+                style={{
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.375rem",
+                  padding: "0.5rem",
+                  fontSize: "0.875rem",
+                  color: "#374151",
+                  backgroundColor: "#f9fafb",
+                  outline: "none",
+                  width: "100px",
+                  transition: "border-color 0.2s ease",
+                }}
+                min="0.1"
+                max="1.4"
+                step="0.1"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+              />
+              <label
+                style={{
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  fontSize: "0.9rem",
+                  marginLeft: "1rem",
+                }}
+              >
+                Y Scale:
+              </label>
+              <input
+                type="number"
+                value={prismyScale}
+                onChange={(e) => {
+                  const val = Math.max(0.1, Number(e.target.value));
+                  setprismYScale(val);
+                }}
+                style={{
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.375rem",
+                  padding: "0.5rem",
+                  fontSize: "0.875rem",
+                  color: "#374151",
+                  backgroundColor: "#f9fafb",
+                  outline: "none",
+                  width: "100px",
+                  transition: "border-color 0.2s ease",
+                }}
+                min="0.2"
+                step="0.1"
+                max="5.0"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+              />
             </div>
 
             <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
@@ -1054,6 +1128,7 @@ const selectedTrackOptions = generateTrackOptions(headers);
                 Download Graph as Image
               </button>
             </div>
+
             <div id="chartContainer" style={{ marginTop: "2rem" }}>
   <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
     {/* Movements Graph */}
@@ -1063,8 +1138,9 @@ const selectedTrackOptions = generateTrackOptions(headers);
       </h3>
       <div style={{ height: 400 }}>
         {movementData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
             <LineChart
+            width={800 * primsxScale}
+            height={500}
               data={movementData[0].times.map((time, i) => ({
                 time,
                 ...Object.fromEntries(
@@ -1082,8 +1158,8 @@ const selectedTrackOptions = generateTrackOptions(headers);
                 tick={{ fontSize: 12 }}
               />
               <YAxis 
-               domain={[-0.5 / yScale, 0.5 / yScale]}
-               ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+               domain={[-0.5 / prismyScale, 0.5 / prismyScale]}
+               ticks={generateTicks(-0.5 / prismyScale, 0.5 / prismyScale)}
               />
               <Tooltip />
               <Legend />
@@ -1099,7 +1175,8 @@ const selectedTrackOptions = generateTrackOptions(headers);
                 />
               ))}
             </LineChart>
-          </ResponsiveContainer>
+
+            
         ) : (
           <div style={{
             height: "100%",
@@ -1108,16 +1185,21 @@ const selectedTrackOptions = generateTrackOptions(headers);
             justifyContent: "center",
             border: "1px dashed #ccc"
           }}>
-            Select track,easting northing etc prism size
+            Select track,easting northing etc prism number
           </div>
         )}
       </div>
+
     </div>
   </div>
 </div>
+              {/* // empty div for spacing and margin */}
+              <div style={{ height: "200px" }}></div>
           </div>
         )}
+
       </div>
+
     </>
   );
 }
