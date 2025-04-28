@@ -14,6 +14,7 @@ const Navbar: React.FC = () => {
       <Link to="/export-data">Export Data</Link>
       <Link to="/GapRemoval">MergeTracks</Link>
       <Link to="/track-graphs">TrackGraphs</Link>
+      <Link to="/atms-track-graphs"> AMTS Track Graphs</Link>
     </nav>
   );
 };

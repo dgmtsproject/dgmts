@@ -19,6 +19,7 @@ import ProjectsList from "../pages/ProjectsList";
 import AddProjects from "../pages/AddProjects";
 import TrackGraphs from "../pages/TrackGraphs";
 import NewTrackGraphs from "../pages/NewTrackGraphs";
+import AtmsTrackGraphs from "../pages/AtmsTrackGraphs";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -42,7 +43,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/add-projects" element={<AddProjects />} />
       <Route path="/track-graphs" element={<TrackGraphs />} />
       <Route path="/new-track-graphs" element={<NewTrackGraphs />} />
-
+      <Route path="/amts-track-graphs" element={<AtmsTrackGraphs />} />
     </Routes>
   );
 };
