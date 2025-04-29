@@ -268,6 +268,7 @@ const GapRemoval: React.FC = () => {
     setCombinedGraphData(
       combined.filter((item) => item.value1 !== 0 || item.value2 !== 0 || item.value3 !== 0));
   };
+  console.log("Combined Graph Data:", combinedGraphData);
   const generateTicks = (min: number, max: number) => {
     const range = max - min;
     const approxSteps = 10;
@@ -295,6 +296,13 @@ const GapRemoval: React.FC = () => {
   };
 
   // console.log("Headers:", headers);
+  // all headers except difference headers
+  const filteredHeaders = headers.filter(
+    (header) =>
+      typeof header === "string" &&
+      !header.toLowerCase().includes("difference") &&
+      !header.toLowerCase().includes("time")
+  );
 
   return (
     <>
@@ -418,16 +426,17 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
-                {headers
-                  .filter(
-                    (header) =>
-                      typeof header === "string" &&
-                      /^(?:[^-]*-){3}[^-]*[A](?= - )/i.test(header))
-                  .map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
+                {filteredHeaders.map((header, index) => (
+                  <option key={index} value={header}>
+                    {header}
+                  </option>
+                ))}
+                   {differenceOptions.map(({ label, value }, index) => (
+                  <option key={index} value={value}>
+                    {label}
+                  </option>
+                ))}
+
               </select>
             </div>
 
@@ -468,17 +477,16 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
-                {headers
-                  .filter(
-                    (header) =>
-                      typeof header === "string" &&
-                      /^(?:[^-]*-){3}[^-]*[B](?= - )/i.test(header)
-                  )
-                  .map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
+                {filteredHeaders.map((header, index) => (
+                  <option key={index} value={header}>
+                    {header}
+                  </option>
+                ))}
+                   {differenceOptions.map(({ label, value }, index) => (
+                  <option key={index} value={value}>
+                    {label}
+                  </option>
+                ))}
 
               </select>
             </div>
@@ -520,6 +528,12 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
+           
+                {filteredHeaders.map((header, index) => (
+                  <option key={index} value={header}>
+                    {header}
+                  </option>
+                ))}
                 {differenceOptions.map(({ label, value }, index) => (
                   <option key={index} value={value}>
                     {label}

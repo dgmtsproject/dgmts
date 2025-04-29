@@ -16,8 +16,9 @@ import html2canvas from "html2canvas"
 
 interface MovementData {
   prism: string;
-  values: string[]; 
+  values: string[];
   times: string[];
+  fullColumnName: string; // Add the full column name to the interface
 }
 const TrackGraphs: React.FC = () => {
 
@@ -43,7 +44,7 @@ const TrackGraphs: React.FC = () => {
   const [combinedData, setCombinedData] = useState<
     { header: string; value1: number; value2: number; value3: number }[]
   >([]);
-  
+
   const [xScale, setXScale] = useState<number>(1.0);
   const [yScale, setYScale] = useState<number>(1.0);
   const [primsxScale, setprismxScale] = useState<number>(1.0);
@@ -54,7 +55,7 @@ const TrackGraphs: React.FC = () => {
   const [showGraph, setShowGraph] = useState(false);
   const [timeColumn, setTimeColumn] = useState<string[]>([]);
   const [processedData, setProcessedData] = useState<string[][]>([]);
-
+  const [yDomain, setYDomain] = useState([-0.5, 0.5]);
 
   useEffect(() => {
     const storedHeaders = localStorage.getItem("processedHeaders");
@@ -69,36 +70,36 @@ const TrackGraphs: React.FC = () => {
   const handleProcess = () => {
     const fileData = localStorage.getItem("mergedExcelFile");
     if (!fileData) return;
-  
+
     const byteCharacters = atob(fileData);
     const byteNumbers = new Array(byteCharacters.length)
       .fill(null)
       .map((_, i) => byteCharacters.charCodeAt(i));
     const byteArray = new Uint8Array(byteNumbers);
-  
+
     const workbook = XLSX.read(byteArray, { type: "array" });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as (
       | string
     )[][];
-  
+
     if (jsonData.length === 0) return;
-  
+
     const headers = jsonData[0];
     const result: (string | number)[][] = [];
-  
+
     const timeData: string[] = [];
-  
+
     for (let i = 1; i < jsonData.length; i++) {
       const row = jsonData[i];
       const newRow: (string | number)[] = [row[0]]; // keep the first column (timestamp)
       timeData.push(row[0]?.toString() || "");
-  
+
       for (let j = 1; j < headers.length; j += 2) {
         const val1 = row[j];
         const val2 = row[j + 1];
         newRow.push(val1 ?? "", val2 ?? "");
-  
+
         if (
           val1 !== undefined &&
           val2 !== undefined &&
@@ -113,13 +114,13 @@ const TrackGraphs: React.FC = () => {
       }
       result.push(newRow);
     }
-  
+
     const newHeader: (string | number)[] = [headers[0]]; // keep the first column (timestamp)
     for (let j = 1; j < headers.length; j += 2) {
       const h1 = headers[j] ?? `Col${j}`;
       const h2 = headers[j + 1] ?? `Col${j + 1}`;
       let label = "Difference"; // default label
-  
+
       if (typeof h1 === "string" && typeof h2 === "string") {
         if (
           h1.toLowerCase().includes("easting") ||
@@ -140,9 +141,9 @@ const TrackGraphs: React.FC = () => {
       }
       newHeader.push(h1, h2, label);
     }
-  
+
     result.unshift(newHeader);
-  
+
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(result);
     for (let c = 3; c < newHeader.length; c += 3) {
       for (let r = 0; r < result.length; r++) {
@@ -153,20 +154,20 @@ const TrackGraphs: React.FC = () => {
         }
       }
     }
-  
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Processed");
-  
+
     const wbout = XLSX.write(wb, {
       bookType: "xlsx",
       type: "array",
       cellStyles: true,
     });
-  
+
     const blob = new Blob([wbout], { type: "application/octet-stream" });
     setProcessedBlob(blob);
     setShowGraph(true);
-  
+
     localStorage.setItem("processedHeaders", JSON.stringify(newHeader));
     localStorage.setItem("processedData", JSON.stringify(result));
     setHeaders(newHeader as string[]);
@@ -181,24 +182,24 @@ const TrackGraphs: React.FC = () => {
 
   const handleTimeSelects = () => {
     if (!processedData.length || !headers.length) return;
-  
+
     const track = selectedTrack; // like "LBN-TP-TK3-A"
     const columnType = selectedTrkColOption; // like "Easting" or "Easting Difference"
     const trackLimit = parseInt(tracksizeoptions, 10); // like 14
-  
+
     if (!track || !columnType || isNaN(trackLimit)) {
       console.error("Missing track/column/track size options.");
       return;
     }
-  
+
     const trackBase = track.slice(0, track.lastIndexOf("-")); // "LBN-TP-TK3"
     const trackSuffix = track.slice(-1); // "A" or "B"
-  
+
     const isDifferenceType = columnType.includes("Difference");
-  
+
     const expectedPrismPatterns = Array.from({ length: trackLimit }, (_, idx) => {
       const prismNumber = (idx + 1).toString().padStart(2, "0"); // "01", "02", etc.
-  
+
       if (isDifferenceType) {
         // For "Easting Difference", "Northing Difference", "Height Difference"
         return `${trackBase}-${prismNumber}A,${trackBase}-${prismNumber}B - ${columnType}`;
@@ -207,18 +208,18 @@ const TrackGraphs: React.FC = () => {
         return `${trackBase}-${prismNumber}${trackSuffix} - ${columnType}`;
       }
     });
-  
+
     const matchingIndexes = headers
       .map((h, i) => ({ header: h, index: i }))
       .filter(({ header }) => expectedPrismPatterns.includes(header));
-  
+
     const findRow = (timestamp: string) =>
       processedData.find(row => row[0]?.toString().trim() === timestamp);
-  
+
     const buildGraphData = (timestamp: string) => {
       const row = findRow(timestamp);
       if (!row) return [];
-  
+
       return matchingIndexes.map(({ index, header }) => {
         const cellValue = row[index];
         return {
@@ -228,22 +229,22 @@ const TrackGraphs: React.FC = () => {
         };
       });
     };
-  
+
     const data1 = buildGraphData(selectedRowTime1);
     const data2 = buildGraphData(selectedRowTime2);
     const data3 = buildGraphData(selectedRowTime3);
-  
+
     let combinedData = matchingIndexes.map(({ header }, idx) => ({
       header,
       value1: data1[idx]?.value,
       value2: data2[idx]?.value,
       value3: data3[idx]?.value,
     }));
-  
+
     combinedData = combinedData.filter(item => {
       return !(item.value1 === undefined && item.value2 === undefined && item.value3 === undefined);
     });
-  
+
     setCombinedData(combinedData as { header: string; value1: number; value2: number; value3: number }[]);
   };
 
@@ -253,32 +254,34 @@ const TrackGraphs: React.FC = () => {
 
   const handleMovementSelects = () => {
     if (!processedData.length || !headers.length) return;
-  
+
     const track = movementSelectedTrack;
     const columnType = movementSelectedTrkColOption;
     const trackLimit = parseInt(movementTrackSizeoptions, 10);
-  
+
     if (!track || !columnType || isNaN(trackLimit)) return;
-  
+
     const trackBase = track.slice(0, track.lastIndexOf("-"));
     const trackSuffix = track.slice(-1);
-  
+
     // Get all unique time points
     const allTimes = Array.from(new Set(
       processedData.slice(1).map(row => row[0]?.toString().trim()).filter(Boolean)
     )).sort();
-  
+
     const newMovementData: MovementData[] = [];
-  
+
     for (let prismNum = 1; prismNum <= trackLimit; prismNum++) {
       const prism = prismNum.toString().padStart(2, '0') + trackSuffix;
       const searchPattern = columnType.includes("Difference")
         ? `${trackBase}-${prismNum.toString().padStart(2, '0')}A,${trackBase}-${prismNum.toString().padStart(2, '0')}B - ${columnType}`
         : `${trackBase}-${prismNum.toString().padStart(2, '0')}${trackSuffix} - ${columnType}`;
-  
+
       const columnIndex = headers.findIndex(h => h === searchPattern);
       if (columnIndex === -1) continue;
-  
+
+      const fullColumnName = searchPattern; // This is the full column name like "LBN-TK3-01A - Height"
+
       const timeValueMap = new Map<string, number>();
       for (let i = 1; i < processedData.length; i++) {
         const time = processedData[i][0]?.toString().trim();
@@ -287,21 +290,21 @@ const TrackGraphs: React.FC = () => {
           timeValueMap.set(time, Number(value));
         }
       }
-  
+
       newMovementData.push({
         prism,
-        values: allTimes.map(time => timeValueMap.get(time)?.toString() ?? "No value"), //dont
+        fullColumnName, // Add the full column name to the data
+        values: allTimes.map(time => timeValueMap.get(time)?.toString() ?? "No value"),
         times: [...allTimes]
       });
     }
-  
+
     newMovementData.sort((a, b) => a.prism.localeCompare(b.prism));
     setMovementData(newMovementData);
     console.log("Movement Data:", newMovementData);
-    // in prism
   };
-  
-  
+
+
 
   useEffect(() => {
     if (processedData.length > 1) {
@@ -337,6 +340,10 @@ const TrackGraphs: React.FC = () => {
     }
   };
   const generateTicks = (min: number, max: number) => {
+    if (typeof min !== 'number' || typeof max !== 'number' || isNaN(min) || isNaN(max)) {
+      return [];
+    }
+
     const range = max - min;
     const approxSteps = 10;
     const step = range / approxSteps;
@@ -352,13 +359,13 @@ const TrackGraphs: React.FC = () => {
   }
 
   const generateTrackOptions = (headers: GenerateTrackOptionsProps['headers']): string[] => {
-    const trackOptions = new Set<string>(); 
+    const trackOptions = new Set<string>();
     headers.forEach(header => {
-    
+
       const match = header.match(/LBN-TP-(TK3|TK2)-/);
 
       if (match) {
-        const trackBase = match[0]; 
+        const trackBase = match[0];
         trackOptions.add(`${trackBase}A`);
         trackOptions.add(`${trackBase}B`);
       }
@@ -366,27 +373,52 @@ const TrackGraphs: React.FC = () => {
     return Array.from(trackOptions);
   };
 
+  useEffect(() => {
+    if (processedData && processedData.length > 0) {
+      let allValues: number[] = [];
 
-const selectedTrackOptions = generateTrackOptions(headers);
+      processedData.forEach(row => {
+        const values = row.slice(1); // Skip first column (time)
+        values.forEach(val => {
+          const num = parseFloat(val);
+          if (!isNaN(num)) {
+            allValues.push(num);
+          }
+        });
+      });
 
-// selectedtrackcol options Easting, Northing, Height,Easting Difference, Northing Difference, Height Difference
-    const selectedTrkColOptions = [
-        "Easting",
-        "Northing",
-        "Height",
-        "Easting Difference",
-        "Northing Difference",
-        "Height Difference",
-        ];
+      if (allValues.length > 0) {
+        const min = Math.min(...allValues);
+        const max = Math.max(...allValues);
+        setYDomain([min, max]);
+      }
+    }
 
-    const trackSizeOptions = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32"];
+  }, [processedData]);
+  console.log(yDomain);
 
-    const extendedColors = [
-      '#ff7300', '#82ca9d', '#8884d8', 
-      '#ffc658', '#a4de6c', '#8dd1e1',
-      '#ff8042', '#d0ed57', '#ffbb28',
-      '#00c49f', '#ff6b6b', '#a28dff'
-    ];
+
+  const selectedTrackOptions = generateTrackOptions(headers);
+
+  // selectedtrackcol options Easting, Northing, Height,Easting Difference, Northing Difference, Height Difference
+  const selectedTrkColOptions = [
+    "Easting",
+    "Northing",
+    "Height",
+    "Easting Difference",
+    "Northing Difference",
+    "Height Difference",
+  ];
+
+  // map numbers from 1 to 33 to strings "1" to "33"
+  const trackSizeOptions = Array.from({ length: 33 }, (_, i) => (i + 1).toString());
+
+  const extendedColors = [
+    '#ff7300', '#82ca9d', '#8884d8',
+    '#ffc658', '#a4de6c', '#8dd1e1',
+    '#ff8042', '#d0ed57', '#ffbb28',
+    '#00c49f', '#ff6b6b', '#a28dff'
+  ];
   return (
     <>
       <HeaNavLogo />
@@ -639,11 +671,11 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   <option value="placeholder" disabled>
                     Select a Track
                   </option>
-                    {selectedTrackOptions.map((header, index) => (
-                        <option key={index} value={header}>
-                        {header}
-                        </option>
-                    ))}
+                  {selectedTrackOptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
                 </select>
                 <select
@@ -666,11 +698,11 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   <option value="placeholder" disabled>
                     Select Easting/Northing/Height
                   </option>
-                    {selectedTrkColOptions.map((header, index) => (
-                        <option key={index} value={header}>
-                        {header}
-                        </option>
-                    ))}
+                  {selectedTrkColOptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
                 </select>
                 <select
@@ -693,149 +725,149 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   <option value="placeholder" disabled>
                     Select Track Prism No.
                   </option>
-                    {trackSizeOptions.map((header, index) => (
-                        <option key={index} value={header}>
-                        {header}
-                        </option>
-                    ))}
+                  {trackSizeOptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
                 </select>
               </div>
               <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginTop: "1rem",
-              }}
-            >
-              <label
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginTop: "1rem",
                 }}
               >
-                X Scale:
-              </label>
-              <input
-                type="number"
-                value={xScale}
-                onChange={(e) => setXScale(Number(e.target.value))}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.1"
-                max="1.4"
-                step="0.1"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                  marginLeft: "1rem",
-                }}
-              >
-                Y Scale:
-              </label>
-              <input
-                type="number"
-                value={yScale}
-                onChange={(e) => {
-                  const val = Math.max(0.1, Number(e.target.value));
-                  setYScale(val);
-                }}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.2"
-                step="0.1"
-                max="5.0"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-            </div>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  X Scale:
+                </label>
+                <input
+                  type="number"
+                  value={xScale}
+                  onChange={(e) => setXScale(Number(e.target.value))}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    width: "100px",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  min="0.1"
+                  max="1.4"
+                  step="0.1"
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                    marginLeft: "1rem",
+                  }}
+                >
+                  Y Scale:
+                </label>
+                <input
+                  type="number"
+                  value={yScale}
+                  onChange={(e) => {
+                    const val = Math.max(0.1, Number(e.target.value));
+                    setYScale(val);
+                  }}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    width: "100px",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  min="0.2"
+                  step="0.1"
+                  max="5.0"
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+              </div>
               <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-              <button
-                onClick={handleTimeSelects}
-                style={{
-                  backgroundColor: "#2563eb",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#2563eb")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                Generate Prism Graph
-              </button>
-              <button
-                onClick={handleDownloadPrismGraph}
-                style={{
-                  backgroundColor: "#7c3aed",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#6d28d9")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#7c3aed")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                Download Prism Graph
-              </button>
+                <button
+                  onClick={handleTimeSelects}
+                  style={{
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.375rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease, transform 0.1s ease",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#2563eb")
+                  }
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.98)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  Generate Prism Graph
+                </button>
+                <button
+                  onClick={handleDownloadPrismGraph}
+                  style={{
+                    backgroundColor: "#7c3aed",
+                    color: "#ffffff",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.375rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease, transform 0.1s ease",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#6d28d9")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#7c3aed")
+                  }
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.98)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  Download Prism Graph
+                </button>
 
               </div>
-                              {/* First Chart */}
-                              <div id="prismchartContainer" style={{ marginTop: "2rem" }}>
-                              <div>
+              {/* First Chart */}
+              <div id="prismchartContainer" style={{ marginTop: "2rem" }}>
+                <div>
                   <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                     Prisms Graph
                   </h3>
@@ -855,8 +887,12 @@ const selectedTrackOptions = generateTrackOptions(headers);
 
                     />
                     <YAxis
-                      domain={[-0.5 / yScale, 0.5 / yScale]}
-                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+                      domain={[-0.5, 0.5]}
+                      ticks={
+                        yDomain.length === 2
+                          ? generateTicks(yDomain[0] * (1 / yScale), yDomain[1] * (1 / yScale))
+                          : []
+                      }
                     />
                     <Tooltip />
                     <Legend />
@@ -890,7 +926,7 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   </LineChart>
 
                 </div>
-                </div>
+              </div>
               <h2
                 style={{
                   fontWeight: "700",
@@ -931,11 +967,11 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   <option value="placeholder" disabled>
                     Select a Track
                   </option>
-                    {selectedTrackOptions.map((header, index) => (
-                        <option key={index} value={header}>
-                        {header}
-                        </option>
-                    ))}
+                  {selectedTrackOptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
                 </select>
                 <select
@@ -958,11 +994,11 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   <option value="placeholder" disabled>
                     Select Easting/Northing/Height
                   </option>
-                    {selectedTrkColOptions.map((header, index) => (
-                        <option key={index} value={header}>
-                        {header}
-                        </option>
-                    ))}
+                  {selectedTrkColOptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
                 </select>
                 <select
@@ -985,11 +1021,11 @@ const selectedTrackOptions = generateTrackOptions(headers);
                   <option value="placeholder" disabled>
                     Select Track Prism No.
                   </option>
-                    {trackSizeOptions.map((header, index) => (
-                        <option key={index} value={header}>
-                        {header}
-                        </option>
-                    ))}
+                  {trackSizeOptions.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
 
                 </select>
               </div>
@@ -1130,71 +1166,76 @@ const selectedTrackOptions = generateTrackOptions(headers);
             </div>
 
             <div id="chartContainer" style={{ marginTop: "2rem" }}>
-  <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-    {/* Movements Graph */}
-    <div>
-      <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-        Movements Graph
-      </h3>
-      <div style={{ height: 400 }}>
-        {movementData.length > 0 ? (
-            <LineChart
-            width={800 * primsxScale}
-            height={500}
-              data={movementData[0].times.map((time, i) => ({
-                time,
-                ...Object.fromEntries(
-                  movementData.map(data => [
-                    data.prism, 
-                    i < data.values.length ? data.values[i] : null
-                  ])
-                )
-              }))}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="time" 
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis 
-               domain={[-0.5 / prismyScale, 0.5 / prismyScale]}
-               ticks={generateTicks(-0.5 / prismyScale, 0.5 / prismyScale)}
-              />
-              <Tooltip />
-              <Legend />
-              {movementData.map((data, index) => (
-                <Line
-                  key={data.prism}
-                  type="monotone"
-                  dataKey={data.prism}
-                  stroke={extendedColors[index % extendedColors.length]}
-     
-                  activeDot={{ r: 8}}
-                  connectNulls
-                />
-              ))}
-            </LineChart>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                {/* Movements Graph */}
+                <div>
+                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                    Movements Graph
+                  </h3>
+                  <div style={{ height: 400 }}>
+                    {movementData.length > 0 ? (
+                      <LineChart
+                        width={800 * primsxScale}
+                        height={500}
+                        data={movementData[0].times.map((time, i) => ({
+                          time,
+                          ...Object.fromEntries(
+                            movementData.map(data => [
+                              data.fullColumnName, 
+                              i < data.values.length ? data.values[i] : null
+                            ])
+                          )
+                        }))}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="time"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis
+                          domain={[
+                            yDomain[0] * (1 / prismyScale),
+                            yDomain[1] * (1 / prismyScale)
+                          ]}
+                          ticks={
+                            yDomain.length === 2
+                              ? generateTicks(yDomain[0] * (1 / prismyScale), yDomain[1] * (1 / prismyScale))
+                              : []
+                          }
+                        />
+                        <Tooltip />
+                        <Legend />
+                        {movementData.map((data, index) => (
+                          <Line
+                            key={data.fullColumnName} 
+                            type="monotone"
+                            dataKey={data.fullColumnName} 
+                            name={data.fullColumnName} 
+                            stroke={extendedColors[index % extendedColors.length]}
+                            activeDot={{ r: 8 }}
+                            connectNulls
+                          />
+                        ))}
+                      </LineChart>
+                    ) : (
+                      <div style={{
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px dashed #ccc"
+                      }}>
+                        Select track, easting/northing/etc and prism number
+                      </div>
+                    )}
+                  </div>
 
-            
-        ) : (
-          <div style={{
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px dashed #ccc"
-          }}>
-            Select track,easting northing etc prism number
-          </div>
-        )}
-      </div>
-
-    </div>
-  </div>
-</div>
-              {/* // empty div for spacing and margin */}
-              <div style={{ height: "200px" }}></div>
+                </div>
+              </div>
+            </div>
+            {/* // empty div for spacing and margin */}
+            <div style={{ height: "200px" }}></div>
           </div>
         )}
 

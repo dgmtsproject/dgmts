@@ -11,11 +11,8 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
-    ReferenceLine,
 } from "recharts";
 import html2canvas from "html2canvas";
-import { Scatter } from "recharts";
-
 
 const AtmsTrackGraphs: React.FC = () => {
     const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
@@ -27,12 +24,16 @@ const AtmsTrackGraphs: React.FC = () => {
     const [xScale, setXScale] = useState<number>(1);
     const [yScale, setYScale] = useState<number>(1);
     const [selectedTrkColOption, setSelectedTrkColOption] = useState<string>("placeholder");
+    // const [yDomain, setYDomain] = useState([-0.5, 0.5]);
     const [combinedGraphData, setCombinedGraphData] = useState<
         Array<{
             x: number;
             amtsValue: number | null;
             prismA: number | null;
             prismB: number | null;
+            amtsColName?: string | null; // Optional property for AMTS column name
+            prismAColName?: string | null; // Optional property for Prism A column name
+            prismBColName?: string | null; // Optional property for Prism B column name
             time: string;
         }>
     >([]);
@@ -227,68 +228,69 @@ const AtmsTrackGraphs: React.FC = () => {
 
     const handleColumnSelect = () => {
         if (!selectedRowTime1 || !selectedTrkColOption) {
-          return;
+            return;
         }
-      
+
         const timeIndex = headers.indexOf("Time");
         const selectedRow = processedData.find(row => row[timeIndex] === selectedRowTime1);
         if (!selectedRow) {
-          return;
+            return;
         }
-      
+
         const isTrack3 = headers.some(h => h.includes('LBN-TP-TK3'));
         const prismSize = isTrack3 ? amts_track3_prism_size : amsts_track2_prism_size;
         const startDistance = isTrack3 ? amts_track3_start_distance : amts_track2_start_distance;
-      
+
         const amtsColPrefix = `LBN-AMTS-1 - ${selectedTrkColOption}`;
         const amtsColIndex = headers.indexOf(amtsColPrefix);
         const amtsValue = selectedRow[amtsColIndex];
-      
+
         const chartData = [];
-      
+
         // Add prism data points
         for (let i = 1; i <= prismSize; i++) {
-          const prismNumber = i.toString().padStart(2, '0');
-          const xPos = startDistance + (i - 1) * amts_offset;
-      
-          const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
-          const prismAIndex = headers.indexOf(prismACol);
-          const prismAValue = prismAIndex !== -1 ? Number(selectedRow[prismAIndex]) : null;
-          
-          const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
-          const prismBIndex = headers.indexOf(prismBCol);
-          const prismBValue = prismBIndex !== -1 ? Number(selectedRow[prismBIndex]) : null;
-      
-          chartData.push({
-            x: xPos,
-            amtsValue: null,
-            prismA: prismAValue,
-            prismB: prismBValue,
-            time: selectedRowTime1
-          });
-        }
-      
-        // Force x-axis to start at -50
-        const xValues = chartData.map(item => item.x);
-        const minX = -50; // Hardcoded minimum
-        const maxX = Math.max(...xValues, 50); // Ensure we show enough right side
-      
-        setCombinedGraphData([
-          // Add AMTS reference point at x=0
-          {
-            x: 0,
-            amtsValue: Number(amtsValue),
-            prismA: null,
-            prismB: null,
-            time: selectedRowTime1
-          },
-          ...chartData.filter(item => item.prismA !== null || item.prismB !== null)
-        ]);
-      
-        // Set fixed domain
-        setXDomain([minX, maxX]);
-      };
+            const prismNumber = i.toString().padStart(2, '0');
+            const xPos = startDistance + (i - 1) * amts_offset;
 
+            const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
+            const prismAIndex = headers.indexOf(prismACol);
+            const prismAValue = prismAIndex !== -1 ? Number(selectedRow[prismAIndex]) : null;
+
+            const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
+            const prismBIndex = headers.indexOf(prismBCol);
+            const prismBValue = prismBIndex !== -1 ? Number(selectedRow[prismBIndex]) : null;
+
+            chartData.push({
+                x: xPos,
+                amtsValue: null,
+                prismA: prismAValue,
+                prismB: prismBValue,
+                prismAColName: prismACol, // Store full column name
+                prismBColName: prismBCol, // Store full column name
+                time: selectedRowTime1
+            });
+        }
+
+        setCombinedGraphData([
+            {
+                x: 0,
+                amtsValue: Number(amtsValue),
+                prismA: null,
+                prismB: null,
+                prismAColName: null,
+                prismBColName: null,
+                amtsColName: amtsColPrefix, // Store AMTS column name
+                time: selectedRowTime1
+            },
+            ...chartData.filter(item => item.prismA !== null || item.prismB !== null)
+        ]);
+
+        const xValues = chartData.map(item => item.x);
+        const minX = 0;
+        const maxX = Math.max(...xValues, 50) + 10;
+        setXDomain([minX, maxX]);
+    };
+    console.log("Combined Graph Data:", combinedGraphData);
 
     const handleDownloadGraph = () => {
         const chartContainer = document.getElementById("chartContainer");
@@ -302,6 +304,70 @@ const AtmsTrackGraphs: React.FC = () => {
             });
         }
     };
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="custom-tooltip" style={{
+                    backgroundColor: '#fff',
+                    padding: '10px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px'
+                }}>
+                    <p className="label">{`Time: ${data.time}`}</p>
+                    {payload.map((entry: any) => {
+                        let name = entry.name;
+                        if (entry.dataKey === 'prismA' && data.prismAColName) {
+                            name = data.prismAColName;
+                        }
+                        if (entry.dataKey === 'prismB' && data.prismBColName) {
+                            name = data.prismBColName;
+                        }
+                        if (entry.dataKey === 'amtsValue' && data.amtsColName) {
+                            name = data.amtsColName;
+                        }
+                        return (
+                            <p key={entry.dataKey} style={{ color: entry.color }}>
+                                {`${name}: ${entry.value}`}
+                            </p>
+                        );
+                    })}
+                </div>
+            );
+        }
+        return null;
+    };
+    const renderLegend = (props: any) => {
+        const { payload } = props;
+        return (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {payload.map((entry: any, index: number) => {
+                    let name = entry.value;
+                    // Find the first data point that has this dataKey
+                    const dataItem = combinedGraphData.find((item: any) =>
+                        (entry.dataKey === 'prismA' && item.prismAColName) ||
+                        (entry.dataKey === 'prismB' && item.prismBColName) ||
+                        (entry.dataKey === 'amtsValue' && item.amtsColName)
+                    );
+
+                    if (dataItem) {
+                        if (entry.dataKey === 'prismA') name = dataItem.prismAColName;
+                        if (entry.dataKey === 'prismB') name = dataItem.prismBColName;
+                        if (entry.dataKey === 'amtsValue') name = dataItem.amtsColName;
+                    }
+
+                    return (
+                        <li key={`item-${index}`} style={{ display: 'inline-block', marginRight: '10px' }}>
+                            <svg width="14" height="14" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
+                                <rect width="14" height="14" fill={entry.color} />
+                            </svg>
+                            <span>{name}</span>
+                        </li>
+                    );
+                })}
+            </ul>
+        );
+    };
     const generateTicks = (min: number, max: number) => {
         const range = max - min;
         const approxSteps = 10;
@@ -313,6 +379,31 @@ const AtmsTrackGraphs: React.FC = () => {
         }
         return ticks;
     };
+    // useEffect(() => {
+    //     if (processedData && processedData.length > 0) {
+    //         let allValues: number[] = [];
+
+    //         processedData.forEach(row => {
+    //             const values = row.slice(1); 
+    //             values.forEach(val => {
+    //                 const num = parseFloat(val);
+    //                 if (!isNaN(num)) {
+    //                     allValues.push(num);
+    //                 }
+    //             });
+    //         });
+
+    //         if (allValues.length > 0) {
+    //             const min = Math.min(...allValues);
+    //             const max = Math.max(...allValues);
+    //             setYDomain([min, max]);
+    //         }
+    //     }
+
+    // }, [processedData]);
+    // console.log(yDomain);
+
+
     return (
 
         <>
@@ -608,76 +699,67 @@ const AtmsTrackGraphs: React.FC = () => {
 
                                 </h3>
                                 <LineChart
-  width={800 * xScale}
-  height={500}
-  style={{ maxHeight: "800px" }}
-  data={combinedGraphData}
-  margin={{ left: 50, right: 50 }} // Add margin for labels
->
-  <CartesianGrid strokeDasharray="3 3" />
-  <XAxis
-    dataKey="x"
-    domain={xDomain}
-    label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
-    type="number"
-    tickCount={10} // Control number of ticks
-  />
-  <YAxis
-    domain={[-0.5 / yScale, 0.5 / yScale]}
-    ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-    label={{ 
-      value: selectedTrkColOption, 
-      angle: -90, 
-      position: 'insideLeft',
-      style: { textAnchor: 'middle' }
-    }}
-  />
-  <Tooltip />
-  <Legend />
+                                    width={800 * xScale}
+                                    height={500}
+                                    style={{ maxHeight: "800px" }}
+                                    data={combinedGraphData}
+                                    margin={{ left: 50, right: 50 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis
+                                        dataKey="x"
+                                        domain={xDomain}
+                                        label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
+                                        type="number"
+                                        tickCount={10}
+                                    />
+                                    <YAxis
+                                        domain={[-0.5 / yScale, 0.5 / yScale]}
+                                        ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+                                        label={{
+                                            value: selectedTrkColOption,
+                                            angle: -90,
+                                            position: 'insideLeft',
+                                            style: { textAnchor: 'middle' }
+                                        }}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend content={renderLegend} />
 
-  {/* Vertical Reference Line */}
-  <ReferenceLine
-    x={0}
-    stroke="red"
-    strokeWidth={2}
-    label={{
-      value: `AMTS-1 (${combinedGraphData[0]?.amtsValue})`,
-      fill: 'red',
-      fontSize: 12,
-      offset: 10
-    }}
-  />
+                                    {/* AMTS Line */}
+                                    <Line
+                                        type="monotone"
+                                        dataKey="amtsValue"
+                                        stroke="#ff0000"
+                                        strokeWidth={2}
+                                        dot={{ r: 5, strokeWidth: 2 }}
+                                        activeDot={{ r: 8 }}
+                                        name="AMTS-1"
+                                        connectNulls={true}
+                                    />
 
-
-  <Line
-    type="monotone" 
-    dataKey="prismA"
-    stroke="#8884d8"
-    strokeWidth={2}
-    dot={{ r: 5, strokeWidth: 2 }}
-    activeDot={{ r: 8 }}
-    name="Prism A"
-    connectNulls={true}
-  />
-  <Line
-    type="monotone"
-    dataKey="prismB"
-    stroke="#82ca9d"
-    strokeWidth={2}
-    dot={{ r: 5, strokeWidth: 2 }}
-    activeDot={{ r: 8 }}
-    name="Prism B"
-    connectNulls={true}
-  />
-
-  <Scatter
-    data={combinedGraphData.filter(d => d.x === 0)}
-    dataKey="amtsValue"
-    fill="red"
-    shape={<circle r={6} />}
-    name="AMTS Reference"
-  />
-</LineChart>
+                                    {/* Prism Lines */}
+                                    <Line
+                                        type="monotone"
+                                        dataKey="prismA"
+                                        stroke="#8884d8"
+                                        strokeWidth={2}
+                                        dot={{ r: 5, strokeWidth: 2 }}
+                                        activeDot={{ r: 8 }}
+                                        name="Prism A"
+                                        connectNulls={true}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="prismB"
+                                        stroke="#82ca9d"
+                                        strokeWidth={2}
+                                        dot={{ r: 5, strokeWidth: 2 }}
+                                        activeDot={{ r: 8 }}
+                                        name="Prism B"
+                                        connectNulls={true}
+                                    />
+                                </LineChart>
                             </div>
                         </div>
                     </div>
