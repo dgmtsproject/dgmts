@@ -11,6 +11,8 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
+    ReferenceArea,
+    Label,
 } from "recharts";
 import html2canvas from "html2canvas";
 
@@ -31,16 +33,33 @@ const AtmsTrackGraphs: React.FC = () => {
             amtsValue: number | null;
             prismA: number | null;
             prismB: number | null;
-            amtsColName?: string | null; // Optional property for AMTS column name
-            prismAColName?: string | null; // Optional property for Prism A column name
-            prismBColName?: string | null; // Optional property for Prism B column name
+            amtsColName?: string | null; 
+            prismAColName?: string | null; 
+            prismBColName?: string | null; 
+            time: string;
+        }>
+    >([]);
+    const [Amts2combinedGraphData, setAmts2CombinedGraphData] = useState<
+        Array<{
+            x: number;
+            amtsValue: number | null;
+            amts2Value: number | null; // Added for AMTS-2
+            prismA: number | null;
+            prismB: number | null;
+            amtsColName?: string | null;
+            amts2ColName?: string | null; // Added for AMTS-2 
+            prismAColName?: string | null; 
+            prismBColName?: string | null; 
             time: string;
         }>
     >([]);
     const [xDomain, setXDomain] = useState<[number, number]>([-50, 50]);
+    const [AmtsxDomain, setAmtsXDomain] = useState<[number, number]>([-335, 50]);
 
     const amsts_track2_prism_size = 16;
     const amts_track2_start_distance = -10;
+    const amts2_track2_start_distance = -100;
+    const amts2_track3_start_distance = -335;
     const amts_track3_prism_size = 6;
     const amts_track3_start_distance = 10;
     const amts_offset = 25;
@@ -181,6 +200,9 @@ const AtmsTrackGraphs: React.FC = () => {
                         const lowerHeader = header.toLowerCase();
                         if (lowerHeader.includes('amts1') ||
                             lowerHeader.includes('amts-1') ||
+                            lowerHeader.includes('lbn-amts2') ||
+                            lowerHeader.includes('amts-2') ||
+                            lowerHeader.includes('amts2') ||
                             lowerHeader.includes('atms1')) {
                             console.log(`Found ATMS1 column: ${header} at index ${index}`);
                             return index;
@@ -227,50 +249,94 @@ const AtmsTrackGraphs: React.FC = () => {
     }, [processedData]);
 
     const handleColumnSelect = () => {
-        if (!selectedRowTime1 || !selectedTrkColOption) {
-            return;
-        }
-
+        if (!selectedRowTime1 || !selectedTrkColOption) return;
+    
         const timeIndex = headers.indexOf("Time");
         const selectedRow = processedData.find(row => row[timeIndex] === selectedRowTime1);
-        if (!selectedRow) {
-            return;
-        }
-
+        if (!selectedRow) return;
+    
         const isTrack3 = headers.some(h => h.includes('LBN-TP-TK3'));
         const prismSize = isTrack3 ? amts_track3_prism_size : amsts_track2_prism_size;
         const startDistance = isTrack3 ? amts_track3_start_distance : amts_track2_start_distance;
-
+        const amts2StartDistance = isTrack3 ? amts2_track3_start_distance : amts2_track2_start_distance;
+    
+        // AMTS-1 Data (unchanged)
         const amtsColPrefix = `LBN-AMTS-1 - ${selectedTrkColOption}`;
         const amtsColIndex = headers.indexOf(amtsColPrefix);
         const amtsValue = selectedRow[amtsColIndex];
-
+    
+        // AMTS-2 Data
+        const amts2ColPrefix = `LBN-AMTS-2 - ${selectedTrkColOption}`;
+        const amts2ColIndex = headers.indexOf(amts2ColPrefix);
+        const amts2Value = amts2ColIndex !== -1 ? Number(selectedRow[amts2ColIndex]) : null;
+    
+        // Correct prism numbering for AMTS-2
+        const amts2StartPrism = isTrack3 ? 7 : 17;  // 7 for Track3, 17 for Track2
+        const amts2EndPrism = 32;
+        
+        // Find available prisms in the correct range
+        const availablePrisms: number[] = [];
+        for (let i = amts2StartPrism; i <= amts2EndPrism; i++) {
+            const prismNum = i.toString().padStart(2, '0');
+            const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNum}A - ${selectedTrkColOption}`;
+            if (headers.includes(prismACol)) {
+                availablePrisms.push(i);
+            }
+        }
+    
         const chartData = [];
-
-        // Add prism data points
+        const amts2ChartData: { x: number; amtsValue: null; amts2Value: null; prismA: number | null; prismB: number | null; prismAColName: string; prismBColName: string; time: string; }[] = [];
+    
+        // Add prism data points for AMTS-1 (unchanged)
         for (let i = 1; i <= prismSize; i++) {
             const prismNumber = i.toString().padStart(2, '0');
             const xPos = startDistance + (i - 1) * amts_offset;
-
+    
             const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
             const prismAIndex = headers.indexOf(prismACol);
             const prismAValue = prismAIndex !== -1 ? Number(selectedRow[prismAIndex]) : null;
-
+    
             const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
             const prismBIndex = headers.indexOf(prismBCol);
             const prismBValue = prismBIndex !== -1 ? Number(selectedRow[prismBIndex]) : null;
-
+    
             chartData.push({
                 x: xPos,
                 amtsValue: null,
                 prismA: prismAValue,
                 prismB: prismBValue,
-                prismAColName: prismACol, // Store full column name
-                prismBColName: prismBCol, // Store full column name
+                prismAColName: prismACol,
+                prismBColName: prismBCol,
                 time: selectedRowTime1
             });
         }
-
+    
+        // Add prism data points for AMTS-2 (with correct numbering)
+        availablePrisms.forEach((prismNum, index) => {
+            const prismNumber = prismNum.toString().padStart(2, '0');
+            const xPos = amts2StartDistance + (index * amts_offset);
+    
+            const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
+            const prismAIndex = headers.indexOf(prismACol);
+            const prismAValue = prismAIndex !== -1 ? Number(selectedRow[prismAIndex]) : null;
+    
+            const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
+            const prismBIndex = headers.indexOf(prismBCol);
+            const prismBValue = prismBIndex !== -1 ? Number(selectedRow[prismBIndex]) : null;
+    
+            amts2ChartData.push({
+                x: xPos,
+                amtsValue: null,
+                amts2Value: null,
+                prismA: prismAValue,
+                prismB: prismBValue,
+                prismAColName: prismACol,
+                prismBColName: prismBCol,
+                time: selectedRowTime1
+            });
+        });
+    
+        // Set AMTS-1 graph data (unchanged)
         setCombinedGraphData([
             {
                 x: 0,
@@ -279,18 +345,41 @@ const AtmsTrackGraphs: React.FC = () => {
                 prismB: null,
                 prismAColName: null,
                 prismBColName: null,
-                amtsColName: amtsColPrefix, // Store AMTS column name
+                amtsColName: amtsColPrefix,
                 time: selectedRowTime1
             },
             ...chartData.filter(item => item.prismA !== null || item.prismB !== null)
         ]);
-
+    
+        // Set AMTS-2 graph data
+        setAmts2CombinedGraphData([
+            {
+                x: 0,
+                amtsValue: Number(amtsValue),
+                amts2Value: amts2Value !== null ? Number(amts2Value) : null,
+                prismA: null,
+                prismB: null,
+                prismAColName: null,
+                prismBColName: null,
+                amtsColName: amtsColPrefix,
+                amts2ColName: amts2ColPrefix,
+                time: selectedRowTime1
+            },
+            ...amts2ChartData.filter(item => item.prismA !== null || item.prismB !== null)
+        ]);
+    
+        // Set domains
         const xValues = chartData.map(item => item.x);
-        const minX = 0;
-        const maxX = Math.max(...xValues, 50) + 10;
-        setXDomain([minX, maxX]);
+        setXDomain([0, Math.max(...xValues, 50) + 10]);
+    
+        const amts2XValues = amts2ChartData.map(item => item.x);
+        setAmtsXDomain([
+            Math.min(...amts2XValues, amts2StartDistance) - 10,
+            Math.max(...amts2XValues, 50) + 10
+        ]);
     };
     console.log("Combined Graph Data:", combinedGraphData);
+    console.log("AMTS-2 Combined Graph Data:", Amts2combinedGraphData);
 
     const handleDownloadGraph = () => {
         const chartContainer = document.getElementById("chartContainer");
@@ -304,6 +393,7 @@ const AtmsTrackGraphs: React.FC = () => {
             });
         }
     };
+    
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
@@ -699,67 +789,197 @@ const AtmsTrackGraphs: React.FC = () => {
 
                                 </h3>
                                 <LineChart
-                                    width={800 * xScale}
-                                    height={500}
-                                    style={{ maxHeight: "800px" }}
-                                    data={combinedGraphData}
-                                    margin={{ left: 50, right: 50 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis
-                                        dataKey="x"
-                                        domain={xDomain}
-                                        label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
-                                        type="number"
-                                        tickCount={10}
-                                    />
-                                    <YAxis
-                                        domain={[-0.5 / yScale, 0.5 / yScale]}
-                                        ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                                        label={{
-                                            value: selectedTrkColOption,
-                                            angle: -90,
-                                            position: 'insideLeft',
-                                            style: { textAnchor: 'middle' }
-                                        }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend content={renderLegend} />
+    width={800 * xScale}
+    height={500}
+    style={{ maxHeight: "800px", background: 'white' }}
+    data={combinedGraphData}
+    margin={{ left: 50, right: 50 }}
+>
+    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+    
+    {/* Ohio Bridge Section - Only for Track 2 */}
+    {headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 0 && (
+        <ReferenceArea
+            x1={combinedGraphData[7]?.x}  // Prism 7 (0-based index 6)
+            x2={combinedGraphData[10]?.x}  // Prism 10 (0-based index 9)
+            fill="rgba(255, 255, 255, 0.7)"
+            stroke="#ffcc00"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            // a little less height than the graph height
+            // y1={-0.5 / yScale + 0.1}
+            // y2={0.5 / yScale - 0.5}
+            label={
+                <Label 
+                    value="Ohio Bridge" 
+                    position="insideTop" 
+                    offset={10}
+                    style={{ 
+                        fill: '#333', 
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    }} 
+                />
+            }
+        />
+    )}
 
-                                    {/* AMTS Line */}
-                                    <Line
-                                        type="monotone"
-                                        dataKey="amtsValue"
-                                        stroke="#ff0000"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="AMTS-1"
-                                        connectNulls={true}
-                                    />
+    {/* Rest of your chart components... */}
+    <XAxis
+        dataKey="x"
+        domain={xDomain}
+        label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
+        type="number"
+        tickCount={10}
+    />
+    <YAxis
+        domain={[-0.5 / yScale, 0.5 / yScale]}
+        ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+        label={{
+            value: selectedTrkColOption,
+            angle: -90,
+            position: 'insideLeft',
+            style: { textAnchor: 'middle' }
+        }}
+    />
+    <Tooltip content={<CustomTooltip />} />
+    <Legend content={renderLegend} />
 
-                                    {/* Prism Lines */}
-                                    <Line
-                                        type="monotone"
-                                        dataKey="prismA"
-                                        stroke="#8884d8"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="Prism A"
-                                        connectNulls={true}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="prismB"
-                                        stroke="#82ca9d"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="Prism B"
-                                        connectNulls={true}
-                                    />
-                                </LineChart>
+    <Line
+        type="monotone"
+        dataKey="amtsValue"
+        stroke="#ff0000"
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="AMTS-1"
+        connectNulls={true}
+    />
+    <Line
+        type="monotone"
+        dataKey="prismA"
+        stroke="#8884d8"
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="Prism A"
+        connectNulls={true}
+    />
+    <Line
+        type="monotone"
+        dataKey="prismB"
+        stroke="#82ca9d"
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="Prism B"
+        connectNulls={true}
+    />
+</LineChart>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                                <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                                    AMTS-2 GRAPH
+
+                                </h3>
+                                <LineChart
+    width={800 * xScale}
+    height={500}
+    style={{ maxHeight: "800px", background: 'white' }}
+    data={Amts2combinedGraphData}
+    margin={{ left: 50, right: 50 }}
+>
+    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+    
+    {/* Ohio Bridge Section - Only for Track 2 */}
+    { headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && (
+        <ReferenceArea
+            x1={Amts2combinedGraphData[23]?.x}  
+            x2={Amts2combinedGraphData[28]?.x}  
+            fill="rgba(255, 255, 255, 0.7)"
+            stroke="#ffcc00"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            label={
+                <Label 
+                    value="Washington Channel Bridge" 
+                    position="insideTop" 
+                    offset={10}
+                    style={{ 
+                        fill: '#333', 
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    }} 
+                />
+            }
+        />
+    )}
+
+    <XAxis
+        dataKey="x"
+        domain={AmtsxDomain}
+        label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
+        type="number"
+        tickCount={10}
+    />
+    <YAxis
+        domain={[-0.5 / yScale, 0.5 / yScale]}
+        ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
+        label={{
+            value: selectedTrkColOption,
+            angle: -90,
+            position: 'insideLeft',
+            style: { textAnchor: 'middle' }
+        }}
+    />
+    <Tooltip content={<CustomTooltip />} />
+    <Legend content={renderLegend} />
+
+    {/* AMTS-1 Line (shown at x=0) */}
+    <Line
+        type="monotone"
+        dataKey="amtsValue"
+        stroke="#ff0000"  // Red for AMTS-1
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="AMTS-1"
+        connectNulls={true}
+    />
+
+    {/* AMTS-2 Line (shown at x=0) */}
+    <Line
+        type="monotone"
+        dataKey="amts2Value"
+        stroke="#ff6600"  // Orange for AMTS-2
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="AMTS-2"
+        connectNulls={true}
+    />
+
+    <Line
+        type="monotone"
+        dataKey="prismA"
+        stroke="#8884d8"
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="Prism A"
+        connectNulls={true}
+    />
+    <Line
+        type="monotone"
+        dataKey="prismB"
+        stroke="#82ca9d"
+        strokeWidth={2}
+        dot={{ r: 5, strokeWidth: 2 }}
+        activeDot={{ r: 8 }}
+        name="Prism B"
+        connectNulls={true}
+    />
+</LineChart>
                             </div>
                         </div>
                     </div>
