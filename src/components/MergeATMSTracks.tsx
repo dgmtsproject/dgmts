@@ -7,7 +7,7 @@ type Props = {
 };
 const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   useEffect(() => {
-    localStorage.clear(); // or removeItem("mergedExcelFile")
+    localStorage.clear(); 
   }, []);
   const [fileA, setFileA] = useState<File | null>(null);
   const [fileB, setFileB] = useState<File | null>(null);
