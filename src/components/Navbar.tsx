@@ -12,8 +12,8 @@ const Navbar: React.FC = () => {
       <Link to="/file-manager">File Manager</Link>
       <Link to="/ProjectForm">Admin Setup</Link>
       <Link to="/export-data">Export Data</Link>
-      <Link to="/GapRemoval">MergeTracks</Link>
-      <Link to="/track-graphs">TrackGraphs</Link>
+      <Link to="/single-prism-with-time">Single Prism Graph</Link>
+      <Link to="/multi-prisms-with-time">Multiple Prisms Graph</Link>
       <Link to="/amts-track-graphs"> AMTS Track Graphs</Link>
     </nav>
   );

@@ -38,10 +38,10 @@ const AppRoutes: React.FC = () => {
       <Route path="/help" element={<Help />} />
       <Route path="/DashBoard" element={<DashBoard />} />
       {/* <Route path="/MergeTracks" element={<MergeTracks />} /> */}
-      <Route path="/GapRemoval" element={<GapRemoval />} />
+      <Route path="/single-prism-with-time" element={<GapRemoval />} />
       <Route path="/projects-list" element={<ProjectsList />} />
       <Route path="/add-projects" element={<AddProjects />} />
-      <Route path="/track-graphs" element={<TrackGraphs />} />
+      <Route path="/multi-prisms-with-time" element={<TrackGraphs />} />
       <Route path="/new-track-graphs" element={<NewTrackGraphs />} />
       <Route path="/amts-track-graphs" element={<AtmsTrackGraphs />} />
     </Routes>
