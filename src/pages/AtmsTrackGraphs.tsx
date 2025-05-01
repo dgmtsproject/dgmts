@@ -27,6 +27,7 @@ const AtmsTrackGraphs: React.FC = () => {
     const [xScale, setXScale] = useState<number>(1);
     const [yScale, setYScale] = useState<number>(1);
     const [selectedTrkColOption, setSelectedTrkColOption] = useState<string>("placeholder");
+    const [selectedTrk,setSelectedTrk] = useState<string>("placeholder");
     // const [yDomain, setYDomain] = useState([-0.5, 0.5]);
     const [combinedGraphData, setCombinedGraphData] = useState<
         Array<{
@@ -71,7 +72,6 @@ const AtmsTrackGraphs: React.FC = () => {
         "Height"
     ];
 
-
     const processSaveRef = useRef<HTMLButtonElement>(null);
     const handleMergeClick = () => {
         processSaveRef.current?.click(); // simulate click
@@ -80,37 +80,47 @@ const AtmsTrackGraphs: React.FC = () => {
     const handleProcess = () => {
         const fileData = localStorage.getItem("mergedExcelFile");
         if (!fileData) return;
-
+    
         const byteCharacters = atob(fileData);
         const byteNumbers = new Array(byteCharacters.length)
             .fill(null)
             .map((_, i) => byteCharacters.charCodeAt(i));
         const byteArray = new Uint8Array(byteNumbers);
-
+    
         const workbook = XLSX.read(byteArray, { type: "array" });
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-
+    
         if (jsonData.length === 0) return;
-
+    
         const headers = jsonData[0];
         const result: (string | number)[][] = [];
         const timeData: string[] = [];
-        const atmsStartIndex = headers.findIndex(h =>
+    
+        // Find indices for different data sections
+        const tk2StartIndex = 1; // TK-2 data starts right after timestamp
+        const tk2EndIndex = headers.findIndex(h => 
+            typeof h === 'string' && h.includes('LBN-TP-TK3')
+        );
+        const tk3StartIndex = tk2EndIndex > 0 ? tk2EndIndex : 
+            headers.findIndex(h => typeof h === 'string' && h.includes('LBN-TP-TK3'));
+        const tk3EndIndex = headers.findIndex(h =>
             typeof h === 'string' && h.includes('LBN-AMTS')
         );
-
+        const atmsStartIndex = tk3EndIndex > 0 ? tk3EndIndex : 
+            headers.findIndex(h => typeof h === 'string' && h.includes('LBN-AMTS'));
+    
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i];
             const newRow: (string | number)[] = [row[0]];
             timeData.push(row[0]?.toString() || "");
-
-
-            for (let j = 1; j < (atmsStartIndex > 0 ? atmsStartIndex : headers.length); j += 2) {
+    
+            // Process TK-2 data (pairs of columns)
+            for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
                 const val1 = row[j];
                 const val2 = row[j + 1];
                 newRow.push(val1 ?? "", val2 ?? "");
-
+    
                 if (
                     val1 !== undefined &&
                     val2 !== undefined &&
@@ -123,53 +133,109 @@ const AtmsTrackGraphs: React.FC = () => {
                     newRow.push("");
                 }
             }
-
+    
+            // Process TK-3 data (pairs of columns)
+            if (tk3StartIndex > 0) {
+                for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
+                    const val1 = row[j];
+                    const val2 = row[j + 1];
+                    newRow.push(val1 ?? "", val2 ?? "");
+    
+                    if (
+                        val1 !== undefined &&
+                        val2 !== undefined &&
+                        !isNaN(Number(val1)) &&
+                        !isNaN(Number(val2))
+                    ) {
+                        const diff = Number(val1) - Number(val2);
+                        newRow.push(diff);
+                    } else {
+                        newRow.push("");
+                    }
+                }
+            }
+    
+            // Add AMTS data (no processing, just append)
             if (atmsStartIndex > 0) {
                 newRow.push(...row.slice(atmsStartIndex));
             }
-
+    
             result.push(newRow);
         }
-
+    
         const newHeader: (string | number)[] = [headers[0]]; // timestamp
-
-        for (let j = 1; j < (atmsStartIndex > 0 ? atmsStartIndex : headers.length); j += 2) {
+    
+        // Create headers for TK-2 differences
+        for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
             const h1 = headers[j] ?? `Col${j}`;
             const h2 = headers[j + 1] ?? `Col${j + 1}`;
             let label = "Difference";
-
+    
             if (typeof h1 === "string" && typeof h2 === "string") {
+                const baseName1 = h1.split(' - ')[0];
+                const baseName2 = h2.split(' - ')[0];
+                const baseName = baseName1 === baseName2 ? baseName1 : `${baseName1},${baseName2}`;
+                
                 if (h1.toLowerCase().includes("easting") || h2.toLowerCase().includes("easting")) {
-                    label = `${h1.split(' - ')[0]},${h2.split(' - ')[0]} - Easting Difference`;
+                    label = `${baseName} - Easting Difference`;
                 } else if (h1.toLowerCase().includes("northing") || h2.toLowerCase().includes("northing")) {
-                    label = `${h1.split(' - ')[0]},${h2.split(' - ')[0]} - Northing Difference`;
+                    label = `${baseName} - Northing Difference`;
                 } else if (h1.toLowerCase().includes("height") || h2.toLowerCase().includes("height")) {
-                    label = `${h1.split(' - ')[0]},${h2.split(' - ')[0]} - Height Difference`;
+                    label = `${baseName} - Height Difference`;
+                } else {
+                    label = `${baseName} - Difference`;
                 }
             }
             newHeader.push(h1, h2, label);
         }
-
+    
+        // Create headers for TK-3 differences
+        if (tk3StartIndex > 0) {
+            for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
+                const h1 = headers[j] ?? `Col${j}`;
+                const h2 = headers[j + 1] ?? `Col${j + 1}`;
+                let label = "Difference";
+    
+                if (typeof h1 === "string" && typeof h2 === "string") {
+                    const baseName1 = h1.split(' - ')[0];
+                    const baseName2 = h2.split(' - ')[0];
+                    const baseName = baseName1 === baseName2 ? baseName1 : `${baseName1},${baseName2}`;
+                    
+                    if (h1.toLowerCase().includes("easting") || h2.toLowerCase().includes("easting")) {
+                        label = `${baseName} - Easting Difference `;
+                    } else if (h1.toLowerCase().includes("northing") || h2.toLowerCase().includes("northing")) {
+                        label = `${baseName} - Northing Difference `;
+                    } else if (h1.toLowerCase().includes("height") || h2.toLowerCase().includes("height")) {
+                        label = `${baseName} - Height Difference `;
+                    } else {
+                        label = `${baseName} - Difference `;
+                    }
+                }
+                newHeader.push(h1, h2, label);
+            }
+        }
+    
+        // Add AMTS headers
         if (atmsStartIndex > 0) {
             newHeader.push(...headers.slice(atmsStartIndex));
         }
-
+    
         result.unshift(newHeader);
-
+    
         const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(result);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Processed");
-
+    
         const wbout = XLSX.write(wb, {
             bookType: "xlsx",
             type: "array",
             cellStyles: true,
         });
-
+    
         const blob = new Blob([wbout], { type: "application/octet-stream" });
         setProcessedBlob(blob);
         setShowGraph(true);
-
+    
         localStorage.setItem("processedHeaders", JSON.stringify(newHeader));
         localStorage.setItem("processedData", JSON.stringify(result));
         setHeaders(newHeader as string[]);
@@ -250,16 +316,16 @@ const AtmsTrackGraphs: React.FC = () => {
     }, [processedData]);
 
     const handleColumnSelect = () => {
-        if (!selectedRowTime1 || !selectedTrkColOption) return;
+        if (!selectedRowTime1 || !selectedTrkColOption || !selectedTrk) return;
 
         const timeIndex = headers.indexOf("Time");
         const selectedRow = processedData.find(row => row[timeIndex] === selectedRowTime1);
         if (!selectedRow) return;
 
-        const isTrack3 = headers.some(h => h.includes('LBN-TP-TK3'));
-        const prismSize = isTrack3 ? amts_track3_prism_size : amsts_track2_prism_size;
-        const startDistance = isTrack3 ? amts_track3_start_distance : amts_track2_start_distance;
-        const amts2StartDistance = isTrack3 ? amts2_track3_start_distance : amts2_track2_start_distance;
+        // const isTrack3 = headers.some(h => h.includes('LBN-TP-TK3'));
+        const prismSize = selectedTrk === "LBN-TP-TK-2" ? amsts_track2_prism_size : amts_track3_prism_size;
+        const startDistance = selectedTrk === "LBN-TP-TK-2" ? amts_track2_start_distance : amts_track3_start_distance;
+        const amts2StartDistance = selectedTrk === "LBN-TP-TK-2" ? amts2_track2_start_distance : amts2_track3_start_distance;
 
         // AMTS-1 Data (unchanged)
         const amtsColPrefix = `LBN-AMTS-1 - ${selectedTrkColOption}`;
@@ -272,14 +338,16 @@ const AtmsTrackGraphs: React.FC = () => {
         const amts2Value = amts2ColIndex !== -1 ? Number(selectedRow[amts2ColIndex]) : null;
 
         // Correct prism numbering for AMTS-2
-        const amts2StartPrism = isTrack3 ? 7 : 17;  // 7 for Track3, 17 for Track2
+        const amts2StartPrism = selectedTrk === "LBN-TP-TK-2" ? 17 : 7; // 1 for Track2, 7 for Track3
+        // const amts2StartPrism = isTrack3 ? 7 : 17;  // 7 for Track3, 17 for Track2
         const amts2EndPrism = 32;
 
         // Find available prisms in the correct range
         const availablePrisms: number[] = [];
         for (let i = amts2StartPrism; i <= amts2EndPrism; i++) {
             const prismNum = i.toString().padStart(2, '0');
-            const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNum}A - ${selectedTrkColOption}`;
+            // const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNum}A - ${selectedTrkColOption}`;
+            const prismACol = `LBN-TP-TK${selectedTrk === "LBN-TP-TK-2" ? '2' : '3'}-${prismNum}A - ${selectedTrkColOption}`;
             if (headers.includes(prismACol)) {
                 availablePrisms.push(i);
             }
@@ -293,11 +361,13 @@ const AtmsTrackGraphs: React.FC = () => {
             const prismNumber = i.toString().padStart(2, '0');
             const xPos = startDistance + (i - 1) * amts_offset;
 
-            const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
+            // const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
+            const prismACol = `LBN-TP-TK${selectedTrk === "LBN-TP-TK-2" ? '2' : '3'}-${prismNumber}A - ${selectedTrkColOption}`;
             const prismAIndex = headers.indexOf(prismACol);
             const prismAValue = prismAIndex !== -1 ? Number(selectedRow[prismAIndex]) : null;
 
-            const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
+            // const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
+            const prismBCol = `LBN-TP-TK${selectedTrk === "LBN-TP-TK-2" ? '2' : '3'}-${prismNumber}B - ${selectedTrkColOption}`;
             const prismBIndex = headers.indexOf(prismBCol);
             const prismBValue = prismBIndex !== -1 ? Number(selectedRow[prismBIndex]) : null;
 
@@ -317,11 +387,13 @@ const AtmsTrackGraphs: React.FC = () => {
             const prismNumber = prismNum.toString().padStart(2, '0');
             const xPos = amts2StartDistance + (index * amts_offset);
 
-            const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
+            // const prismACol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}A - ${selectedTrkColOption}`;
+            const prismACol = `LBN-TP-TK${selectedTrk === "LBN-TP-TK-2" ? '2' : '3'}-${prismNumber}A - ${selectedTrkColOption}`;
             const prismAIndex = headers.indexOf(prismACol);
             const prismAValue = prismAIndex !== -1 ? Number(selectedRow[prismAIndex]) : null;
 
-            const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
+            // const prismBCol = `LBN-TP-TK${isTrack3 ? '3' : '2'}-${prismNumber}B - ${selectedTrkColOption}`;
+            const prismBCol = `LBN-TP-TK${selectedTrk === "LBN-TP-TK-2" ? '2' : '3'}-${prismNumber}B - ${selectedTrkColOption}`;
             const prismBIndex = headers.indexOf(prismBCol);
             const prismBValue = prismBIndex !== -1 ? Number(selectedRow[prismBIndex]) : null;
 
@@ -371,7 +443,7 @@ const AtmsTrackGraphs: React.FC = () => {
 
         // Set domains
         const xValues = chartData.map(item => item.x);
-        setXDomain([0, Math.max(...xValues, 50) + 10]);
+        setXDomain([-50, Math.max(...xValues, 50) + 10]);
 
         const amts2XValues = amts2ChartData.map(item => item.x);
         setAmtsXDomain([
@@ -587,6 +659,39 @@ const AtmsTrackGraphs: React.FC = () => {
                                 marginBottom: "1rem",
                             }}
                         >
+                            <label
+                                style={{
+                                    fontWeight: "600",
+                                    color: "#1f2937",
+                                    fontSize: "0.9rem",
+                                }}
+                            >
+                                Select Track 2/3:
+                            </label>
+                            <select
+                                value={selectedTrk}
+                                onChange={(e) => setSelectedTrk(e.target.value)}
+                                style={{
+                                    border: "1px solid #d1d5db",
+                                    borderRadius: "0.375rem",
+                                    padding: "0.5rem",
+                                    fontSize: "0.875rem",
+                                    color: "#374151",
+                                    backgroundColor: "#f9fafb",
+                                    outline: "none",
+                                    transition: "border-color 0.2s ease",
+                                    width: "200px",
+                                }}
+                                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                            >
+                                <option value="placeholder" disabled>
+                                    Select a track
+                                </option>
+                                <option value="LBN-TP-TK-2">LBN-TP-TK-2</option>
+                                <option value="LBN-TP-TK-3">LBN-TP-TK-3</option>
+                                
+                            </select>
                             <label
                                 style={{
                                     fontWeight: "600",
@@ -847,12 +952,27 @@ const AtmsTrackGraphs: React.FC = () => {
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend content={renderLegend} />
 
+                                                                        
+                                    <ReferenceLine
+                                        segment={[
+                                            { x: 0, y: -0.5 / yScale }, 
+                                            { x: 0, y: combinedGraphData[0]?.amtsValue || 0 } 
+                                        ]}
+                                        stroke="red"
+                                        strokeWidth={2}
+                                        label={{
+                                            value: "AMTS-2",
+                                            position: "top",
+                                            fill: "red"
+                                        }}
+                                    />
+
                                     <Line
                                         type="monotone"
                                         dataKey="amtsValue"
                                         stroke="#ff0000"
                                         strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
+                                        dot={{ r:5, strokeWidth: 2 }}
                                         activeDot={{ r: 8 }}
                                         name="AMTS-1"
                                         connectNulls={true}
@@ -894,7 +1014,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
                                     {/* check if prism 7 to prism 10 exists and draw ohio bridge too */}
-                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && (
+                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk==='LBN-TP-TK-3' && (
                                         <ReferenceArea
                                             x1={Amts2combinedGraphData[1]?.x}  // Prism 7 (0-based index 6)
                                             x2={Amts2combinedGraphData[3]?.x}  // Prism 10 (0-based index 9)
@@ -918,7 +1038,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                     )}
 
                                     {/* Ohio Bridge Section - Only for Track 2 */}
-                                    {headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && (
+                                    {headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && selectedTrk==='LBN-TP-TK-2' && (
                                         <ReferenceArea
                                             x1={Amts2combinedGraphData[7]?.x}
                                             x2={Amts2combinedGraphData[12]?.x}
@@ -940,7 +1060,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                             }
                                         />
                                     )}
-                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && (
+                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-3' && (
                                         <ReferenceArea
                                             x1={Amts2combinedGraphData[17]?.x}
                                             x2={Amts2combinedGraphData[22]?.x}
@@ -983,16 +1103,16 @@ const AtmsTrackGraphs: React.FC = () => {
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend content={renderLegend} />
 
-                                    {/* draw a reference line vertically here at amts x=0 till amts point not dashed*/}
+                                    
                                     <ReferenceLine
                                         segment={[
-                                            { x: 0, y: -0.5 / yScale }, // Start at bottom of Y-axis domain
-                                            { x: 0, y: Amts2combinedGraphData[0]?.amts2Value || 0 } // End at AMTS-2 value
+                                            { x: 0, y: -0.5 / yScale }, 
+                                            { x: 0, y: Amts2combinedGraphData[0]?.amts2Value || 0 } 
                                         ]}
                                         stroke="red"
                                         strokeWidth={2}
                                         label={{
-                                            value: "AMTS-2",
+                                            value: "AMTS",
                                             position: "top",
                                             fill: "red"
                                         }}
@@ -1005,7 +1125,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                         dataKey="amtsValue"
                                         stroke="#ff0000"  // Red for AMTS-1
                                         strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
+                                        dot={{ r: 5, strokeWidth: 2 , shapeRendering: "edge"}}
                                         activeDot={{ r: 8 }}
                                         name="AMTS-1"
                                         connectNulls={true}
@@ -1017,7 +1137,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                         dataKey="amts2Value"
                                         stroke="#ff6600"
                                         strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
+                                        dot={{ r: 5, strokeWidth: 2 , shapeRendering: "crispEdges"}}
                                         activeDot={{ r: 8 }}
                                         name="AMTS-2"
                                         connectNulls={true}

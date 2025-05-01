@@ -4,16 +4,8 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import HeaNavLogo from "./HeaNavLogo";
 import TrackMerger from "./MergeTracks";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
 import html2canvas from "html2canvas";
+import Plot from "react-plotly.js";
 
 const GapRemoval: React.FC = () => {
   //double click logic-start
@@ -202,6 +194,26 @@ const GapRemoval: React.FC = () => {
       saveAs(processedBlob, "difference_output.xlsx");
     }
   };
+  const getOptimizedTicks = (timeData: string | any[]) => {
+    if (!timeData || timeData.length === 0) return [];
+
+    const tickCount = Math.min(6, timeData.length);
+    const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
+
+    const ticks = [];
+    ticks.push(timeData[0]);
+
+    for (let i = 1; i < tickCount - 1; i++) {
+      const index = Math.min(i * step, timeData.length - 1);
+      ticks.push(timeData[index]);
+    }
+    if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
+      ticks.push(timeData[timeData.length - 1]);
+    }
+
+    return ticks;
+  };
+
 
   const handleColumnSelect = () => {
     if (!selectedColumn1 || !selectedColumn2 || !selectedColumn3) return;
@@ -268,6 +280,8 @@ const GapRemoval: React.FC = () => {
     setCombinedGraphData(
       combined.filter((item) => item.value1 !== 0 || item.value2 !== 0 || item.value3 !== 0));
   };
+  console.log("Graph Data 1:", graphData1);
+  console.log("Graph Data 2:", graphData2);
   console.log("Combined Graph Data:", combinedGraphData);
   const generateTicks = (min: number, max: number) => {
     const range = max - min;
@@ -431,7 +445,7 @@ const GapRemoval: React.FC = () => {
                     {header}
                   </option>
                 ))}
-                   {differenceOptions.map(({ label, value }, index) => (
+                {differenceOptions.map(({ label, value }, index) => (
                   <option key={index} value={value}>
                     {label}
                   </option>
@@ -482,7 +496,7 @@ const GapRemoval: React.FC = () => {
                     {header}
                   </option>
                 ))}
-                   {differenceOptions.map(({ label, value }, index) => (
+                {differenceOptions.map(({ label, value }, index) => (
                   <option key={index} value={value}>
                     {label}
                   </option>
@@ -528,7 +542,7 @@ const GapRemoval: React.FC = () => {
                 <option value="placeholder" disabled>
                   Select a header
                 </option>
-           
+
                 {filteredHeaders.map((header, index) => (
                   <option key={index} value={header}>
                     {header}
@@ -684,28 +698,90 @@ const GapRemoval: React.FC = () => {
                     First Graph ({selectedColumn1})
                   </h3>
 
-                  <LineChart
-                    width={800 * xScale}
-                    height={500}
-                    style={{ maxHeight: "800px" }}
-                    data={graphData1}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis
-                      domain={[-0.5 / yScale, 0.5 / yScale]}
-                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#8884d8"
-                      activeDot={{ r: 8 }}
-                      name={selectedColumn1}
-                    />
-                  </LineChart>
+                  <Plot
+                    data={[
+                      {
+                        x: graphData1.map(item => item.time),
+                        y: graphData1.map(item => item.value),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: selectedColumn1,
+                        line: {
+                          color: '#8884d8',
+                          shape: 'spline'
+                        },
+                        marker: {
+                          size: 6,
+                          color: '#8884d8'
+                        },
+                        hoverinfo: 'y+name',
+                        hovertemplate: `
+        <b>${selectedColumn1}</b><br>
+        Time: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                      }
+                    ]}
+                    layout={{
+                      width: 800 * xScale,
+                      height: 500,
+                      margin: {
+                        l: 60,
+                        r: 30,
+                        b: 80,
+                        t: 30,
+                        pad: 4
+                      },
+                      xaxis: {
+                        title: 'Time',
+                        type: 'category',
+                        tickmode: 'array',
+                        tickvals: getOptimizedTicks(graphData1.map(item => item.time)), // Custom function to select ticks
+                        tickangle: 0,
+                        gridcolor: '#f0f0f0',
+                        gridwidth: 1,
+                        showgrid: true,
+                        automargin: true
+                      },
+                      yaxis: {
+                        title: selectedColumn1,
+                        range: [-0.5 / yScale, 0.5 / yScale],
+                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                        tickmode: 'array',
+                        nticks: 6,
+                        gridcolor: '#f0f0f0',
+                        gridwidth: 1,
+                        zeroline: true,
+                        zerolinecolor: '#f0f0f0',
+                        zerolinewidth: 1
+                      },
+                      plot_bgcolor: 'white',
+                      paper_bgcolor: 'white',
+                      showlegend: true,
+                      legend: {
+                        orientation: 'h',
+                        y: 1.1,
+                        x: 0.5,
+                        xanchor: 'center'
+                      },
+                      hovermode: 'x unified',
+                      hoverlabel: {
+                        bgcolor: 'white',
+                        bordercolor: '#ddd',
+                        font: {
+                          family: 'Arial',
+                          size: 12,
+                          color: 'black'
+                        }
+                      }
+                    }}
+                    config={{
+                      displayModeBar: true,
+                      responsive: true,
+                      displaylogo: false
+                    }}
+                    style={{ maxHeight: '800px' }}
+                  />
 
                 </div>
 
@@ -715,28 +791,120 @@ const GapRemoval: React.FC = () => {
                     Second Graph ({selectedColumn2})
                   </h3>
 
-                  <LineChart
-                    width={800 * xScale}
-                    height={500}
-                    style={{ maxHeight: "800px" }}
-                    data={graphData2}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis
-                      domain={[-0.5 / yScale, 0.5 / yScale]}
-                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#82ca9d"
-                      activeDot={{ r: 8 }}
-                      name={selectedColumn2}
-                    />
-                  </LineChart>
+                  <Plot
+                    data={[
+                      {
+                        x: graphData2.map(item => item.time),
+                        y: graphData2.map(item => item.value),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: selectedColumn2,
+                        line: {
+                          color: '#82ca9d', // Matching your Recharts green color exactly
+                          shape: 'spline',
+                          width: 2
+                        },
+                        marker: {
+                          size: 8, // Increased to match Recharts' activeDot size
+                          color: '#82ca9d',
+                          line: {
+                            width: 1,
+                            color: '#fff'
+                          }
+                        },
+                        hovertemplate: `
+        <b>${selectedColumn2}</b><br>
+        <b>Time:</b> %{x}<br>
+        <b>Value:</b> %{y:.7f}<extra></extra>
+      `,
+                        hoverlabel: {
+                          bgcolor: '#fff',
+                          bordercolor: '#82ca9d',
+                          font: {
+                            family: 'Arial',
+                            size: 12,
+                            color: '#333'
+                          }
+                        }
+                      }
+                    ]}
+                    layout={{
+                      width: 800 * xScale,
+                      height: 500,
+                      margin: {
+                        l: 60,
+                        r: 30,
+                        b: 80,
+                        t: 30,
+                        pad: 4
+                      },
+                      xaxis: {
+                        title: 'Time',
+                        type: 'category',
+                        tickmode: 'array',
+                        tickvals: getOptimizedTicks(graphData2.map(item => item.time)),
+                        tickangle: 0,
+                        gridcolor: 'rgba(240, 240, 240, 0.7)',
+                        gridwidth: 1,
+                        showgrid: true,
+                        automargin: true,
+                        tickfont: {
+                          size: 11
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: selectedColumn2,
+                          standoff: 15
+                        },
+                        range: [-0.5 / yScale, 0.5 / yScale],
+                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                        tickmode: 'array',
+                        nticks: 6,
+                        gridcolor: 'rgba(240, 240, 240, 0.7)',
+                        gridwidth: 1,
+                        zeroline: true,
+                        zerolinecolor: 'rgba(240, 240, 240, 0.7)',
+                        zerolinewidth: 1,
+                        tickfont: {
+                          size: 11
+                        }
+                      },
+                      plot_bgcolor: 'white',
+                      paper_bgcolor: 'white',
+                      showlegend: true,
+                      legend: {
+                        orientation: 'h',
+                        y: 1.1,
+                        x: 0.5,
+                        xanchor: 'center',
+                        font: {
+                          size: 12
+                        }
+                      },
+                      hovermode: 'x unified',
+                      hoverlabel: {
+                        bgcolor: 'white',
+                        bordercolor: '#ddd',
+                        font: {
+                          family: 'Arial',
+                          size: 12,
+                          color: 'black'
+                        }
+                      }
+                    }}
+                    config={{
+                      displayModeBar: true,
+                      responsive: true,
+                      displaylogo: false,
+                     
+                    }}
+                    style={{
+                      maxHeight: '800px',
+                      border: '1px solid #f0f0f0',
+                      borderRadius: '4px'
+                    }}
+                  />
 
                 </div>
 
@@ -746,28 +914,90 @@ const GapRemoval: React.FC = () => {
                     Third Graph ({selectedColumn3})
                   </h3>
 
-                  <LineChart
-                    width={800 * xScale}
-                    height={500}
-                    style={{ maxHeight: "800px" }}
-                    data={graphData3}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis
-                      domain={[-0.5 / yScale, 0.5 / yScale]}
-                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#ff7300"
-                      activeDot={{ r: 8 }}
-                      name={selectedColumn3}
-                    />
-                  </LineChart>
+                  <Plot
+                    data={[
+                      {
+                        x: graphData3.map(item => item.time),
+                        y: graphData3.map(item => item.value),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: selectedColumn3,
+                        line: {
+                          color: '#ff7300',
+                          shape: 'spline'
+                        },
+                        marker: {
+                          size: 6,
+                          color: '#ff7300'
+                        },
+                        hoverinfo: 'y+name',
+                        hovertemplate: `
+                                      <b>${selectedColumn3}</b><br>
+                                      Time: %{x}<br>
+                                      Value: %{y:.7f}<extra></extra>
+                                      `
+                      }
+                    ]}
+                    layout={{
+                      width: 800 * xScale,
+                      height: 500,
+                      margin: {
+                        l: 60,
+                        r: 30,
+                        b: 80,
+                        t: 30,
+                        pad: 4
+                      },
+                      xaxis: {
+                        title: 'Time',
+                        type: 'category',
+                        tickmode: 'array',
+                        tickvals: getOptimizedTicks(graphData3.map(item => item.time)), // Custom function to select ticks
+                        tickangle: 0,
+                        gridcolor: '#f0f0f0',
+                        gridwidth: 1,
+                        showgrid: true,
+                        automargin: true
+                      },
+                      yaxis: {
+                        title: selectedColumn3,
+                        range: [-0.5 / yScale, 0.5 / yScale],
+                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                        tickmode: 'array',
+                        nticks: 6,
+                        gridcolor: '#f0f0f0',
+                        gridwidth: 1,
+                        zeroline: true,
+                        zerolinecolor: '#f0f0f0',
+                        zerolinewidth: 1
+                      },
+                      plot_bgcolor: 'white',
+                      paper_bgcolor: 'white',
+                      showlegend: true,
+                      legend: {
+                        orientation: 'h',
+                        y: 1.1,
+                        x: 0.5,
+                        xanchor: 'center'
+                      },
+                      hovermode: 'x unified',
+                      hoverlabel: {
+                        bgcolor: 'white',
+                        bordercolor: '#ddd',
+                        font: {
+                          family: 'Arial',
+                          size: 12,
+                          color: 'black'
+                        }
+                      }
+                    }}
+                    config={{
+                      displayModeBar: true,
+                      responsive: true,
+                      displaylogo: false
+                    }}
+                    style={{ maxHeight: '800px' }}
+                  />
 
                 </div>
 
@@ -777,42 +1007,129 @@ const GapRemoval: React.FC = () => {
                     Combined Graph
                   </h3>
 
-                  <LineChart
-                    width={800 * xScale}
-                    height={500}
-                    style={{ maxHeight: "800px" }}
-                    data={combinedGraphData}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis
-                      domain={[-0.5 / yScale, 0.5 / yScale]}
-                      ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="value1"
-                      stroke="#8884d8"
-                      activeDot={{ r: 8 }}
-                      name={selectedColumn1}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="value2"
-                      stroke="#82ca9d"
-                      activeDot={{ r: 8 }}
-                      name={selectedColumn2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="value3"
-                      stroke="#ff7300"
-                      activeDot={{ r: 8 }}
-                      name={selectedColumn3}
-                    />
-                  </LineChart>
+                  <Plot
+                    data={[
+                      {
+                        x: combinedGraphData.map(item => item.time),
+                        y: combinedGraphData.map(item => item.value1),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: selectedColumn1,
+                        line: {
+                          color: '#8884d8',
+                          shape: 'spline'
+                        },
+                        marker: {
+                          size: 6,
+                          color: '#8884d8'
+                        },
+                        hovertemplate: `
+        <b>${selectedColumn1}</b><br>
+        Time: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                      },
+                      {
+                        x: combinedGraphData.map(item => item.time),
+                        y: combinedGraphData.map(item => item.value2),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: selectedColumn2,
+                        line: {
+                          color: '#82ca9d',
+                          shape: 'spline'
+                        },
+                        marker: {
+                          size: 6,
+                          color: '#82ca9d'
+                        },
+                        hovertemplate: `
+        <b>${selectedColumn2}</b><br>
+        Time: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                      },
+                      {
+                        x: combinedGraphData.map(item => item.time),
+                        y: combinedGraphData.map(item => item.value3),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: selectedColumn3,
+                        line: {
+                          color: '#ff7300',
+                          shape: 'spline'
+                        },
+                        marker: {
+                          size: 6,
+                          color: '#ff7300'
+                        },
+                        hovertemplate: `
+        <b>${selectedColumn3}</b><br>
+        Time: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                      }
+                    ]}
+                    layout={{
+                      width: 800 * xScale,
+                      height: 500,
+                      margin: {
+                        l: 60,
+                        r: 30,
+                        b: 80,
+                        t: 30,
+                        pad: 4
+                      },
+                      xaxis: {
+                        title: 'Time',
+                        type: 'category',
+                        tickmode: 'array',
+                        tickvals: getOptimizedTicks(combinedGraphData.map(item => item.time)),
+                        tickangle: 0,
+                        gridcolor: '#f0f0f0',
+                        gridwidth: 1,
+                        showgrid: true,
+                        automargin: true
+                      },
+                      yaxis: {
+                        title: 'Value',
+                        range: [-0.5 / yScale, 0.5 / yScale],
+                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                        tickmode: 'array',
+                        nticks: 6,
+                        gridcolor: '#f0f0f0',
+                        gridwidth: 1,
+                        zeroline: true,
+                        zerolinecolor: '#f0f0f0',
+                        zerolinewidth: 1
+                      },
+                      plot_bgcolor: 'white',
+                      paper_bgcolor: 'white',
+                      showlegend: true,
+                      legend: {
+                        orientation: 'h',
+                        y: 1.1,
+                        x: 0.5,
+                        xanchor: 'center'
+                      },
+                      hovermode: 'x unified',
+                      hoverlabel: {
+                        bgcolor: 'white',
+                        bordercolor: '#ddd',
+                        font: {
+                          family: 'Arial',
+                          size: 12,
+                          color: 'black'
+                        }
+                      }
+                    }}
+                    config={{
+                      displayModeBar: true,
+                      responsive: true,
+                      displaylogo: false
+                    }}
+                    style={{ maxHeight: '800px' }}
+                  />
 
                 </div>
               </div>

@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Papa from "papaparse"; 
+import Papa from "papaparse";
 type Props = {
   onMergeSave: () => void;
 };
@@ -12,27 +12,30 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   }, []);
   const [fileA, setFileA] = useState<File | null>(null);
   const [fileB, setFileB] = useState<File | null>(null);
+  const [tkFileA, setTkFileA] = useState<File | null>(null);
+  const [tkFileB, setTkFileB] = useState<File | null>(null);
   const [fileAtms1, setFileAtms1] = useState<File | null>(null);
   const [fileAtms2, setFileAtms2] = useState<File | null>(null);
 
-// csv issue
+
+  // csv issue new handler
   const readFile = async (file: File): Promise<(string | number | null)[][]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const result = e.target?.result;
           if (!result) return reject("File read error: No result");
-  
+
           // Handle CSV files
           if (file.name.endsWith('.csv')) {
             Papa.parse(result.toString(), {
               complete: (results) => {
                 const data = results.data as (string | number | null)[][];
-                
+
                 // Convert numeric strings to numbers
-                const processedData = data.map(row => 
+                const processedData = data.map(row =>
                   row.map(cell => {
                     if (typeof cell === 'string' && !isNaN(Number(cell)) && cell.trim() !== '') {
                       return Number(cell);
@@ -40,22 +43,22 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
                     return cell;
                   })
                 );
-                
+
                 resolve(processedData);
               },
               error: (error: any) => reject(error)
             });
-          } 
-          // Handle Excel files (your existing logic)
+          }
+          // Handle Excel files (previous logic)
           else {
             const data = new Uint8Array(result as ArrayBuffer);
             const workbook = XLSX.read(data, { type: "array", cellDates: true });
             const firstSheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[firstSheetName];
-  
+
             const json: (string | number | null)[][] = [];
             const range = XLSX.utils.decode_range(sheet["!ref"]!);
-            
+
             for (let row = range.s.r; row <= range.e.r; row++) {
               const rowData: (string | number | null)[] = [];
               for (let col = range.s.c; col <= range.e.c; col++) {
@@ -76,14 +79,14 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
           reject(err);
         }
       };
-      
+
       reader.onerror = (err) => reject(err);
-      
+
       // Read differently based on file type
       if (file.name.endsWith('.csv')) {
-        reader.readAsText(file);
+        reader.readAsText(file); // reader call to read as text for CSV
       } else {
-        reader.readAsArrayBuffer(file);
+        reader.readAsArrayBuffer(file); // reader call to read as array buffer for Excel
       }
     });
   };
@@ -180,118 +183,152 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   };
 
   const handleMerge = async () => {
-    if (!fileA || !fileB || !fileAtms1 || !fileAtms2) {
-      toast.error("Please select all files!");
-      return;
+    if (!fileA || !fileB || !fileAtms1 || !fileAtms2 || !tkFileA || !tkFileB) {
+        toast.error("Please select all files!");
+        return;
     }
-  
+
     try {
-      const [dataA, dataB, dataAtms1, dataAtms2] = await Promise.all([
-        readFile(fileA),
-        readFile(fileB),
-        readFile(fileAtms1),
-        readFile(fileAtms2)
-      ]);
-  
-      // Process TKA and TKB files
-      const headerA = dataA[0];
-      const headerB = dataB[0];
-      const groupedA = groupByDateHour(dataA);
-      const groupedB = groupByDateHour(dataB);
-  
-      // Process ATMS files - skip the first column (Time)
-      const headerAtms1 = dataAtms1[0].slice(1); // Remove Time column
-      const headerAtms2 = dataAtms2[0].slice(1); // Remove Time column
-      const groupedAtms1 = groupByDateHour(dataAtms1);
-      const groupedAtms2 = groupByDateHour(dataAtms2);
-  
-      // Combine all time keys
-      const allKeys = Array.from(
-        new Set([
-          ...groupedA.keys(),
-          ...groupedB.keys(),
-          ...groupedAtms1.keys(),
-          ...groupedAtms2.keys()
-        ])
-      ).sort();
-  
-      const finalData: (string | number | null)[][] = [];
-  
-      // Create header row
-      const headerRow = ["Time"];
-      
-      // Add TKA and TKB headers
-      const maxColumns = Math.max(headerA.length, headerB.length);
-      for (let i = 1; i < maxColumns; i++) {
-        if (i < headerA.length) headerRow.push(`${headerA[i]}`);
-        if (i < headerB.length) headerRow.push(`${headerB[i]}`);
-      }
-      
-      // Add ATMS headers exactly as they are (without prefixes)
-      headerRow.push(...headerAtms1.filter((val): val is string => val !== null && typeof val === 'string'));
-      headerRow.push(...headerAtms2.filter((val): val is string => val !== null && typeof val === 'string'));
-  
-      finalData.push(headerRow);
-  
-      // Process each time key
-      for (const key of allKeys) {
-        const row: (string | number | null)[] = [key];
-        
-        // Get values from TKA and TKB
-        const firstA = groupedA.get(key)
-          ? pickFirstValue(groupedA.get(key)!)
-          : Array(headerA.length).fill(null);
-        const firstB = groupedB.get(key)
-          ? pickFirstValue(groupedB.get(key)!)
-          : Array(headerB.length).fill(null);
-  
-        // Get values from ATMS files (skip Time column)
-        const firstAtms1 = groupedAtms1.get(key)
-          ? pickFirstValue(groupedAtms1.get(key)!).slice(1)
-          : Array(headerAtms1.length).fill(null);
-        const firstAtms2 = groupedAtms2.get(key)
-          ? pickFirstValue(groupedAtms2.get(key)!).slice(1)
-          : Array(headerAtms2.length).fill(null);
-  
-        // Add TKA and TKB values
-        for (let i = 1; i < maxColumns; i++) {
-          if (i < firstA.length) {
-            const val = firstA[i];
-            row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-          }
-          if (i < firstB.length) {
-            const val = firstB[i];
-            row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-          }
+        const [dataA, dataB, dataAtms1, dataAtms2, dataTk3A, dataTk3B] = await Promise.all([
+            readFile(fileA),    // TK-2A
+            readFile(fileB),    // TK-2B
+            readFile(fileAtms1),
+            readFile(fileAtms2),
+            readFile(tkFileA),  // TK-3A
+            readFile(tkFileB)   // TK-3B
+        ]);
+
+        // Process all files
+        const headerA = dataA[0];
+        const headerB = dataB[0];
+        const headerTk3A = dataTk3A[0];
+        const headerTk3B = dataTk3B[0];
+
+        const groupedA = groupByDateHour(dataA);
+        const groupedB = groupByDateHour(dataB);
+        const groupedTk3A = groupByDateHour(dataTk3A);
+        const groupedTk3B = groupByDateHour(dataTk3B);
+        const groupedAtms1 = groupByDateHour(dataAtms1);
+        const groupedAtms2 = groupByDateHour(dataAtms2);
+
+        // Process ATMS files - skip the first column (Time)
+        const headerAtms1 = dataAtms1[0].slice(1);
+        const headerAtms2 = dataAtms2[0].slice(1);
+
+        // Combine all time keys
+        const allKeys = Array.from(
+            new Set([
+                ...groupedA.keys(),
+                ...groupedB.keys(),
+                ...groupedTk3A.keys(),
+                ...groupedTk3B.keys(),
+                ...groupedAtms1.keys(),
+                ...groupedAtms2.keys()
+            ])
+        ).sort();
+
+        const finalData: (string | number | null)[][] = [];
+
+        // Create header row
+        const headerRow = ["Time"];
+
+        // Add TK-2 headers (A and B)
+        const maxColumnsTk2 = Math.max(headerA.length, headerB.length);
+        for (let i = 1; i < maxColumnsTk2; i++) {
+            if (i < headerA.length) headerRow.push(`${headerA[i]}`);
+            if (i < headerB.length) headerRow.push(`${headerB[i]}`);
         }
-  
-        // Add ATMS1 values (already sliced to exclude Time column)
-        row.push(...firstAtms1.map(val => 
-          typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
-        ));
-  
-        // Add ATMS2 values (already sliced to exclude Time column)
-        row.push(...firstAtms2.map(val => 
-          typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
-        ));
-  
-        finalData.push(row);
-      }
-  
-      // Create and save the merged file
-      const ws = XLSX.utils.aoa_to_sheet(finalData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Merged");
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-      localStorage.setItem("mergedExcelFile", wbout);
-      toast.success("Files merged successfully!");
+
+        // Add TK-3 headers (A and B)
+        const maxColumnsTk3 = Math.max(headerTk3A.length, headerTk3B.length);
+        for (let i = 1; i < maxColumnsTk3; i++) {
+            if (i < headerTk3A.length) headerRow.push(`${headerTk3A[i]}`);
+            if (i < headerTk3B.length) headerRow.push(`${headerTk3B[i]}`);
+        }
+
+        // Add ATMS headers exactly as they are
+        headerRow.push(...headerAtms1.filter((val): val is string => val !== null && typeof val === 'string'));
+        headerRow.push(...headerAtms2.filter((val): val is string => val !== null && typeof val === 'string'));
+
+        finalData.push(headerRow);
+
+        // Process each time key
+        for (const key of allKeys) {
+            const row: (string | number | null)[] = [key];
+
+            // Get values from TK-2 files
+            const firstA = groupedA.get(key)
+                ? pickFirstValue(groupedA.get(key)!)
+                : Array(headerA.length).fill(null);
+            const firstB = groupedB.get(key)
+                ? pickFirstValue(groupedB.get(key)!)
+                : Array(headerB.length).fill(null);
+
+            // Get values from TK-3 files
+            const firstTk3A = groupedTk3A.get(key)
+                ? pickFirstValue(groupedTk3A.get(key)!)
+                : Array(headerTk3A.length).fill(null);
+            const firstTk3B = groupedTk3B.get(key)
+                ? pickFirstValue(groupedTk3B.get(key)!)
+                : Array(headerTk3B.length).fill(null);
+
+            // Get values from ATMS files (skip Time column)
+            const firstAtms1 = groupedAtms1.get(key)
+                ? pickFirstValue(groupedAtms1.get(key)!).slice(1)
+                : Array(headerAtms1.length).fill(null);
+            const firstAtms2 = groupedAtms2.get(key)
+                ? pickFirstValue(groupedAtms2.get(key)!).slice(1)
+                : Array(headerAtms2.length).fill(null);
+
+            // Add TK-2 values
+            for (let i = 1; i < maxColumnsTk2; i++) {
+                if (i < firstA.length) {
+                    const val = firstA[i];
+                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+                }
+                if (i < firstB.length) {
+                    const val = firstB[i];
+                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+                }
+            }
+
+            // Add TK-3 values
+            for (let i = 1; i < maxColumnsTk3; i++) {
+                if (i < firstTk3A.length) {
+                    const val = firstTk3A[i];
+                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+                }
+                if (i < firstTk3B.length) {
+                    const val = firstTk3B[i];
+                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+                }
+            }
+
+            // Add ATMS values
+            row.push(...firstAtms1.map(val =>
+                typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
+            ));
+            row.push(...firstAtms2.map(val =>
+                typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
+            ));
+
+            finalData.push(row);
+        }
+
+        // Create and save the merged file
+        const ws = XLSX.utils.aoa_to_sheet(finalData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Merged");
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+        localStorage.setItem("mergedExcelFile", wbout);
+        toast.success("Files merged successfully!");
     } catch (err) {
-      toast.error("Error merging files");
-      console.error(err);
+        toast.error("Error merging files");
+        console.error(err);
     }
-  
+
     onMergeSave();
-  };
+};
 
   return (
     <>
@@ -320,68 +357,164 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
         </h2>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <label
+          <div
             style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "600",
-              color: "#1f2937",
-              fontSize: "0.9rem",
+              display: "flex",
+              justifyContent: "space-between",
+              flexDirection: "row",
+              width: "100%", // Full width container
+              gap: "1rem",   // Optional spacing between columns
             }}
           >
-            Upload TKA File:
-          </label>
-          <input
-            type="file"
-            accept=".xlsx, .xls, .csv"
-            onChange={(e) => setFileA(e.target.files?.[0] || null)}
+            {/* First input group */}
+            <div style={{ flex: 1 }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Upload TK-2A File:
+              </label>
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                onChange={(e) => setFileA(e.target.files?.[0] || null)}
+                style={{
+                  width: "98%",
+                  padding: "0.5rem",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.875rem",
+                  color: "#374151",
+                  backgroundColor: "#f9fafb",
+                  outline: "none",
+                  transition: "border-color 0.2s ease",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+              />
+            </div>
+
+            {/* Second input group */}
+            <div style={{ flex: 1 }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Upload TK-2B File:
+              </label>
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                onChange={(e) => setFileB(e.target.files?.[0] || null)}
+                style={{
+                  width: "98%",
+                  padding: "0.5rem",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.875rem",
+                  color: "#374151",
+                  backgroundColor: "#f9fafb",
+                  outline: "none",
+                  transition: "border-color 0.2s ease",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+              />
+            </div>
+          </div>
+
+        </div>
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div
             style={{
-              width: "98%",
-              padding: "0.5rem",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              color: "#374151",
-              backgroundColor: "#f9fafb",
-              outline: "none",
-              transition: "border-color 0.2s ease",
+              display: "flex",
+              justifyContent: "space-between",
+              flexDirection: "row",
+              width: "100%", // Full width container
+              gap: "1rem",   // Optional spacing between columns
             }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-          />
+          >
+            {/* First input group */}
+            <div style={{ flex: 1 }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Upload TK-3A File:
+              </label>
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                onChange={(e) => setTkFileA(e.target.files?.[0] || null)}
+                style={{
+                  width: "98%",
+                  padding: "0.5rem",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.875rem",
+                  color: "#374151",
+                  backgroundColor: "#f9fafb",
+                  outline: "none",
+                  transition: "border-color 0.2s ease",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+              />
+            </div>
+
+            {/* Second input group */}
+            <div style={{ flex: 1 }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Upload TK-3B File:
+              </label>
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                onChange={(e) => setTkFileB(e.target.files?.[0] || null)}
+                style={{
+                  width: "98%",
+                  padding: "0.5rem",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.875rem",
+                  color: "#374151",
+                  backgroundColor: "#f9fafb",
+                  outline: "none",
+                  transition: "border-color 0.2s ease",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+              />
+            </div>
+          </div>
+
         </div>
 
-        <div style={{ marginBottom: "1.5rem" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "0.5rem",
-              fontWeight: "600",
-              color: "#1f2937",
-              fontSize: "0.9rem",
-            }}
-          >
-            Upload TKB File:
-          </label>
-          <input
-            type="file"
-            accept=".xlsx, .xls, .csv"
-            onChange={(e) => setFileB(e.target.files?.[0] || null)}
-            style={{
-              width: "98%",
-              padding: "0.5rem",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              color: "#374151",
-              backgroundColor: "#f9fafb",
-              outline: "none",
-              transition: "border-color 0.2s ease",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-          />
-        </div>
+
+
         <div style={{ marginBottom: "1.5rem" }}>
           <label
             style={{
