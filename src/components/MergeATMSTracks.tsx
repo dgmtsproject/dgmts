@@ -2,6 +2,7 @@ import * as XLSX from "xlsx";
 import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Papa from "papaparse"; 
 type Props = {
   onMergeSave: () => void;
 };
@@ -14,40 +15,113 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   const [fileAtms1, setFileAtms1] = useState<File | null>(null);
   const [fileAtms2, setFileAtms2] = useState<File | null>(null);
 
-  const readExcel = (file: File): Promise<(string | number | null)[][]> => {
+// csv issue
+  const readFile = async (file: File): Promise<(string | number | null)[][]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        const result = e.target?.result;
-        if (!result) return reject("File read error: No result");
-
-        const data = new Uint8Array(result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array", cellDates: true });
-        const firstSheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[firstSheetName];
-
-        const json: (string | number | null)[][] = [];
-        const range = XLSX.utils.decode_range(sheet["!ref"]!);
-        for (let row = range.s.r; row <= range.e.r; row++) {
-          const rowData: (string | number | null)[] = [];
-          for (let col = range.s.c; col <= range.e.c; col++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-            const cell = sheet[cellAddress];
-            if (!cell) {
-              rowData.push(null);
-              continue;
+      
+      reader.onload = (e) => {
+        try {
+          const result = e.target?.result;
+          if (!result) return reject("File read error: No result");
+  
+          // Handle CSV files
+          if (file.name.endsWith('.csv')) {
+            Papa.parse(result.toString(), {
+              complete: (results) => {
+                const data = results.data as (string | number | null)[][];
+                
+                // Convert numeric strings to numbers
+                const processedData = data.map(row => 
+                  row.map(cell => {
+                    if (typeof cell === 'string' && !isNaN(Number(cell)) && cell.trim() !== '') {
+                      return Number(cell);
+                    }
+                    return cell;
+                  })
+                );
+                
+                resolve(processedData);
+              },
+              error: (error: any) => reject(error)
+            });
+          } 
+          // Handle Excel files (your existing logic)
+          else {
+            const data = new Uint8Array(result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array", cellDates: true });
+            const firstSheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[firstSheetName];
+  
+            const json: (string | number | null)[][] = [];
+            const range = XLSX.utils.decode_range(sheet["!ref"]!);
+            
+            for (let row = range.s.r; row <= range.e.r; row++) {
+              const rowData: (string | number | null)[] = [];
+              for (let col = range.s.c; col <= range.e.c; col++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                const cell = sheet[cellAddress];
+                if (!cell) {
+                  rowData.push(null);
+                  continue;
+                }
+                const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
+                rowData.push(value);
+              }
+              json.push(rowData);
             }
-            const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
-            rowData.push(value);
+            resolve(json);
           }
-          json.push(rowData);
+        } catch (err) {
+          reject(err);
         }
-        resolve(json);
       };
+      
       reader.onerror = (err) => reject(err);
-      reader.readAsArrayBuffer(file);
+      
+      // Read differently based on file type
+      if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
     });
   };
+
+  // const readExcel = (file: File): Promise<(string | number | null)[][]> => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.onload = (e: ProgressEvent<FileReader>) => {
+  //       const result = e.target?.result;
+  //       if (!result) return reject("File read error: No result");
+
+  //       const data = new Uint8Array(result as ArrayBuffer);
+  //       const workbook = XLSX.read(data, { type: "array", cellDates: true });
+  //       const firstSheetName = workbook.SheetNames[0];
+  //       const sheet = workbook.Sheets[firstSheetName];
+
+  //       const json: (string | number | null)[][] = [];
+  //       const range = XLSX.utils.decode_range(sheet["!ref"]!);
+  //       for (let row = range.s.r; row <= range.e.r; row++) {
+  //         const rowData: (string | number | null)[] = [];
+  //         for (let col = range.s.c; col <= range.e.c; col++) {
+  //           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+  //           const cell = sheet[cellAddress];
+  //           if (!cell) {
+  //             rowData.push(null);
+  //             continue;
+  //           }
+  //           const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
+  //           rowData.push(value);
+  //         }
+  //         json.push(rowData);
+  //       }
+  //       resolve(json);
+  //     };
+  //     reader.onerror = (err) => reject(err);
+  //     reader.readAsArrayBuffer(file);
+  //   });
+  // };
 
   const parseDateHour = (timeStr: string | number | null): string | null => {
     if (!timeStr) return null;
@@ -113,10 +187,10 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   
     try {
       const [dataA, dataB, dataAtms1, dataAtms2] = await Promise.all([
-        readExcel(fileA),
-        readExcel(fileB),
-        readExcel(fileAtms1),
-        readExcel(fileAtms2)
+        readFile(fileA),
+        readFile(fileB),
+        readFile(fileAtms1),
+        readFile(fileAtms2)
       ]);
   
       // Process TKA and TKB files

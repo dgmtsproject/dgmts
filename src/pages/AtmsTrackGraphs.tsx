@@ -13,6 +13,7 @@ import {
     Legend,
     ReferenceArea,
     Label,
+    ReferenceLine,
 } from "recharts";
 import html2canvas from "html2canvas";
 
@@ -797,7 +798,8 @@ const AtmsTrackGraphs: React.FC = () => {
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
-                                    {/* Ohio Bridge Section - Only for Track 2 */}
+
+
                                     {headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 0 && (
                                         <ReferenceArea
                                             x1={combinedGraphData[7]?.x}  // Prism 7 (0-based index 6)
@@ -891,6 +893,30 @@ const AtmsTrackGraphs: React.FC = () => {
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
+                                    {/* check if prism 7 to prism 10 exists and draw ohio bridge too */}
+                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && (
+                                        <ReferenceArea
+                                            x1={Amts2combinedGraphData[1]?.x}  // Prism 7 (0-based index 6)
+                                            x2={Amts2combinedGraphData[3]?.x}  // Prism 10 (0-based index 9)
+                                            fill="rgba(255, 255, 255, 0.7)"
+                                            stroke="#ffcc00"
+                                            strokeWidth={2}
+                                            strokeDasharray="5 5"
+                                            label={
+                                                <Label
+                                                    value="Ohio Bridge"
+                                                    position="insideTop"
+                                                    offset={10}
+                                                    style={{
+                                                        fill: '#333',
+                                                        fontSize: 12,
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                />
+                                            }
+                                        />
+                                    )}
+
                                     {/* Ohio Bridge Section - Only for Track 2 */}
                                     {headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && (
                                         <ReferenceArea
@@ -957,6 +983,22 @@ const AtmsTrackGraphs: React.FC = () => {
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend content={renderLegend} />
 
+                                    {/* draw a reference line vertically here at amts x=0 till amts point not dashed*/}
+                                    <ReferenceLine
+                                        segment={[
+                                            { x: 0, y: -0.5 / yScale }, // Start at bottom of Y-axis domain
+                                            { x: 0, y: Amts2combinedGraphData[0]?.amts2Value || 0 } // End at AMTS-2 value
+                                        ]}
+                                        stroke="red"
+                                        strokeWidth={2}
+                                        label={{
+                                            value: "AMTS-2",
+                                            position: "top",
+                                            fill: "red"
+                                        }}
+                                    />
+                                    {/* Ohio Bridge Section - Only for Track 2 */}
+
                                     {/* AMTS-1 Line (shown at x=0) */}
                                     <Line
                                         type="monotone"
@@ -969,11 +1011,11 @@ const AtmsTrackGraphs: React.FC = () => {
                                         connectNulls={true}
                                     />
 
-                                
+
                                     <Line
                                         type="monotone"
                                         dataKey="amts2Value"
-                                        stroke="#ff6600"  
+                                        stroke="#ff6600"
                                         strokeWidth={2}
                                         dot={{ r: 5, strokeWidth: 2 }}
                                         activeDot={{ r: 8 }}
