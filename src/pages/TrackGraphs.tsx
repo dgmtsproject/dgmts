@@ -1201,7 +1201,7 @@ const TrackGraphs: React.FC = () => {
                        y: data.values,
                        type: 'scatter',
                        mode: 'lines+markers',
-                       showlegend: false, // Hide individual series names in legend
+                       showlegend: false,
                        line: {
                          color: extendedColors[index % extendedColors.length],
                          shape: 'spline'
@@ -1219,8 +1219,8 @@ const TrackGraphs: React.FC = () => {
                      }))}
                      layout={{
                        width: 800 * primsxScale,
-                       height: 600,
-                       margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 }, // Increased bottom margin
+                       height: 700,
+                       margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
                        xaxis: {
                          title: 'Time',
                          type: 'category',
@@ -1234,19 +1234,17 @@ const TrackGraphs: React.FC = () => {
                        },
                        yaxis: {
                          title: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
-                         range: [
-                           yDomain[0] * (0.5 / prismyScale),
-                           yDomain[1] * (0.5 / prismyScale)
-                         ],
                          tickmode: 'linear',
-                         dtick: 0.25, // Fixed 0.25 interval
+                         dtick: 0.25,
                          gridcolor: '#f0f0f0',
                          zeroline: true,
-                         zerolinecolor: '#f0f0f0'
+                         zerolinecolor: '#f0f0f0',
+                         // Dynamic range calculation
+                         autorange: true, // Let Plotly calculate the range
+                         range: undefined // Remove fixed range
                        },
                        plot_bgcolor: 'white',
                        paper_bgcolor: 'white',
-                       // Custom legend implementation
                        annotations: [
                          {
                            x: 0.5,
@@ -1257,7 +1255,8 @@ const TrackGraphs: React.FC = () => {
                            showarrow: false,
                            font: {
                              size: 12,
-                             color: '#333'
+                             color: '#333',
+                             weight: 800,
                            },
                            xanchor: 'center',
                            yanchor: 'top'
