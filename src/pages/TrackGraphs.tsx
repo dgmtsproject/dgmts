@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import html2canvas from "html2canvas"
+import Plot from "react-plotly.js";
 
 interface MovementData {
   prism: string;
@@ -172,6 +173,26 @@ const TrackGraphs: React.FC = () => {
     localStorage.setItem("processedData", JSON.stringify(result));
     setHeaders(newHeader as string[]);
     setProcessedData(result as string[][]);
+  };
+
+  const getOptimizedTicks = (timeData: string | any[]) => {
+    if (!timeData || timeData.length === 0) return [];
+
+    const tickCount = Math.min(6, timeData.length);
+    const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
+
+    const ticks = [];
+    ticks.push(timeData[0]);
+
+    for (let i = 1; i < tickCount - 1; i++) {
+      const index = Math.min(i * step, timeData.length - 1);
+      ticks.push(timeData[index]);
+    }
+    if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
+      ticks.push(timeData[timeData.length - 1]);
+    }
+
+    return ticks;
   };
 
   const handleDownload = () => {
@@ -1172,52 +1193,84 @@ const TrackGraphs: React.FC = () => {
                   <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                     Movements Graph
                   </h3>
-                  <div style={{ height: 400 }}>
+                  <div style={{ height: 800 }}>
                     {movementData.length > 0 ? (
-                      <LineChart
-                        width={800 * primsxScale}
-                        height={500}
-                        data={movementData[0].times.map((time, i) => ({
-                          time,
-                          ...Object.fromEntries(
-                            movementData.map(data => [
-                              data.fullColumnName, 
-                              i < data.values.length ? data.values[i] : null
-                            ])
-                          )
-                        }))}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis
-                          dataKey="time"
-                          tick={{ fontSize: 12 }}
-                        />
-                        <YAxis
-                          domain={[
-                            yDomain[0] * (1 / prismyScale),
-                            yDomain[1] * (1 / prismyScale)
-                          ]}
-                          ticks={
-                            yDomain.length === 2
-                              ? generateTicks(yDomain[0] * (1 / prismyScale), yDomain[1] * (1 / prismyScale))
-                              : []
-                          }
-                        />
-                        <Tooltip />
-                        <Legend />
-                        {movementData.map((data, index) => (
-                          <Line
-                            key={data.fullColumnName} 
-                            type="monotone"
-                            dataKey={data.fullColumnName} 
-                            name={data.fullColumnName} 
-                            stroke={extendedColors[index % extendedColors.length]}
-                            activeDot={{ r: 8 }}
-                            connectNulls
-                          />
-                        ))}
-                      </LineChart>
+                     <Plot
+                     data={movementData.map((data, index) => ({
+                       x: data.times,
+                       y: data.values,
+                       type: 'scatter',
+                       mode: 'lines+markers',
+                       showlegend: false, // Hide individual series names in legend
+                       line: {
+                         color: extendedColors[index % extendedColors.length],
+                         shape: 'spline'
+                       },
+                       marker: {
+                         size: 6,
+                         color: extendedColors[index % extendedColors.length]
+                       },
+                       hovertemplate: `
+                         <b>${data.fullColumnName}</b><br>
+                         Time: %{x}<br>
+                         Value: %{y:.6f}<extra></extra>
+                       `,
+                       connectgaps: true
+                     }))}
+                     layout={{
+                       width: 800 * primsxScale,
+                       height: 600,
+                       margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 }, // Increased bottom margin
+                       xaxis: {
+                         title: 'Time',
+                         type: 'category',
+                         tickmode: 'array',
+                         tickvals: getOptimizedTicks(movementData[0]?.times || []),
+                         tickangle: 0,
+                         gridcolor: '#f0f0f0',
+                         gridwidth: 1,
+                         showgrid: true,
+                         automargin: true
+                       },
+                       yaxis: {
+                         title: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                         range: [
+                           yDomain[0] * (0.5 / prismyScale),
+                           yDomain[1] * (0.5 / prismyScale)
+                         ],
+                         tickmode: 'linear',
+                         dtick: 0.25, // Fixed 0.25 interval
+                         gridcolor: '#f0f0f0',
+                         zeroline: true,
+                         zerolinecolor: '#f0f0f0'
+                       },
+                       plot_bgcolor: 'white',
+                       paper_bgcolor: 'white',
+                       // Custom legend implementation
+                       annotations: [
+                         {
+                           x: 0.5,
+                           y: -0.15,
+                           xref: 'paper',
+                           yref: 'paper',
+                           text: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                           showarrow: false,
+                           font: {
+                             size: 12,
+                             color: '#333'
+                           },
+                           xanchor: 'center',
+                           yanchor: 'top'
+                         }
+                       ],
+                       hovermode: 'x unified'
+                     }}
+                     config={{
+                       displayModeBar: true,
+                       responsive: true,
+                       displaylogo: false
+                     }}
+                   />
                     ) : (
                       <div style={{
                         height: "100%",

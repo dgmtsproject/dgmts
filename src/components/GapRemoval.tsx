@@ -246,7 +246,7 @@ const GapRemoval: React.FC = () => {
 
         if (day && month && year && timePart) {
           // Convert to MM/DD/YYYY format
-          usFormattedDate = `${month}/${day}/${year} ${timePart}`;
+          usFormattedDate = `${day}/${month}/${year} ${timePart}`;
         }
 
         return {
@@ -716,10 +716,10 @@ const GapRemoval: React.FC = () => {
                         },
                         hoverinfo: 'y+name',
                         hovertemplate: `
-        <b>${selectedColumn1}</b><br>
-        Time: %{x}<br>
-        Value: %{y:.6f}<extra></extra>
-      `
+                              <b>${selectedColumn1}</b><br>
+                                Time: %{x}<br>
+                              Value: %{y:.6f}<extra></extra>
+                                  `
                       }
                     ]}
                     layout={{
@@ -736,7 +736,7 @@ const GapRemoval: React.FC = () => {
                         title: 'Time',
                         type: 'category',
                         tickmode: 'array',
-                        tickvals: getOptimizedTicks(graphData1.map(item => item.time)), // Custom function to select ticks
+                        tickvals: getOptimizedTicks(graphData1.map(item => item.time)),
                         tickangle: 0,
                         gridcolor: '#f0f0f0',
                         gridwidth: 1,
@@ -746,21 +746,21 @@ const GapRemoval: React.FC = () => {
                       yaxis: {
                         title: selectedColumn1,
                         range: [-0.5 / yScale, 0.5 / yScale],
-                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'array',
-                        nticks: 6,
+                        tickmode: 'linear', // Changed from 'array' to 'linear'
+                        dtick: 0.25, // Sets 0.25-inch intervals
                         gridcolor: '#f0f0f0',
                         gridwidth: 1,
                         zeroline: true,
                         zerolinecolor: '#f0f0f0',
-                        zerolinewidth: 1
+                        zerolinewidth: 1,
+                        showgrid: true
                       },
                       plot_bgcolor: 'white',
                       paper_bgcolor: 'white',
                       showlegend: true,
                       legend: {
                         orientation: 'h',
-                        y: 1.1,
+                        y: -0.2,
                         x: 0.5,
                         xanchor: 'center'
                       },
@@ -859,7 +859,8 @@ const GapRemoval: React.FC = () => {
                         },
                         range: [-0.5 / yScale, 0.5 / yScale],
                         tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'array',
+                        tickmode: 'linear', // Changed from 'array' to 'linear'
+                        dtick: 0.25, // Sets 0.25-inch intervals
                         nticks: 6,
                         gridcolor: 'rgba(240, 240, 240, 0.7)',
                         gridwidth: 1,
@@ -875,7 +876,7 @@ const GapRemoval: React.FC = () => {
                       showlegend: true,
                       legend: {
                         orientation: 'h',
-                        y: 1.1,
+                        y: -0.2,
                         x: 0.5,
                         xanchor: 'center',
                         font: {
@@ -897,7 +898,7 @@ const GapRemoval: React.FC = () => {
                       displayModeBar: true,
                       responsive: true,
                       displaylogo: false,
-                     
+
                     }}
                     style={{
                       maxHeight: '800px',
@@ -963,7 +964,8 @@ const GapRemoval: React.FC = () => {
                         title: selectedColumn3,
                         range: [-0.5 / yScale, 0.5 / yScale],
                         tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'array',
+                        tickmode: 'linear',
+                        dtick: 0.25,
                         nticks: 6,
                         gridcolor: '#f0f0f0',
                         gridwidth: 1,
@@ -976,7 +978,7 @@ const GapRemoval: React.FC = () => {
                       showlegend: true,
                       legend: {
                         orientation: 'h',
-                        y: 1.1,
+                        y: -0.2,
                         x: 0.5,
                         xanchor: 'center'
                       },
@@ -1095,7 +1097,8 @@ const GapRemoval: React.FC = () => {
                         title: 'Value',
                         range: [-0.5 / yScale, 0.5 / yScale],
                         tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'array',
+                        tickmode: 'linear',
+                        dtick: 0.25,
                         nticks: 6,
                         gridcolor: '#f0f0f0',
                         gridwidth: 1,
@@ -1108,7 +1111,7 @@ const GapRemoval: React.FC = () => {
                       showlegend: true,
                       legend: {
                         orientation: 'h',
-                        y: 1.1,
+                        y: -0.2,
                         x: 0.5,
                         xanchor: 'center'
                       },
