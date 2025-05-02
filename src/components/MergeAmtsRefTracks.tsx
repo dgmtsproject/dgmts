@@ -86,42 +86,6 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
       });
     };
 
-  // const readExcel = (file: File): Promise<(string | number | null)[][]> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onload = (e: ProgressEvent<FileReader>) => {
-  //       const result = e.target?.result;
-  //       if (!result) return reject("File read error: No result");
-  
-  //       const data = new Uint8Array(result as ArrayBuffer);
-  //       const workbook = XLSX.read(data, { type: "array", cellDates: true });
-  //       const firstSheetName = workbook.SheetNames[0];
-  //       const sheet = workbook.Sheets[firstSheetName];
-  
-  //       const json: (string | number | null)[][] = [];
-  //       const range = XLSX.utils.decode_range(sheet["!ref"]!);
-  //       for (let row = range.s.r; row <= range.e.r; row++) {
-  //         const rowData: (string | number | null)[] = [];
-  //         for (let col = range.s.c; col <= range.e.c; col++) {
-  //           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-  //           const cell = sheet[cellAddress];
-  //           if (!cell) {
-  //             rowData.push(null);
-  //             continue;
-  //           }
-  //           // Preserve numbers as numbers, everything else as before
-  //           const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
-  //           rowData.push(value);
-  //         }
-  //         json.push(rowData);
-  //       }
-  //       resolve(json);
-  //     };
-  //     reader.onerror = (err) => reject(err);
-  //     reader.readAsArrayBuffer(file);
-  //   });
-  // };
-
   const parseDateHour = (timeStr: string | number | null): string | null => {
     if (!timeStr) return null;
 
@@ -277,7 +241,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
               fontSize: "0.9rem",
             }}
           >
-            Upload TKA File:
+            Upload AMTS-1 Reference File:
           </label>
           <input
             type="file"
@@ -309,7 +273,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
               fontSize: "0.9rem",
             }}
           >
-            Upload TKB File:
+            Upload AMTS-2 Reference File:
           </label>
           <input
             type="file"

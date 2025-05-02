@@ -15,6 +15,7 @@ const Navbar: React.FC = () => {
       <Link to="/single-prism-with-time">Single Prism Graph</Link>
       <Link to="/multi-prisms-with-time">Multiple Prisms Graph</Link>
       <Link to="/amts-track-graphs"> AMTS Track Graphs</Link>
+      <Link to="/amts-ref-graphs"> AMTS Ref Graphs</Link>
     </nav>
   );
 };

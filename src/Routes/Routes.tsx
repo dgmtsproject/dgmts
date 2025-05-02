@@ -20,6 +20,7 @@ import AddProjects from "../pages/AddProjects";
 import TrackGraphs from "../pages/TrackGraphs";
 import NewTrackGraphs from "../pages/NewTrackGraphs";
 import AtmsTrackGraphs from "../pages/AtmsTrackGraphs";
+import AmtsRefGraphs from "../pages/AmtsRefGraphs";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -44,6 +45,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/multi-prisms-with-time" element={<TrackGraphs />} />
       <Route path="/new-track-graphs" element={<NewTrackGraphs />} />
       <Route path="/amts-track-graphs" element={<AtmsTrackGraphs />} />
+      <Route path="/amts-ref-graphs" element={<AmtsRefGraphs />} />
+
     </Routes>
   );
 };
