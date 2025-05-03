@@ -3,15 +3,6 @@ import HeaNavLogo from "../components/HeaNavLogo";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import TrackMerger from "../components/MergeTracks";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
 import html2canvas from "html2canvas"
 import Plot from "react-plotly.js";
 
@@ -19,13 +10,13 @@ interface MovementData {
   prism: string;
   values: string[];
   times: string[];
-  fullColumnName: string; // Add the full column name to the interface
+  fullColumnName: string; 
 }
 const TrackGraphs: React.FC = () => {
 
   const processSaveRef = useRef<HTMLButtonElement>(null);
   const handleMergeClick = () => {
-    processSaveRef.current?.click(); // simulate click
+    processSaveRef.current?.click(); 
   };
 
   const [selectedRowTime1, setSelectedRowTime1] = useState<string>("placeholder");
@@ -892,59 +883,93 @@ const TrackGraphs: React.FC = () => {
                   <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                     Prisms Graph
                   </h3>
-
-                  <LineChart
-                    width={800 * xScale}
-                    height={500}
-                    style={{ maxHeight: "800px" }}
-                    data={combinedData}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="header"
-
-                      scale="point"
-
-
-                    />
-                    <YAxis
-                      domain={[-0.5, 0.5]}
-                      ticks={
-                        yDomain.length === 2
-                          ? generateTicks(yDomain[0] * (1 / yScale), yDomain[1] * (1 / yScale))
-                          : []
-                      }
-                    />
-                    <Tooltip />
-                    <Legend />
-
-                    {/* Line for graphData1 */}
-                    <Line
-                      type="monotone"
-                      dataKey="value1"
-                      stroke="#8884d8"
-                      name={selectedRowTime1}
-                      activeDot={{ r: 8 }}
-                    />
-
-                    {/* Line for graphData2 */}
-                    <Line
-                      type="monotone"
-                      dataKey="value2"
-                      stroke="#82ca9d"
-                      name={selectedRowTime2}
-                      activeDot={{ r: 8 }}
-                    />
-
-                    {/* Line for graphData3 */}
-                    <Line
-                      type="monotone"
-                      dataKey="value3"
-                      stroke="#ff7300"
-                      name={selectedRowTime3}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
+                  {combinedData.length > 0 ? (
+  <Plot
+    data={[
+      {
+        x: combinedData.map(item => item.header),
+        y: combinedData.map(item => item.value1),
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: selectedRowTime1,
+        line: { color: '#8884d8', shape: 'spline' },
+        marker: { size: 6, color: '#8884d8' },
+        hovertemplate: `<b>${selectedRowTime1}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+        connectgaps: true
+      },
+      {
+        x: combinedData.map(item => item.header),
+        y: combinedData.map(item => item.value2),
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: selectedRowTime2,
+        line: { color: '#82ca9d', shape: 'spline' },
+        marker: { size: 6, color: '#82ca9d' },
+        hovertemplate: `<b>${selectedRowTime2}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+        connectgaps: true
+      },
+      {
+        x: combinedData.map(item => item.header),
+        y: combinedData.map(item => item.value3),
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: selectedRowTime3,
+        line: { color: '#ff7300', shape: 'spline' },
+        marker: { size: 6, color: '#ff7300' },
+        hovertemplate: `<b>${selectedRowTime3}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+        connectgaps: true
+      }
+    ]}
+    layout={{
+      width: 800 * xScale,
+      height: 500,
+      margin: { l: 60, r: 30, b: 100, t: 30, pad: 4 },
+      xaxis: {
+        title: 'Header',
+        type: 'category',
+        tickmode: 'auto',
+        nticks: 6, 
+        tickangle: 0,
+        gridcolor: '#f0f0f0',
+        automargin: true,
+        showgrid: true
+      },
+      yaxis: {
+        range: [-0.5, 0.5],
+        tickvals: yDomain.length === 2 
+          ? generateTicks(yDomain[0] * (1 / yScale), yDomain[1] * (1 / yScale))
+          : [],
+        gridcolor: '#f0f0f0',
+        zeroline: true,
+        zerolinecolor: '#f0f0f0'
+      },
+      legend: {
+        orientation: 'h',
+        y: -0.3, 
+        x: 0.5,
+        xanchor: 'center'
+      },
+      plot_bgcolor: 'white',
+      paper_bgcolor: 'white',
+      hovermode: 'x unified',
+      shapes: [{
+        type: 'line',
+        x0: 0,
+        x1: 1,
+        xref: 'paper',
+        y0: 0,
+        y1: 0,
+        line: { color: '#f0f0f0', width: 2 }
+      }]
+    }}
+    config={{
+      displayModeBar: true,
+      responsive: true,
+      displaylogo: false
+    }}
+    style={{ maxHeight: '800px', width: '100%' }}
+  />
+) : null}
 
                 </div>
               </div>
@@ -1195,81 +1220,81 @@ const TrackGraphs: React.FC = () => {
                   </h3>
                   <div style={{ height: 800 }}>
                     {movementData.length > 0 ? (
-                     <Plot
-                     data={movementData.map((data, index) => ({
-                       x: data.times,
-                       y: data.values,
-                       type: 'scatter',
-                       mode: 'lines+markers',
-                       showlegend: false,
-                       line: {
-                         color: extendedColors[index % extendedColors.length],
-                         shape: 'spline'
-                       },
-                       marker: {
-                         size: 6,
-                         color: extendedColors[index % extendedColors.length]
-                       },
-                       hovertemplate: `
+                      <Plot
+                        data={movementData.map((data, index) => ({
+                          x: data.times,
+                          y: data.values,
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          showlegend: false,
+                          line: {
+                            color: extendedColors[index % extendedColors.length],
+                            shape: 'spline'
+                          },
+                          marker: {
+                            size: 6,
+                            color: extendedColors[index % extendedColors.length]
+                          },
+                          hovertemplate: `
                          <b>${data.fullColumnName}</b><br>
                          Time: %{x}<br>
                          Value: %{y:.6f}<extra></extra>
                        `,
-                       connectgaps: true
-                     }))}
-                     layout={{
-                       width: 800 * primsxScale,
-                       height: 700,
-                       margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
-                       xaxis: {
-                         title: 'Time',
-                         type: 'category',
-                         tickmode: 'array',
-                         tickvals: getOptimizedTicks(movementData[0]?.times || []),
-                         tickangle: 0,
-                         gridcolor: '#f0f0f0',
-                         gridwidth: 1,
-                         showgrid: true,
-                         automargin: true
-                       },
-                       yaxis: {
-                         title: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
-                         tickmode: 'linear',
-                         dtick: 0.25,
-                         gridcolor: '#f0f0f0',
-                         zeroline: true,
-                         zerolinecolor: '#f0f0f0',
-                         // Dynamic range calculation
-                         autorange: true, // Let Plotly calculate the range
-                         range: undefined // Remove fixed range
-                       },
-                       plot_bgcolor: 'white',
-                       paper_bgcolor: 'white',
-                       annotations: [
-                         {
-                           x: 0.5,
-                           y: -0.15,
-                           xref: 'paper',
-                           yref: 'paper',
-                           text: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
-                           showarrow: false,
-                           font: {
-                             size: 12,
-                             color: '#333',
-                             weight: 800,
-                           },
-                           xanchor: 'center',
-                           yanchor: 'top'
-                         }
-                       ],
-                       hovermode: 'x unified'
-                     }}
-                     config={{
-                       displayModeBar: true,
-                       responsive: true,
-                       displaylogo: false
-                     }}
-                   />
+                          connectgaps: true
+                        }))}
+                        layout={{
+                          width: 800 * primsxScale,
+                          height: 700,
+                          margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
+                          xaxis: {
+                            title: 'Time',
+                            type: 'category',
+                            tickmode: 'array',
+                            tickvals: getOptimizedTicks(movementData[0]?.times || []),
+                            tickangle: 0,
+                            gridcolor: '#f0f0f0',
+                            gridwidth: 1,
+                            showgrid: true,
+                            automargin: true
+                          },
+                          yaxis: {
+                            title: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                            tickmode: 'linear',
+                            dtick: 0.25,
+                            gridcolor: '#f0f0f0',
+                            zeroline: true,
+                            zerolinecolor: '#f0f0f0',
+                            // Dynamic range calculation
+                            autorange: true, // Let Plotly calculate the range
+                            range: undefined // Remove fixed range
+                          },
+                          plot_bgcolor: 'white',
+                          paper_bgcolor: 'white',
+                          annotations: [
+                            {
+                              x: 0.5,
+                              y: -0.15,
+                              xref: 'paper',
+                              yref: 'paper',
+                              text: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                              showarrow: false,
+                              font: {
+                                size: 12,
+                                color: '#333',
+                                weight: 800,
+                              },
+                              xanchor: 'center',
+                              yanchor: 'top'
+                            }
+                          ],
+                          hovermode: 'x unified'
+                        }}
+                        config={{
+                          displayModeBar: true,
+                          responsive: true,
+                          displaylogo: false
+                        }}
+                      />
                     ) : (
                       <div style={{
                         height: "100%",

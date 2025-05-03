@@ -91,41 +91,6 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
     });
   };
 
-  // const readExcel = (file: File): Promise<(string | number | null)[][]> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onload = (e: ProgressEvent<FileReader>) => {
-  //       const result = e.target?.result;
-  //       if (!result) return reject("File read error: No result");
-
-  //       const data = new Uint8Array(result as ArrayBuffer);
-  //       const workbook = XLSX.read(data, { type: "array", cellDates: true });
-  //       const firstSheetName = workbook.SheetNames[0];
-  //       const sheet = workbook.Sheets[firstSheetName];
-
-  //       const json: (string | number | null)[][] = [];
-  //       const range = XLSX.utils.decode_range(sheet["!ref"]!);
-  //       for (let row = range.s.r; row <= range.e.r; row++) {
-  //         const rowData: (string | number | null)[] = [];
-  //         for (let col = range.s.c; col <= range.e.c; col++) {
-  //           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-  //           const cell = sheet[cellAddress];
-  //           if (!cell) {
-  //             rowData.push(null);
-  //             continue;
-  //           }
-  //           const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
-  //           rowData.push(value);
-  //         }
-  //         json.push(rowData);
-  //       }
-  //       resolve(json);
-  //     };
-  //     reader.onerror = (err) => reject(err);
-  //     reader.readAsArrayBuffer(file);
-  //   });
-  // };
-
   const parseDateHour = (timeStr: string | number | null): string | null => {
     if (!timeStr) return null;
 
@@ -165,22 +130,38 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
 
   const pickFirstValue = (
     rows: (string | number | null)[][]
-  ): (string | number | null)[] => {
-    const result: (string | number | null)[] = [rows[0][0]];
+): (string | number | null)[] => {
+    if (!rows || rows.length === 0) return [];
+    
+    const result: (string | number | null)[] = [rows[0][0]]; // Keep the timestamp
     const colCount = rows[0].length;
+    
     for (let col = 1; col < colCount; col++) {
-      let firstValue: string | number | null = null;
-      for (const row of rows) {
-        const value = row[col];
-        if (value !== null) {
-          firstValue = value;
-          break;
+        let firstValue: string | number | null = null;
+        
+        // First try to find a non-null, non-zero value
+        for (const row of rows) {
+            const value = row[col];
+            if (value !== null && value !== "" && value !== 0) {
+                firstValue = value;
+                break;
+            }
         }
-      }
-      result.push(firstValue);
+        
+        // If still not found, take any value (including null/0)
+        if (firstValue === null) {
+            for (const row of rows) {
+                if (row[col] !== undefined) {
+                    firstValue = row[col];
+                    break;
+                }
+            }
+        }
+        
+        result.push(firstValue);
     }
     return result;
-  };
+};
 
   const handleMerge = async () => {
     if (!fileA || !fileB || !fileAtms1 || !fileAtms2 || !tkFileA || !tkFileB) {
@@ -229,23 +210,21 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
 
         const finalData: (string | number | null)[][] = [];
 
-        // Create header row
+        // Create header row - modified to preserve all columns
         const headerRow = ["Time"];
-
-        // Add TK-2 headers (A and B)
-        const maxColumnsTk2 = Math.max(headerA.length, headerB.length);
-        for (let i = 1; i < maxColumnsTk2; i++) {
-            if (i < headerA.length) headerRow.push(`${headerA[i]}`);
-            if (i < headerB.length) headerRow.push(`${headerB[i]}`);
-        }
-
-        // Add TK-3 headers (A and B)
-        const maxColumnsTk3 = Math.max(headerTk3A.length, headerTk3B.length);
-        for (let i = 1; i < maxColumnsTk3; i++) {
-            if (i < headerTk3A.length) headerRow.push(`${headerTk3A[i]}`);
-            if (i < headerTk3B.length) headerRow.push(`${headerTk3B[i]}`);
-        }
-
+        
+        // Add all TK-2A columns (skip Time column)
+        headerRow.push(...headerA.slice(1).map(h => h !== null ? h.toString() : ''));
+        
+        // Add all TK-2B columns (skip Time column)
+        headerRow.push(...headerB.slice(1).map(h => h !== null ? h.toString() : ''));
+        
+        // Add all TK-3A columns (skip Time column)
+        headerRow.push(...headerTk3A.slice(1).map(h => h !== null ? h.toString() : ''));
+        
+        // Add all TK-3B columns (skip Time column)
+        headerRow.push(...headerTk3B.slice(1).map(h => h !== null ? h.toString() : ''));
+        
         // Add ATMS headers exactly as they are
         headerRow.push(...headerAtms1.filter((val): val is string => val !== null && typeof val === 'string'));
         headerRow.push(...headerAtms2.filter((val): val is string => val !== null && typeof val === 'string'));
@@ -280,30 +259,26 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
                 ? pickFirstValue(groupedAtms2.get(key)!).slice(1)
                 : Array(headerAtms2.length).fill(null);
 
-            // Add TK-2 values
-            for (let i = 1; i < maxColumnsTk2; i++) {
-                if (i < firstA.length) {
-                    const val = firstA[i];
-                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-                }
-                if (i < firstB.length) {
-                    const val = firstB[i];
-                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-                }
-            }
-
-            // Add TK-3 values
-            for (let i = 1; i < maxColumnsTk3; i++) {
-                if (i < firstTk3A.length) {
-                    const val = firstTk3A[i];
-                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-                }
-                if (i < firstTk3B.length) {
-                    const val = firstTk3B[i];
-                    row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-                }
-            }
-
+            // Add all TK-2A values (skip Time column)
+            row.push(...firstA.slice(1).map(val => 
+                typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
+            ));
+            
+            // Add all TK-2B values (skip Time column)
+            row.push(...firstB.slice(1).map(val => 
+                typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
+            ));
+            
+            // Add all TK-3A values (skip Time column)
+            row.push(...firstTk3A.slice(1).map(val => 
+                typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
+            ));
+            
+            // Add all TK-3B values (skip Time column)
+            row.push(...firstTk3B.slice(1).map(val => 
+                typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
+            ));
+            
             // Add ATMS values
             row.push(...firstAtms1.map(val =>
                 typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val
