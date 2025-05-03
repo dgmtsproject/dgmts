@@ -16,6 +16,8 @@ import {
     ReferenceLine,
 } from "recharts";
 import html2canvas from "html2canvas";
+import Plot from "react-plotly.js";
+import { Shape, Annotations } from "plotly.js";
 
 const AtmsTrackGraphs: React.FC = () => {
     const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
@@ -256,6 +258,70 @@ const AtmsTrackGraphs: React.FC = () => {
             saveAs(processedBlob, "difference_output-and-amts.xlsx");
         }
     };
+    const shapes = [
+        // Ohio Bridge reference area (only for LBN-TP-TK2)
+        ...(headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 7 && combinedGraphData.length > 10
+            ? [{
+                type: 'rect',
+                x0: combinedGraphData[7].x,
+                x1: combinedGraphData[10].x,
+                y0: -0.5 / yScale,
+                y1: 0.5 / yScale,
+                fillcolor: 'rgba(255, 255, 255, 0.7)',
+                line: {
+                    color: '#ffcc00',
+                    width: 2,
+                    dash: 'dash'
+                },
+                layer: 'below'
+            }]
+            : []),
+        // AMTS-2 reference line (vertical at x=0)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 0,
+            y0: -0.5 / yScale,
+            y1: combinedGraphData[0]?.amtsValue || 0,
+            line: {
+                color: 'red',
+                width: 2
+            }
+        }
+    ].filter(Boolean) as Partial<Shape>[];
+
+    const annotations = [
+            // Ohio Bridge label
+            ...(headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 7 && combinedGraphData.length > 10
+                ? [{
+                    x: (combinedGraphData[7].x + combinedGraphData[10].x) / 2,
+                    y: 0.5 / yScale,
+                    text: 'Ohio Bridge',
+                    showarrow: false,
+                    font: {
+                        size: 12,
+                        color: '#333',
+                        weight: 'bold'
+                    },
+                    yref: 'y',
+                    yanchor: 'bottom'
+                }]
+                : []),
+            // AMTS-2 label
+            ...(combinedGraphData[0]?.amtsValue !== undefined
+                ? [{
+                    x: 0,
+                    y: combinedGraphData[0]?.amtsValue || 0,
+                    text:'AMTS',
+                    font: {
+                        color: 'red'
+                    },
+                    yshift: 10,
+                    xanchor: 'left'
+                }]
+                : [])
+        ].filter(Boolean) as Partial<Annotations>[];
+
     // filter the time values only get the time that the header which starts with "LBN-AMTS1-" has the value
     useEffect(() => {
         if (processedData.length > 1) {
@@ -894,110 +960,128 @@ const AtmsTrackGraphs: React.FC = () => {
                                     AMTS-1 GRAPH
 
                                 </h3>
-                                <LineChart
-                                    width={800 * xScale}
-                                    height={500}
-                                    style={{ maxHeight: "800px", background: 'white' }}
-                                    data={combinedGraphData}
-                                    margin={{ left: 50, right: 50 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-
-
-
-                                    {headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 0 && (
-                                        <ReferenceArea
-                                            x1={combinedGraphData[7]?.x}  // Prism 7 (0-based index 6)
-                                            x2={combinedGraphData[10]?.x}  // Prism 10 (0-based index 9)
-                                            fill="rgba(255, 255, 255, 0.7)"
-                                            stroke="#ffcc00"
-                                            strokeWidth={2}
-                                            strokeDasharray="5 5"
-                                            // a little less height than the graph height
-                                            // y1={-0.5 / yScale + 0.1}
-                                            // y2={0.5 / yScale - 0.5}
-                                            label={
-                                                <Label
-                                                    value="Ohio Bridge"
-                                                    position="insideTop"
-                                                    offset={10}
-                                                    style={{
-                                                        fill: '#333',
-                                                        fontSize: 12,
-                                                        fontWeight: 'bold'
-                                                    }}
-                                                />
-                                            }
-                                        />
-                                    )}
-
-                                    {/* Rest of your chart components... */}
-                                    <XAxis
-                                        dataKey="x"
-                                        domain={xDomain}
-                                        label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
-                                        type="number"
-                                        tickCount={10}
-                                    />
-                                    <YAxis
-                                        domain={[-0.5 / yScale, 0.5 / yScale]}
-                                        ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                                        label={{
-                                            value: selectedTrkColOption,
-                                            angle: -90,
-                                            position: 'insideLeft',
-                                            style: { textAnchor: 'middle' }
-                                        }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend content={renderLegend} />
-
-                                                                        
-                                    <ReferenceLine
-                                        segment={[
-                                            { x: 0, y: -0.5 / yScale }, 
-                                            { x: 0, y: combinedGraphData[0]?.amtsValue || 0 } 
-                                        ]}
-                                        stroke="red"
-                                        strokeWidth={2}
-                                        label={{
-                                            value: "AMTS-2",
-                                            position: "top",
-                                            fill: "red"
-                                        }}
-                                    />
-
-                                    <Line
-                                        type="monotone"
-                                        dataKey="amtsValue"
-                                        stroke="#ff0000"
-                                        strokeWidth={2}
-                                        dot={{ r:5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="AMTS-1"
-                                        connectNulls={true}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="prismA"
-                                        stroke="#8884d8"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="Prism A"
-                                        connectNulls={true}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="prismB"
-                                        stroke="#82ca9d"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="Prism B"
-                                        connectNulls={true}
-                                    />
-                                </LineChart>
+                                <Plot
+    data={[
+        // AMTS-1 line
+        {
+            x: combinedGraphData.map(item => item.x),
+            y: combinedGraphData.map(item => item.amtsValue),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'AMTS-1',
+            line: { 
+                color: '#ff0000', 
+                width: 2,
+                shape: 'spline' 
+            },
+            marker: { 
+                size: 6, 
+                color: '#ff0000',
+                line: { width: 0 }
+            },
+            hovertemplate: `
+                <b>AMTS-1</b><br>
+                Distance: %{x}<br>
+                Value: %{y:.6f}<br>
+                ${combinedGraphData[0]?.amtsColName ? `Column: ${combinedGraphData[0].amtsColName}<br>` : ''}
+                Time: ${combinedGraphData[0]?.time || ''}
+                <extra></extra>
+            `,
+            connectgaps: true
+        },
+        // Prism A line
+        {
+            x: combinedGraphData.map(item => item.x),
+            y: combinedGraphData.map(item => item.prismA),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: `${selectedTrk}-A-${selectedTrkColOption}`,
+            line: { 
+                color: '#8884d8', 
+                width: 2,
+                shape: 'spline' 
+            },
+            marker: { 
+                size: 6, 
+                color: '#8884d8',
+                line: { width: 0 }
+            },
+            hovertemplate: combinedGraphData.map(item => `
+                Distance: ${item.x}<br>
+                Value: ${item.prismA?.toFixed(6) || 'N/A'}<br>
+                ${item.prismAColName ? `Column: ${item.prismAColName}<br>` : ''}
+                Time: ${item.time || ''}
+                <extra></extra>
+            `),
+            connectgaps: true
+        },
+        // Prism B line
+        {
+            x: combinedGraphData.map(item => item.x),
+            y: combinedGraphData.map(item => item.prismB),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: `${selectedTrk}-B-${selectedTrkColOption}`,
+            line: { 
+                color: '#82ca9d', 
+                width: 2,
+                shape: 'spline' 
+            },
+            marker: { 
+                size: 6, 
+                color: '#82ca9d',
+                line: { width: 0 }
+            },
+            hovertemplate: combinedGraphData.map(item => `
+                Distance: ${item.x}<br>
+                Value: ${item.prismB?.toFixed(6) || 'N/A'}<br>
+                ${item.prismBColName ? `Column: ${item.prismBColName}<br>` : ''}
+                Time: ${item.time || ''}
+                <extra></extra>
+            `),
+            connectgaps: true
+        }
+    ]}
+    layout={{
+        width: 800 * xScale,
+        height: 500,
+        margin: { l: 60, r: 30, b: 100, t: 30, pad: 4 },
+        xaxis: {
+            title: 'Distance',
+            type: 'linear',
+            tickmode: 'auto',
+            nticks: 10,
+            gridcolor: '#f0f0f0',
+            automargin: true,
+            showgrid: true,
+            range: xDomain
+        },
+        yaxis: {
+            range: [-0.5 / yScale, 0.5 / yScale],
+            tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#f0f0f0'
+        },
+        legend: {
+            orientation: 'h',
+            y: -0.3,
+            x: 0.5,
+            xanchor: 'center'
+        },
+        plot_bgcolor: 'white',
+        paper_bgcolor: 'white',
+        hovermode: 'x unified',
+        shapes,
+        annotations,
+    }}
+    config={{
+        displayModeBar: true,
+        responsive: true,
+        displaylogo: false
+    }}
+    style={{ maxHeight: '800px', width: '100%' }}
+/>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                                 <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
