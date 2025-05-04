@@ -735,7 +735,7 @@ const TrackGraphs: React.FC = () => {
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select Track Prism No.
+                    Select No. of Prisms
                   </option>
                   {trackSizeOptions.map((header, index) => (
                     <option key={index} value={header}>
@@ -965,7 +965,8 @@ const TrackGraphs: React.FC = () => {
     config={{
       displayModeBar: true,
       responsive: true,
-      displaylogo: false
+      displaylogo: false,
+      scrollZoom: true,
     }}
     style={{ maxHeight: '800px', width: '100%' }}
   />
@@ -1065,7 +1066,7 @@ const TrackGraphs: React.FC = () => {
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
                   <option value="placeholder" disabled>
-                    Select Track Prism No.
+                    Select No. of Prisms
                   </option>
                   {trackSizeOptions.map((header, index) => (
                     <option key={index} value={header}>
@@ -1258,15 +1259,22 @@ const TrackGraphs: React.FC = () => {
                             automargin: true
                           },
                           yaxis: {
-                            title: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                            title: {
+                              text: 'Movement (inches)',
+                              standoff: 30,
+                              font: {
+                                size: 12,
+                                color: '#333'
+                              }
+                            },
                             tickmode: 'linear',
                             dtick: 0.25,
                             gridcolor: '#f0f0f0',
                             zeroline: true,
                             zerolinecolor: '#f0f0f0',
-                            // Dynamic range calculation
-                            autorange: true, // Let Plotly calculate the range
-                            range: undefined // Remove fixed range
+                            autorange: true,
+                            // title_standoff: 30,
+                            automargin: true
                           },
                           plot_bgcolor: 'white',
                           paper_bgcolor: 'white',
@@ -1292,7 +1300,8 @@ const TrackGraphs: React.FC = () => {
                         config={{
                           displayModeBar: true,
                           responsive: true,
-                          displaylogo: false
+                          displaylogo: false,
+                          scrollZoom: true,
                         }}
                       />
                     ) : (

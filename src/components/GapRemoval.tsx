@@ -728,12 +728,21 @@ const GapRemoval: React.FC = () => {
                       margin: {
                         l: 60,
                         r: 30,
-                        b: 80,
+                        b: 100, 
                         t: 30,
                         pad: 4
                       },
                       xaxis: {
-                        title: 'Time',
+                        title: {
+                          text: 'Time',
+                          standoff: 25,
+                          position: 'bottom right',
+                          font: {
+                            size: 12,
+                            weight: 600
+                          },
+                        },
+                        
                         type: 'category',
                         tickmode: 'array',
                         tickvals: getOptimizedTicks(graphData1.map(item => item.time)),
@@ -743,6 +752,7 @@ const GapRemoval: React.FC = () => {
                         showgrid: true,
                         automargin: true
                       },
+                    
                       yaxis: {
                         title: selectedColumn1,
                         range: [-0.5 / yScale, 0.5 / yScale],
@@ -778,7 +788,8 @@ const GapRemoval: React.FC = () => {
                     config={{
                       displayModeBar: true,
                       responsive: true,
-                      displaylogo: false
+                      displaylogo: false,
+                      scrollZoom: true
                     }}
                     style={{ maxHeight: '800px' }}
                   />
@@ -839,7 +850,15 @@ const GapRemoval: React.FC = () => {
                         pad: 4
                       },
                       xaxis: {
-                        title: 'Time',
+                        title: {
+                          text: 'Time',
+                          standoff: 25,
+                          position: 'bottom right',
+                          font: {
+                            size: 12,
+                            weight: 600
+                          },
+                        },
                         type: 'category',
                         tickmode: 'array',
                         tickvals: getOptimizedTicks(graphData2.map(item => item.time)),
@@ -898,6 +917,7 @@ const GapRemoval: React.FC = () => {
                       displayModeBar: true,
                       responsive: true,
                       displaylogo: false,
+                      scrollZoom: true
 
                     }}
                     style={{
@@ -950,7 +970,15 @@ const GapRemoval: React.FC = () => {
                         pad: 4
                       },
                       xaxis: {
-                        title: 'Time',
+                        title: {
+                          text: 'Time',
+                          standoff: 25,
+                          position: 'bottom right',
+                          font: {
+                            size: 12,
+                            weight: 600
+                          },
+                        },
                         type: 'category',
                         tickmode: 'array',
                         tickvals: getOptimizedTicks(graphData3.map(item => item.time)), // Custom function to select ticks
@@ -996,7 +1024,8 @@ const GapRemoval: React.FC = () => {
                     config={{
                       displayModeBar: true,
                       responsive: true,
-                      displaylogo: false
+                      displaylogo: false,
+                      scrollZoom: true
                     }}
                     style={{ maxHeight: '800px' }}
                   />
@@ -1083,7 +1112,15 @@ const GapRemoval: React.FC = () => {
                         pad: 4
                       },
                       xaxis: {
-                        title: 'Time',
+                        title: {
+                          text: 'Time',
+                          standoff: 25,
+                          position: 'bottom right',
+                          font: {
+                            size: 12,
+                            weight: 600
+                          },
+                        },
                         type: 'category',
                         tickmode: 'array',
                         tickvals: getOptimizedTicks(combinedGraphData.map(item => item.time)),
@@ -1129,7 +1166,8 @@ const GapRemoval: React.FC = () => {
                     config={{
                       displayModeBar: true,
                       responsive: true,
-                      displaylogo: false
+                      displaylogo: false,
+                      scrollZoom: true
                     }}
                     style={{ maxHeight: '800px' }}
                   />

@@ -3,18 +3,6 @@ import HeaNavLogo from "../components/HeaNavLogo";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import TrackMerger from "../components/MergeATMSTracks";
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ReferenceArea,
-    Label,
-    ReferenceLine,
-} from "recharts";
 import html2canvas from "html2canvas";
 import Plot from "react-plotly.js";
 import { Shape, Annotations } from "plotly.js";
@@ -29,7 +17,7 @@ const AtmsTrackGraphs: React.FC = () => {
     const [xScale, setXScale] = useState<number>(1);
     const [yScale, setYScale] = useState<number>(1);
     const [selectedTrkColOption, setSelectedTrkColOption] = useState<string>("placeholder");
-    const [selectedTrk,setSelectedTrk] = useState<string>("placeholder");
+    const [selectedTrk, setSelectedTrk] = useState<string>("placeholder");
     // const [yDomain, setYDomain] = useState([-0.5, 0.5]);
     const [combinedGraphData, setCombinedGraphData] = useState<
         Array<{
@@ -82,47 +70,47 @@ const AtmsTrackGraphs: React.FC = () => {
     const handleProcess = () => {
         const fileData = localStorage.getItem("mergedExcelFile");
         if (!fileData) return;
-    
+
         const byteCharacters = atob(fileData);
         const byteNumbers = new Array(byteCharacters.length)
             .fill(null)
             .map((_, i) => byteCharacters.charCodeAt(i));
         const byteArray = new Uint8Array(byteNumbers);
-    
+
         const workbook = XLSX.read(byteArray, { type: "array" });
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-    
+
         if (jsonData.length === 0) return;
-    
+
         const headers = jsonData[0];
         const result: (string | number)[][] = [];
         const timeData: string[] = [];
-    
+
         // Find indices for different data sections
         const tk2StartIndex = 1; // TK-2 data starts right after timestamp
-        const tk2EndIndex = headers.findIndex(h => 
+        const tk2EndIndex = headers.findIndex(h =>
             typeof h === 'string' && h.includes('LBN-TP-TK3')
         );
-        const tk3StartIndex = tk2EndIndex > 0 ? tk2EndIndex : 
+        const tk3StartIndex = tk2EndIndex > 0 ? tk2EndIndex :
             headers.findIndex(h => typeof h === 'string' && h.includes('LBN-TP-TK3'));
         const tk3EndIndex = headers.findIndex(h =>
             typeof h === 'string' && h.includes('LBN-AMTS')
         );
-        const atmsStartIndex = tk3EndIndex > 0 ? tk3EndIndex : 
+        const atmsStartIndex = tk3EndIndex > 0 ? tk3EndIndex :
             headers.findIndex(h => typeof h === 'string' && h.includes('LBN-AMTS'));
-    
+
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i];
             const newRow: (string | number)[] = [row[0]];
             timeData.push(row[0]?.toString() || "");
-    
+
             // Process TK-2 data (pairs of columns)
             for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
                 const val1 = row[j];
                 const val2 = row[j + 1];
                 newRow.push(val1 ?? "", val2 ?? "");
-    
+
                 if (
                     val1 !== undefined &&
                     val2 !== undefined &&
@@ -135,14 +123,14 @@ const AtmsTrackGraphs: React.FC = () => {
                     newRow.push("");
                 }
             }
-    
+
             // Process TK-3 data (pairs of columns)
             if (tk3StartIndex > 0) {
                 for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
                     const val1 = row[j];
                     const val2 = row[j + 1];
                     newRow.push(val1 ?? "", val2 ?? "");
-    
+
                     if (
                         val1 !== undefined &&
                         val2 !== undefined &&
@@ -156,28 +144,28 @@ const AtmsTrackGraphs: React.FC = () => {
                     }
                 }
             }
-    
+
             // Add AMTS data (no processing, just append)
             if (atmsStartIndex > 0) {
                 newRow.push(...row.slice(atmsStartIndex));
             }
-    
+
             result.push(newRow);
         }
-    
+
         const newHeader: (string | number)[] = [headers[0]]; // timestamp
-    
+
         // Create headers for TK-2 differences
         for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
             const h1 = headers[j] ?? `Col${j}`;
             const h2 = headers[j + 1] ?? `Col${j + 1}`;
             let label = "Difference";
-    
+
             if (typeof h1 === "string" && typeof h2 === "string") {
                 const baseName1 = h1.split(' - ')[0];
                 const baseName2 = h2.split(' - ')[0];
                 const baseName = baseName1 === baseName2 ? baseName1 : `${baseName1},${baseName2}`;
-                
+
                 if (h1.toLowerCase().includes("easting") || h2.toLowerCase().includes("easting")) {
                     label = `${baseName} - Easting Difference`;
                 } else if (h1.toLowerCase().includes("northing") || h2.toLowerCase().includes("northing")) {
@@ -190,19 +178,19 @@ const AtmsTrackGraphs: React.FC = () => {
             }
             newHeader.push(h1, h2, label);
         }
-    
+
         // Create headers for TK-3 differences
         if (tk3StartIndex > 0) {
             for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
                 const h1 = headers[j] ?? `Col${j}`;
                 const h2 = headers[j + 1] ?? `Col${j + 1}`;
                 let label = "Difference";
-    
+
                 if (typeof h1 === "string" && typeof h2 === "string") {
                     const baseName1 = h1.split(' - ')[0];
                     const baseName2 = h2.split(' - ')[0];
                     const baseName = baseName1 === baseName2 ? baseName1 : `${baseName1},${baseName2}`;
-                    
+
                     if (h1.toLowerCase().includes("easting") || h2.toLowerCase().includes("easting")) {
                         label = `${baseName} - Easting Difference `;
                     } else if (h1.toLowerCase().includes("northing") || h2.toLowerCase().includes("northing")) {
@@ -216,28 +204,28 @@ const AtmsTrackGraphs: React.FC = () => {
                 newHeader.push(h1, h2, label);
             }
         }
-    
+
         // Add AMTS headers
         if (atmsStartIndex > 0) {
             newHeader.push(...headers.slice(atmsStartIndex));
         }
-    
+
         result.unshift(newHeader);
-    
+
         const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(result);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Processed");
-    
+
         const wbout = XLSX.write(wb, {
             bookType: "xlsx",
             type: "array",
             cellStyles: true,
         });
-    
+
         const blob = new Blob([wbout], { type: "application/octet-stream" });
         setProcessedBlob(blob);
         setShowGraph(true);
-    
+
         localStorage.setItem("processedHeaders", JSON.stringify(newHeader));
         localStorage.setItem("processedData", JSON.stringify(result));
         setHeaders(newHeader as string[]);
@@ -291,37 +279,171 @@ const AtmsTrackGraphs: React.FC = () => {
     ].filter(Boolean) as Partial<Shape>[];
 
     const annotations = [
-            // Ohio Bridge label
-            ...(headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 7 && combinedGraphData.length > 10
-                ? [{
-                    x: (combinedGraphData[7].x + combinedGraphData[10].x) / 2,
-                    y: 0.5 / yScale,
-                    text: 'Ohio Bridge',
-                    showarrow: false,
-                    font: {
-                        size: 12,
-                        color: '#333',
-                        weight: 'bold'
-                    },
-                    yref: 'y',
-                    yanchor: 'bottom'
-                }]
-                : []),
-            // AMTS-2 label
-            ...(combinedGraphData[0]?.amtsValue !== undefined
-                ? [{
-                    x: 0,
-                    y: combinedGraphData[0]?.amtsValue || 0,
-                    text:'AMTS',
-                    font: {
-                        color: 'red'
-                    },
-                    yshift: 10,
-                    xanchor: 'left'
-                }]
-                : [])
-        ].filter(Boolean) as Partial<Annotations>[];
+        // Ohio Bridge label
+        ...(headers.some(h => h.includes('LBN-TP-TK2')) && combinedGraphData.length > 7 && combinedGraphData.length > 10
+            ? [{
+                x: (combinedGraphData[7].x + combinedGraphData[10].x) / 2,
+                y: 0.5 / yScale,
+                text: 'Ohio Bridge',
+                showarrow: false,
+                font: {
+                    size: 12,
+                    color: '#333',
+                    weight: 'bold'
+                },
+                yref: 'y',
+                yanchor: 'bottom'
+            }]
+            : []),
+        // AMTS-2 label
+        ...(combinedGraphData[0]?.amtsValue !== undefined
+            ? [{
+                x: 0,
+                y: combinedGraphData[0]?.amtsValue || 0,
+                text: 'AMTS',
+                font: {
+                    color: 'red'
+                },
+                yshift: 10,
+                xanchor: 'left'
+            }]
+            : [])
+    ].filter(Boolean) as Partial<Annotations>[];
 
+    const shapesForAmts2 = [
+        // Ohio Bridge reference area for Track 3
+        ...(headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-3'
+            ? [{
+                type: 'rect',
+                x0: Amts2combinedGraphData[1]?.x,
+                x1: Amts2combinedGraphData[3]?.x,
+                y0: -0.5 / yScale,
+                y1: 0.5 / yScale,
+                fillcolor: 'rgba(255, 255, 255, 0.7)',
+                line: {
+                    color: '#ffcc00',
+                    width: 2,
+                    dash: 'dash'
+                },
+                layer: 'below'
+            }]
+            : []),
+
+        // Washington Channel Bridge for Track 2
+        ...(headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-2'
+            ? [{
+                type: 'rect',
+                x0: Amts2combinedGraphData[7]?.x,
+                x1: Amts2combinedGraphData[12]?.x,
+                y0: -0.5 / yScale,
+                y1: 0.5 / yScale,
+                fillcolor: 'rgba(255, 255, 255, 0.7)',
+                line: {
+                    color: '#ffcc00',
+                    width: 2,
+                    dash: 'dash'
+                },
+                layer: 'below'
+            }]
+            : []),
+
+        // Washington Channel Bridge for Track 3
+        ...(headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-3'
+            ? [{
+                type: 'rect',
+                x0: Amts2combinedGraphData[17]?.x,
+                x1: Amts2combinedGraphData[22]?.x,
+                y0: -0.5 / yScale,
+                y1: 0.5 / yScale,
+                fillcolor: 'rgba(255, 255, 255, 0.7)',
+                line: {
+                    color: '#ffcc00',
+                    width: 2,
+                    dash: 'dash'
+                },
+                layer: 'below'
+            }]
+            : []),
+
+        // AMTS-2 reference line (vertical at x=0)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 0,
+            y0: -0.5 / yScale,
+            y1: Amts2combinedGraphData[0]?.amts2Value || 0,
+            line: {
+                color: 'red',
+                width: 2
+            }
+        }
+    ].filter(Boolean) as Partial<Shape>[];
+    const annotationsForAmts2 = [
+        // Ohio Bridge label for Track 3
+        ...(headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-3'
+            ? [{
+                x: (Amts2combinedGraphData[1]?.x + Amts2combinedGraphData[3]?.x) / 2,
+                y: 0.5 / yScale,
+                text: 'Ohio Bridge',
+                showarrow: false,
+                font: {
+                    size: 12,
+                    color: '#333',
+                    weight: 'bold'
+                },
+                yref: 'y',
+                yanchor: 'bottom'
+            }]
+            : []),
+
+        // Washington Channel Bridge label for Track 2
+        ...(headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-2'
+            ? [{
+                x: (Amts2combinedGraphData[7]?.x + Amts2combinedGraphData[12]?.x) / 2,
+                y: 0.5 / yScale,
+                text: 'Washington Channel Bridge',
+                showarrow: false,
+                font: {
+                    size: 12,
+                    color: '#333',
+                    weight: 'bold'
+                },
+                yref: 'y',
+                yanchor: 'bottom'
+            }]
+            : []),
+
+        // Washington Channel Bridge label for Track 3
+        ...(headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-3'
+            ? [{
+                x: (Amts2combinedGraphData[17]?.x + Amts2combinedGraphData[22]?.x) / 2,
+                y: 0.5 / yScale,
+                text: 'Washington Channel Bridge',
+                showarrow: false,
+                font: {
+                    size: 12,
+                    color: '#333',
+                    weight: 'bold'
+                },
+                yref: 'y',
+                yanchor: 'bottom'
+            }]
+            : []),
+
+        // AMTS-2 label
+        ...(Amts2combinedGraphData[0]?.amts2Value !== undefined
+            ? [{
+                x: 0,
+                y: Amts2combinedGraphData[0]?.amts2Value || 0,
+                text: 'AMTS',
+                font: {
+                    color: 'red'
+                },
+                yshift: 10,
+                xanchor: 'left'
+            }]
+            : [])
+    ].filter(Boolean) as Partial<Annotations>[];
     // filter the time values only get the time that the header which starts with "LBN-AMTS1-" has the value
     useEffect(() => {
         if (processedData.length > 1) {
@@ -532,71 +654,6 @@ const AtmsTrackGraphs: React.FC = () => {
             });
         }
     };
-
-    const CustomTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            return (
-                <div className="custom-tooltip" style={{
-                    backgroundColor: '#fff',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px'
-                }}>
-                    <p className="label">{`Time: ${data.time}`}</p>
-                    {payload.map((entry: any) => {
-                        let name = entry.name;
-                        if (entry.dataKey === 'prismA' && data.prismAColName) {
-                            name = data.prismAColName;
-                        }
-                        if (entry.dataKey === 'prismB' && data.prismBColName) {
-                            name = data.prismBColName;
-                        }
-                        if (entry.dataKey === 'amtsValue' && data.amtsColName) {
-                            name = data.amtsColName;
-                        }
-                        return (
-                            <p key={entry.dataKey} style={{ color: entry.color }}>
-                                {`${name}: ${entry.value}`}
-                            </p>
-                        );
-                    })}
-                </div>
-            );
-        }
-        return null;
-    };
-    const renderLegend = (props: any) => {
-        const { payload } = props;
-        return (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {payload.map((entry: any, index: number) => {
-                    let name = entry.value;
-                    // Find the first data point that has this dataKey
-                    const dataItem = combinedGraphData.find((item: any) =>
-                        (entry.dataKey === 'prismA' && item.prismAColName) ||
-                        (entry.dataKey === 'prismB' && item.prismBColName) ||
-                        (entry.dataKey === 'amtsValue' && item.amtsColName)
-                    );
-
-                    if (dataItem) {
-                        if (entry.dataKey === 'prismA') name = dataItem.prismAColName;
-                        if (entry.dataKey === 'prismB') name = dataItem.prismBColName;
-                        if (entry.dataKey === 'amtsValue') name = dataItem.amtsColName;
-                    }
-
-                    return (
-                        <li key={`item-${index}`} style={{ display: 'inline-block', marginRight: '10px' }}>
-                            <svg width="14" height="14" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
-                                <rect width="14" height="14" fill={entry.color} />
-                            </svg>
-                            <span>{name}</span>
-                        </li>
-                    );
-                })}
-            </ul>
-        );
-    };
     const generateTicks = (min: number, max: number) => {
         const range = max - min;
         const approxSteps = 10;
@@ -756,7 +813,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                 </option>
                                 <option value="LBN-TP-TK-2">LBN-TP-TK-2</option>
                                 <option value="LBN-TP-TK-3">LBN-TP-TK-3</option>
-                                
+
                             </select>
                             <label
                                 style={{
@@ -961,25 +1018,25 @@ const AtmsTrackGraphs: React.FC = () => {
 
                                 </h3>
                                 <Plot
-    data={[
-        // AMTS-1 line
-        {
-            x: combinedGraphData.map(item => item.x),
-            y: combinedGraphData.map(item => item.amtsValue),
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: 'AMTS-1',
-            line: { 
-                color: '#ff0000', 
-                width: 2,
-                shape: 'spline' 
-            },
-            marker: { 
-                size: 6, 
-                color: '#ff0000',
-                line: { width: 0 }
-            },
-            hovertemplate: `
+                                    data={[
+                                        // AMTS-1 line
+                                        {
+                                            x: combinedGraphData.map(item => item.x),
+                                            y: combinedGraphData.map(item => item.amtsValue),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: 'AMTS-1',
+                                            line: {
+                                                color: '#ff0000',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#ff0000',
+                                                line: { width: 0 }
+                                            },
+                                            hovertemplate: `
                 <b>AMTS-1</b><br>
                 Distance: %{x}<br>
                 Value: %{y:.6f}<br>
@@ -987,267 +1044,264 @@ const AtmsTrackGraphs: React.FC = () => {
                 Time: ${combinedGraphData[0]?.time || ''}
                 <extra></extra>
             `,
-            connectgaps: true
-        },
-        // Prism A line
-        {
-            x: combinedGraphData.map(item => item.x),
-            y: combinedGraphData.map(item => item.prismA),
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: `${selectedTrk}-A-${selectedTrkColOption}`,
-            line: { 
-                color: '#8884d8', 
-                width: 2,
-                shape: 'spline' 
-            },
-            marker: { 
-                size: 6, 
-                color: '#8884d8',
-                line: { width: 0 }
-            },
-            hovertemplate: combinedGraphData.map(item => `
+                                            connectgaps: true
+                                        },
+                                        // Prism A line
+                                        {
+                                            x: combinedGraphData.map(item => item.x),
+                                            y: combinedGraphData.map(item => item.prismA),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: `${selectedTrk}-A-${selectedTrkColOption}`,
+                                            line: {
+                                                color: '#8884d8',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#8884d8',
+                                                line: { width: 0 }
+                                            },
+                                            hovertemplate: combinedGraphData.map(item => `
                 Distance: ${item.x}<br>
                 Value: ${item.prismA?.toFixed(6) || 'N/A'}<br>
                 ${item.prismAColName ? `Column: ${item.prismAColName}<br>` : ''}
                 Time: ${item.time || ''}
                 <extra></extra>
             `),
-            connectgaps: true
-        },
-        // Prism B line
-        {
-            x: combinedGraphData.map(item => item.x),
-            y: combinedGraphData.map(item => item.prismB),
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: `${selectedTrk}-B-${selectedTrkColOption}`,
-            line: { 
-                color: '#82ca9d', 
-                width: 2,
-                shape: 'spline' 
-            },
-            marker: { 
-                size: 6, 
-                color: '#82ca9d',
-                line: { width: 0 }
-            },
-            hovertemplate: combinedGraphData.map(item => `
+                                            connectgaps: true
+                                        },
+                                        // Prism B line
+                                        {
+                                            x: combinedGraphData.map(item => item.x),
+                                            y: combinedGraphData.map(item => item.prismB),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: `${selectedTrk}-B-${selectedTrkColOption}`,
+                                            line: {
+                                                color: '#82ca9d',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#82ca9d',
+                                                line: { width: 0 }
+                                            },
+                                            hovertemplate: combinedGraphData.map(item => `
                 Distance: ${item.x}<br>
                 Value: ${item.prismB?.toFixed(6) || 'N/A'}<br>
                 ${item.prismBColName ? `Column: ${item.prismBColName}<br>` : ''}
                 Time: ${item.time || ''}
                 <extra></extra>
             `),
-            connectgaps: true
-        }
-    ]}
-    layout={{
-        width: 800 * xScale,
-        height: 500,
-        margin: { l: 60, r: 30, b: 100, t: 30, pad: 4 },
-        xaxis: {
-            title: 'Distance',
-            type: 'linear',
-            tickmode: 'auto',
-            nticks: 10,
-            gridcolor: '#f0f0f0',
-            automargin: true,
-            showgrid: true,
-            range: xDomain
-        },
-        yaxis: {
-            range: [-0.5 / yScale, 0.5 / yScale],
-            tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-            gridcolor: '#f0f0f0',
-            zeroline: true,
-            zerolinecolor: '#f0f0f0'
-        },
-        legend: {
-            orientation: 'h',
-            y: -0.3,
-            x: 0.5,
-            xanchor: 'center'
-        },
-        plot_bgcolor: 'white',
-        paper_bgcolor: 'white',
-        hovermode: 'x unified',
-        shapes,
-        annotations,
-    }}
-    config={{
-        displayModeBar: true,
-        responsive: true,
-        displaylogo: false
-    }}
-    style={{ maxHeight: '800px', width: '100%' }}
-/>
+                                            connectgaps: true
+                                        }
+                                    ]}
+                                    layout={{
+                                        width: 800 * xScale,
+                                        height: 500,
+                                        margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 },
+                                        xaxis: {
+                                            title: 'Distance',
+                                            type: 'linear',
+                                            tickmode: 'auto',
+                                            nticks: 10,
+                                            gridcolor: '#f0f0f0',
+                                            automargin: true,
+                                            showgrid: true,
+                                            range: xDomain
+                                        },
+                                        yaxis: {
+                                            title: {
+                                                text: 'Movement (inches)',
+                                                standoff: 20,
+                                                font: {
+                                                    size: 12,
+                                                    color: '#333'
+                                                }
+                                            },
+                                            range: [-0.5 / yScale, 0.5 / yScale],
+                                            tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                                            gridcolor: '#f0f0f0',
+                                            zeroline: true,
+                                            zerolinecolor: '#f0f0f0',
+                                            // title_standoff: 30,
+                                            automargin: true
+                                        },
+                                        legend: {
+                                            orientation: 'h',
+                                            y: -0.3,
+                                            x: 0.5,
+                                            xanchor: 'center'
+                                        },
+                                        plot_bgcolor: 'white',
+                                        paper_bgcolor: 'white',
+                                        hovermode: 'x unified',
+                                        shapes,
+                                        annotations,
+                                    }}
+                                    config={{
+                                        displayModeBar: true,
+                                        responsive: true,
+                                        displaylogo: false,
+                                        scrollZoom: true,
+                                    }}
+                                    style={{ maxHeight: '800px', width: '100%' }}
+                                />
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                                 <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                                     AMTS-2 GRAPH
 
                                 </h3>
-                                <LineChart
-                                    width={800 * xScale}
-                                    height={500}
-                                    style={{ maxHeight: "800px", background: 'white' }}
-                                    data={Amts2combinedGraphData}
-                                    margin={{ left: 50, right: 50 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-
-                                    {/* check if prism 7 to prism 10 exists and draw ohio bridge too */}
-                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk==='LBN-TP-TK-3' && (
-                                        <ReferenceArea
-                                            x1={Amts2combinedGraphData[1]?.x}  // Prism 7 (0-based index 6)
-                                            x2={Amts2combinedGraphData[3]?.x}  // Prism 10 (0-based index 9)
-                                            fill="rgba(255, 255, 255, 0.7)"
-                                            stroke="#ffcc00"
-                                            strokeWidth={2}
-                                            strokeDasharray="5 5"
-                                            label={
-                                                <Label
-                                                    value="Ohio Bridge"
-                                                    position="insideTop"
-                                                    offset={10}
-                                                    style={{
-                                                        fill: '#333',
-                                                        fontSize: 12,
-                                                        fontWeight: 'bold'
-                                                    }}
-                                                />
-                                            }
-                                        />
-                                    )}
-
-                                    {/* Ohio Bridge Section - Only for Track 2 */}
-                                    {headers.some(h => h.includes('LBN-TP-TK2')) && Amts2combinedGraphData.length > 0 && selectedTrk==='LBN-TP-TK-2' && (
-                                        <ReferenceArea
-                                            x1={Amts2combinedGraphData[7]?.x}
-                                            x2={Amts2combinedGraphData[12]?.x}
-                                            fill="rgba(255, 255, 255, 0.7)"
-                                            stroke="#ffcc00"
-                                            strokeWidth={2}
-                                            strokeDasharray="5 5"
-                                            label={
-                                                <Label
-                                                    value="Washington Channel Bridge"
-                                                    position="insideTop"
-                                                    offset={10}
-                                                    style={{
-                                                        fill: '#333',
-                                                        fontSize: 12,
-                                                        fontWeight: 'bold'
-                                                    }}
-                                                />
-                                            }
-                                        />
-                                    )}
-                                    {headers.some(h => h.includes('LBN-TP-TK3')) && Amts2combinedGraphData.length > 0 && selectedTrk === 'LBN-TP-TK-3' && (
-                                        <ReferenceArea
-                                            x1={Amts2combinedGraphData[17]?.x}
-                                            x2={Amts2combinedGraphData[22]?.x}
-                                            fill="rgba(255, 255, 255, 0.7)"
-                                            stroke="#ffcc00"
-                                            strokeWidth={2}
-                                            strokeDasharray="5 5"
-                                            label={
-                                                <Label
-                                                    value="Washington Channel Bridge"
-                                                    position="insideTop"
-                                                    offset={10}
-                                                    style={{
-                                                        fill: '#333',
-                                                        fontSize: 12,
-                                                        fontWeight: 'bold'
-                                                    }}
-                                                />
-                                            }
-                                        />
-                                    )}
-
-                                    <XAxis
-                                        dataKey="x"
-                                        domain={AmtsxDomain}
-                                        label={{ value: 'Distance', position: 'insideBottomRight', offset: -10 }}
-                                        type="number"
-                                        tickCount={10}
-                                    />
-                                    <YAxis
-                                        domain={[-0.5 / yScale, 0.5 / yScale]}
-                                        ticks={generateTicks(-0.5 / yScale, 0.5 / yScale)}
-                                        label={{
-                                            value: selectedTrkColOption,
-                                            angle: -90,
-                                            position: 'insideLeft',
-                                            style: { textAnchor: 'middle' }
-                                        }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend content={renderLegend} />
-
-                                    
-                                    <ReferenceLine
-                                        segment={[
-                                            { x: 0, y: -0.5 / yScale }, 
-                                            { x: 0, y: Amts2combinedGraphData[0]?.amts2Value || 0 } 
-                                        ]}
-                                        stroke="red"
-                                        strokeWidth={2}
-                                        label={{
-                                            value: "AMTS",
-                                            position: "top",
-                                            fill: "red"
-                                        }}
-                                    />
-                                    {/* Ohio Bridge Section - Only for Track 2 */}
-
-                                    {/* AMTS-1 Line (shown at x=0) */}
-                                    <Line
-                                        type="monotone"
-                                        dataKey="amtsValue"
-                                        stroke="#ff0000"  // Red for AMTS-1
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 , shapeRendering: "edge"}}
-                                        activeDot={{ r: 8 }}
-                                        name="AMTS-1"
-                                        connectNulls={true}
-                                    />
-
-
-                                    <Line
-                                        type="monotone"
-                                        dataKey="amts2Value"
-                                        stroke="#ff6600"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 , shapeRendering: "crispEdges"}}
-                                        activeDot={{ r: 8 }}
-                                        name="AMTS-2"
-                                        connectNulls={true}
-                                    />
-
-                                    <Line
-                                        type="monotone"
-                                        dataKey="prismA"
-                                        stroke="#8884d8"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="Prism A"
-                                        connectNulls={true}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="prismB"
-                                        stroke="#82ca9d"
-                                        strokeWidth={2}
-                                        dot={{ r: 5, strokeWidth: 2 }}
-                                        activeDot={{ r: 8 }}
-                                        name="Prism B"
-                                        connectNulls={true}
-                                    />
-                                </LineChart>
+                                <Plot
+                                    data={[
+                                        // AMTS-1 line
+                                        {
+                                            x: Amts2combinedGraphData.map(item => item.x),
+                                            y: Amts2combinedGraphData.map(item => item.amtsValue),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: 'AMTS-1',
+                                            line: {
+                                                color: '#ff0000',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#ff0000'
+                                            },
+                                            hovertemplate: `
+        <b>AMTS-1</b><br>
+        Distance: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `,
+                                            connectgaps: true
+                                        },
+                                        // AMTS-2 line
+                                        {
+                                            x: Amts2combinedGraphData.map(item => item.x),
+                                            y: Amts2combinedGraphData.map(item => item.amts2Value),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: 'AMTS-2',
+                                            line: {
+                                                color: '#ff6600',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#ff6600'
+                                            },
+                                            hovertemplate: `
+        <b>AMTS-2</b><br>
+        Distance: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `,
+                                            connectgaps: true
+                                        },
+                                        // Prism A line
+                                        {
+                                            x: Amts2combinedGraphData.map(item => item.x),
+                                            y: Amts2combinedGraphData.map(item => item.prismA),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: 'Prism A',
+                                            line: {
+                                                color: '#8884d8',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#8884d8'
+                                            },
+                                            hovertemplate: `
+        <b>Prism A</b><br>
+        Distance: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `,
+                                            connectgaps: true
+                                        },
+                                        // Prism B line
+                                        {
+                                            x: Amts2combinedGraphData.map(item => item.x),
+                                            y: Amts2combinedGraphData.map(item => item.prismB),
+                                            type: 'scatter',
+                                            mode: 'lines+markers',
+                                            name: 'Prism B',
+                                            line: {
+                                                color: '#82ca9d',
+                                                width: 2,
+                                                shape: 'spline'
+                                            },
+                                            marker: {
+                                                size: 6,
+                                                color: '#82ca9d'
+                                            },
+                                            hovertemplate: `
+        <b>Prism B</b><br>
+        Distance: %{x}<br>
+        Value: %{y:.6f}<extra></extra>
+      `,
+                                            connectgaps: true
+                                        }
+                                    ]}
+                                    layout={{
+                                        width: 800 * xScale,
+                                        height: 500,
+                                        margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 }, // Increased left margin for y-axis label
+                                        xaxis: {
+                                            title: 'Distance',
+                                            type: 'linear',
+                                            tickmode: 'auto',
+                                            nticks: 10,
+                                            gridcolor: '#f0f0f0',
+                                            automargin: true,
+                                            showgrid: true,
+                                            range: AmtsxDomain
+                                        },
+                                        yaxis: {
+                                            title: {
+                                                text: 'Movement (inches)',
+                                                standoff: 20,
+                                                font: {
+                                                    size: 12,
+                                                    color: '#333'
+                                                }
+                                            },
+                                            range: [-0.5 / yScale, 0.5 / yScale],
+                                            tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                                            gridcolor: '#f0f0f0',
+                                            zeroline: true,
+                                            zerolinecolor: '#f0f0f0',
+                                            //   title_standoff: 30,
+                                            automargin: true
+                                        },
+                                        legend: {
+                                            orientation: 'h',
+                                            y: -0.3,
+                                            x: 0.5,
+                                            xanchor: 'center'
+                                        },
+                                        plot_bgcolor: 'white',
+                                        paper_bgcolor: 'white',
+                                        hovermode: 'x unified',
+                                        shapes: shapesForAmts2,
+                                        annotations: annotationsForAmts2
+                                    }}
+                                    config={{
+                                        displayModeBar: true,
+                                        responsive: true,
+                                        displaylogo: false,
+                                        scrollZoom: true
+                                    }}
+                                    style={{ maxHeight: '800px', width: '100%' }}
+                                />
                             </div>
                         </div>
                     </div>

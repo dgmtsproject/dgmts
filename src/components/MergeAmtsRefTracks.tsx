@@ -14,78 +14,81 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   const [fileB, setFileB] = useState<File | null>(null);
 
 
-    const readFile = async (file: File): Promise<(string | number | null)[][]> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+  const readFile = async (file: File): Promise<(string | number | null)[][]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
   
-        reader.onload = (e) => {
-          try {
-            const result = e.target?.result;
-            if (!result) return reject("File read error: No result");
+      reader.onload = (e) => {
+        try {
+          const result = e.target?.result;
+          if (!result) return reject("File read error: No result");
   
-            // Handle CSV files
-            if (file.name.endsWith('.csv')) {
-              Papa.parse(result.toString(), {
-                complete: (results) => {
-                  const data = results.data as (string | number | null)[][];
-  
-                  // Convert numeric strings to numbers
-                  const processedData = data.map(row =>
-                    row.map(cell => {
-                      if (typeof cell === 'string' && !isNaN(Number(cell)) && cell.trim() !== '') {
+          if (file.name.endsWith('.csv')) {
+            Papa.parse(result.toString(), {
+              complete: (results) => {
+
+                let data = results.data as (string | number | null)[][];
+                data = data.filter(row => row.length > 0);
+                
+                const processedData = data.map(row => 
+                  row.map(cell => {
+                    if (cell === null || cell === undefined || cell === '') {
+                      return null;
+                    }
+                    if (typeof cell === 'string') {
+                      const date = new Date(cell);
+                      if (!isNaN(date.getTime())) {
+                        return date.toISOString();
+                      }
+       
+                      if (!isNaN(Number(cell))) {
                         return Number(cell);
                       }
-                      return cell;
-                    })
-                  );
-  
-                  resolve(processedData);
-                },
-                error: (error: any) => reject(error)
-              });
-            }
-            // Handle Excel files (previous logic)
-            else {
-              const data = new Uint8Array(result as ArrayBuffer);
-              const workbook = XLSX.read(data, { type: "array", cellDates: true });
-              const firstSheetName = workbook.SheetNames[0];
-              const sheet = workbook.Sheets[firstSheetName];
-  
-              const json: (string | number | null)[][] = [];
-              const range = XLSX.utils.decode_range(sheet["!ref"]!);
-  
-              for (let row = range.s.r; row <= range.e.r; row++) {
-                const rowData: (string | number | null)[] = [];
-                for (let col = range.s.c; col <= range.e.c; col++) {
-                  const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-                  const cell = sheet[cellAddress];
-                  if (!cell) {
-                    rowData.push(null);
-                    continue;
-                  }
-                  const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
-                  rowData.push(value);
-                }
-                json.push(rowData);
-              }
-              resolve(json);
-            }
-          } catch (err) {
-            reject(err);
-          }
-        };
-  
-        reader.onerror = (err) => reject(err);
-  
-        // Read differently based on file type
-        if (file.name.endsWith('.csv')) {
-          reader.readAsText(file); // reader call to read as text for CSV
-        } else {
-          reader.readAsArrayBuffer(file); // reader call to read as array buffer for Excel
-        }
-      });
-    };
+                    }
+                    return cell;
+                  })
+                );
+                
 
+                if (processedData.length === 0) {
+                  return reject("CSV file is empty");
+                }
+                
+                resolve(processedData);
+              },
+              error: (error: any) => reject(error)
+            });
+          } else {
+
+            const data = new Uint8Array(result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array", cellDates: true });
+            const firstSheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[firstSheetName];
+
+            const json = XLSX.utils.sheet_to_json(sheet, {
+              header: 1, 
+              defval: null, 
+              raw: false 
+            }) as (string | number | null)[][];
+
+            const filteredJson = json.filter(row => row.length > 0);
+            
+            resolve(filteredJson);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      };
+  
+      reader.onerror = (err) => reject(err);
+  
+      if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    });
+  };
   const parseDateHour = (timeStr: string | number | null): string | null => {
     if (!timeStr) return null;
 

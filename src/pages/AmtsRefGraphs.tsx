@@ -642,7 +642,12 @@ const AmtsRefGraphs: React.FC = () => {
         font: { family: 'Arial', size: 12, color: 'black' }
       }
     }}
-    config={{ displayModeBar: true, responsive: true, displaylogo: false }}
+    config={{ 
+      displayModeBar: true, 
+      responsive: true, 
+      displaylogo: false, 
+      scrollZoom: true, 
+    }}
     style={{
       maxHeight: '800px',
       border: '1px solid #f0f0f0',
@@ -710,7 +715,12 @@ const AmtsRefGraphs: React.FC = () => {
         font: { family: 'Arial', size: 12, color: 'black' }
       }
     }}
-    config={{ displayModeBar: true, responsive: true, displaylogo: false }}
+    config={{ 
+      displayModeBar: true, 
+      responsive: true, 
+      displaylogo: false,
+      scrollZoom: true
+    }}
     style={{
       maxHeight: '800px',
       border: '1px solid #f0f0f0',
