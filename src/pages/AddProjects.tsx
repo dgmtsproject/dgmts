@@ -6,6 +6,7 @@ import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import MainContentWrapper from '../components/MainContentWrapper';
 // import fs from 'fs';
 
 
@@ -69,6 +70,7 @@ const AddProjects: React.FC = () => {
     return (
         <>
         <HeaNavLogo />
+        <MainContentWrapper>
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', alignItems: 'center' }}>
                 <Button variant="contained" color="primary" onClick={() => navigate('/projects')} style={{ marginLeft: '20px' }}>
@@ -100,6 +102,7 @@ const AddProjects: React.FC = () => {
                 Add
             </Button>
         </form>
+        </MainContentWrapper>
         
 
         </>

@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import HeaNavLogo from '../components/HeaNavLogo';
+import MainContentWrapper from '../components/MainContentWrapper';
 
 const filesData = [
   {
@@ -77,6 +78,7 @@ const FileManager: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <div className="page">
         <div className="content">
           <h2 style={{ textAlign: 'center', marginTop: '20px', color: '#1c1c1c' }}>Project File Manager</h2>
@@ -143,6 +145,7 @@ const FileManager: React.FC = () => {
           © 2025 DGMTS. All rights reserved.
         </footer>
       </div>
+      </MainContentWrapper>
     </>
   );
 };

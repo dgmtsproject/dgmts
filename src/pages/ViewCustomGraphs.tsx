@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/logo.jpg";
 import fullData from "../data/customGraphData.json";
 import HeaNavLogo from "../components/HeaNavLogo";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 interface GraphData {
   time: string;
@@ -121,6 +122,7 @@ const ViewCustomGraphs: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
 
       <div
         style={{
@@ -275,6 +277,7 @@ const ViewCustomGraphs: React.FC = () => {
 
         <ToastContainer />
       </div>
+      </MainContentWrapper>
     </>
   );
 };

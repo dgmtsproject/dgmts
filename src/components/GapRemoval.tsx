@@ -6,6 +6,7 @@ import HeaNavLogo from "./HeaNavLogo";
 import TrackMerger from "./MergeTracks";
 import html2canvas from "html2canvas";
 import Plot from "react-plotly.js";
+import MainContentWrapper from "./MainContentWrapper";
 
 const GapRemoval: React.FC = () => {
   //double click logic-start
@@ -321,8 +322,9 @@ const GapRemoval: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <TrackMerger onMergeSave={handleMergeClick} />
-
+      
       <div
         style={{
           // padding: '2rem',
@@ -1178,6 +1180,7 @@ const GapRemoval: React.FC = () => {
           </div>
         )}
       </div>
+      </MainContentWrapper>
     </>
   );
 };

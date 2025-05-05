@@ -1,22 +1,33 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import MainContentWrapper from '../components/MainContentWrapper';
 import {
   Box,
   Button,
   TextField,
   Typography,
-  Container
+  Container,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import logo from '../assets/logo.jpg';
 import HeaNavLogo from '../components/HeaNavLogo';
 import { supabase } from '../supabase';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from 'react-router-dom';
 const Instruments: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const project = location.state?.project;
+  type Project = {
+    id: string;
+    name: string;
+  };
+
+  const [project, setProject] = useState<Project | null>(location.state?.project || null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   const [EmailsForAlert, setEmailsForAlert] = React.useState<string[]>(['']);
   const [instrumentSno, setInstrumentSno] = React.useState('');
@@ -28,10 +39,42 @@ const Instruments: React.FC = () => {
   const [warningValue, setWarningValue] = React.useState<number | string>('');
   const [shutdownValue, setShutdownValue] = React.useState<number | string>('');
 
+  useEffect(() => {
+    if (!project) {
+      fetchProjects();
+    }
+  }, []);
+  const fetchProjects = async () => {
+    setLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .order('name', { ascending: true });
 
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast.error('Failed to load projects');
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
+  const handleProjectSelect = (projectId: string) => {
+    const selectedProject = projects.find(p => p.id === projectId);
+    if (selectedProject) {
+      setProject(selectedProject);
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!project) {
+      toast.error('Please select a project first');
+      return;
+    }
 
     const emailData = {
       alert_emails: EmailsForAlert,
@@ -39,8 +82,6 @@ const Instruments: React.FC = () => {
       shutdown_emails: ShutEmailsForAlert,
     };
 
-
-  
     const { data, error } = await supabase.from('instruments').insert([
       {
         instrument_id: instrumentId,
@@ -48,7 +89,7 @@ const Instruments: React.FC = () => {
         alert_value: alertValue,
         warning_value: warningValue,
         shutdown_value: shutdownValue,
-        project_id: project?.id, 
+        project_id: project.id, 
         alert_emails: emailData.alert_emails,
         warning_emails: emailData.warning_emails,
         shutdown_emails: emailData.shutdown_emails,
@@ -62,7 +103,6 @@ const Instruments: React.FC = () => {
     } else {
       console.log('Instrument added successfully:', data);
       toast.success('Instrument added successfully!');
-      // navigate to projects page after 2 seconds
       setTimeout(() => {
         navigate('/projects', { state: { project } });
       }, 2000);
@@ -104,9 +144,71 @@ const Instruments: React.FC = () => {
     setShutEmailsForAlert(updatedEmails);
   };
 
+  if (!project) {
+    return (
+      <>
+        <HeaNavLogo />
+        <MainContentWrapper >
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+        <Container maxWidth="lg">
+          <Box mt={4} position="relative">
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '60%',
+                opacity: 0.05,
+                zIndex: -1,
+                pointerEvents: 'none',
+              }}
+            />
+            <Typography variant="h5" gutterBottom align="center" fontWeight="bold">
+              Select Project
+            </Typography>
+            <Box
+              sx={{ mt: 4, width: '100%', maxWidth: 800 }}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              margin="0 auto"
+              padding="20px"
+            >
+              <FormControl fullWidth>
+                <InputLabel id="project-select-label">Project</InputLabel>
+                <Select
+                  labelId="project-select-label"
+                  value=""
+                  onChange={(e) => handleProjectSelect(e.target.value as string)}
+                  label="Project"
+                  disabled={loadingProjects}
+                >
+                  {projects.map((proj) => (
+                    <MenuItem key={proj.id} value={proj.id}>
+                      {proj.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {loadingProjects && <Typography mt={2}>Loading projects...</Typography>}
+              {!loadingProjects && projects.length === 0 && (
+                <Typography mt={2}>No projects found</Typography>
+              )}
+            </Box>
+          </Box>
+        </Container>
+        </MainContentWrapper>
+      </>
+    );
+  }
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper >
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <Container maxWidth="lg">
       <Box mt={4} position="relative">
@@ -165,8 +267,6 @@ const Instruments: React.FC = () => {
       />
     </Box>
 
-
-{/* Alert Values */}
 <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
   <TextField
     label="Alert Value"
@@ -304,6 +404,7 @@ const Instruments: React.FC = () => {
           © 2025 DGMTS. All rights reserved.
         </Box>
       </Container>
+      </MainContentWrapper>
     </>
   );
 };

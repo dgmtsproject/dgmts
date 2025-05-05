@@ -4,6 +4,7 @@ import React from "react";
 import LineGraph from "../pages/LineGraph";
 // import logo from "../assets/logo.jpg";
 import HeaNavLogo from "../components/HeaNavLogo";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 
 
@@ -11,6 +12,7 @@ const ProjectGraphs: React.FC = () => {
   return (
     <>
     <HeaNavLogo/>
+    <MainContentWrapper>
     <div className="page">
       {/* <Header />
       <Navbar /> */}
@@ -39,6 +41,7 @@ const ProjectGraphs: React.FC = () => {
       </div>
       <footer>© 2025 DGMTS. All rights reserved.</footer>
     </div>
+    </MainContentWrapper>
     </>
   );
 };

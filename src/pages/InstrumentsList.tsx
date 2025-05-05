@@ -1,0 +1,224 @@
+import React, { useEffect, useState } from 'react';
+import HeaNavLogo from '../components/HeaNavLogo';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../supabase';
+import {
+  Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Button,
+  FormControl, InputLabel, Select, MenuItem,
+  Typography, Box
+} from '@mui/material';
+import MainContentWrapper from '../components/MainContentWrapper';
+
+type Instrument = {
+  id: number;
+  instrument_id: string;
+  instrument_name: string;
+  alert_value: number;
+  warning_value: number;
+  shutdown_value: number;
+  project_id: number;
+  project_name?: string;
+  sno: string;
+};
+
+type Project = {
+  id: number;
+  name: string;
+};
+
+const InstrumentsList: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [instrumentsData, setInstrumentsData] = useState<Instrument[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(location.state?.project || null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedProject) {
+      fetchInstruments(selectedProject.id);
+    } else {
+      fetchProjects();
+    }
+  }, [selectedProject]);
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInstruments = async (projectId: number) => {
+    setLoading(true);
+    try {
+      // First get the project name
+      const { data: projectData } = await supabase
+        .from('Projects')
+        .select('name')
+        .eq('id', projectId)
+        .single();
+
+      // Then get instruments for this project
+      const { data: instrumentsData, error } = await supabase
+        .from('instruments')
+        .select(`
+          instrument_id,
+          instrument_name,
+          alert_value,
+          warning_value,
+          shutdown_value,
+          project_id,
+          sno
+        `)
+        .eq('project_id', projectId)
+        .order('sno', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedData = instrumentsData.map((instrument: any) => ({
+        ...instrument,
+        project_name: projectData?.name || 'Unknown Project'
+      }));
+      setInstrumentsData(formattedData as Instrument[]);
+    } catch (error) {
+      console.error('Error fetching instruments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProjectChange = (projectId: number) => {
+    const project = projects.find(p => p.id === projectId) || null;
+    setSelectedProject(project);
+  };
+
+  const handleEditInstrument = (instrument: Instrument) => {
+    navigate('/edit-instrument', { state: { instrument } });
+  };
+
+  if (!selectedProject) {
+    return (
+      <>
+        
+        <HeaNavLogo />
+        <MainContentWrapper>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Button variant="contained" onClick={() => navigate('/projects')}>
+            Back to Projects
+          </Button>
+        </Box>
+        <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
+          <Typography variant="h5" align="center" gutterBottom>
+            Select Project to View Instruments
+          </Typography>
+          {loading ? (
+            <Typography align="center">Loading projects...</Typography>
+          ) : (
+            <FormControl fullWidth sx={{ mt: 3 }}>
+              <InputLabel>Project</InputLabel>
+              <Select
+                value=""
+                onChange={(e) => handleProjectChange(Number(e.target.value))}
+                label="Project"
+              >
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        </Box>
+        </MainContentWrapper>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <HeaNavLogo />
+      <MainContentWrapper>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 2 }}>
+        <Button variant="contained" onClick={() => navigate('/projects')}>
+          Back to Projects
+        </Button>
+        {!location.state?.project && (
+          <Button variant="outlined" onClick={() => setSelectedProject(null)}>
+            Change Project
+          </Button>
+        )}
+      </Box>
+    
+      <Box sx={{ fontFamily: 'Arial, sans-serif', p: 0 }}>
+        <Typography variant="h5" align="center" sx={{ mt: 3, color: '#333' }}>
+          Instruments for: {selectedProject.name}
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <TableContainer component={Paper} sx={{ maxWidth: '96%', mt: 3, border: '1px solid #000', mb: 2 }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: '#f1f1f1' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>S.No</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument ID</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Alert Value</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Warning Value</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Shutdown Value</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">Loading instruments...</TableCell>
+                  </TableRow>
+                ) : instrumentsData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">No instruments found for this project</TableCell>
+                  </TableRow>
+                ) : (
+                  instrumentsData.map((instrument) => (
+                    <TableRow key={instrument.id} sx={{ backgroundColor: '#fff' }}>
+                      <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_name}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleEditInstrument(instrument)}
+                          sx={{ py: 1, fontSize: 14 }}
+                        >
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
+      </MainContentWrapper>
+    </>
+  );
+};
+
+export default InstrumentsList;

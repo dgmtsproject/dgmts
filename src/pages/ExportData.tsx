@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import HeaNavLogo from "../components/HeaNavLogo";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 const sensors = [
   "VM1 BatteryLevel",
@@ -77,6 +78,7 @@ const ExportData: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <div
         style={{
           padding: "32px",
@@ -292,6 +294,7 @@ const ExportData: React.FC = () => {
         )}
       </div>
       <ToastContainer />
+      </MainContentWrapper>
     </>
   );
 };

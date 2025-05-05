@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import html2canvas from "html2canvas"
+import MainContentWrapper from "../components/MainContentWrapper";
 
 
 const NewTrackGraphs: React.FC = () => {
@@ -382,6 +383,7 @@ console.log(selectedTrackOptions);
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <TrackMerger onMergeSave={handleMergeClick} />
       <div
         style={{
@@ -1254,6 +1256,7 @@ console.log(selectedTrackOptions);
           </div>
         )}
       </div>
+      </MainContentWrapper>
     </>
   );
 }

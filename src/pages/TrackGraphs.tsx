@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import TrackMerger from "../components/MergeTracks";
 import html2canvas from "html2canvas"
 import Plot from "react-plotly.js";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 interface MovementData {
   prism: string;
@@ -434,6 +435,7 @@ const TrackGraphs: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <TrackMerger onMergeSave={handleMergeClick} />
       <div
         style={{
@@ -1326,6 +1328,7 @@ const TrackGraphs: React.FC = () => {
         )}
 
       </div>
+      </MainContentWrapper>
 
     </>
   );

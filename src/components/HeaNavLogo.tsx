@@ -1,12 +1,13 @@
 import Header from "./Header";
-import Navbar from "../components/Navbar";
+// import Navbar from "../components/Navbar";
+import NavSidebar from './NavSidebar';
 import logo from "../assets/logo.jpg";
 
 const HeaNavLogo = () => {
   return (
     <div>
       <Header />
-      <Navbar />
+      <NavSidebar />
       <div className="centered-logo">
         <img
           src={logo}

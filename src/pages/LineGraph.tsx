@@ -11,6 +11,7 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import projectData from '../data/sensorData.json'; // ✅ Import your static project data
+import MainContentWrapper from '../components/MainContentWrapper';
 
 // Define the type for graph data
 interface GraphData {
@@ -47,6 +48,8 @@ const LineGraph = () => {
   };
 
   return (
+    <>
+    <MainContentWrapper>
     <div>
       <ToastContainer />
       <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
@@ -99,6 +102,8 @@ const LineGraph = () => {
         <p style={{ textAlign: 'center', fontSize: '1.1rem', color: '#777' }}>Select a project to view the data.</p>
       )}
     </div>
+    </MainContentWrapper>
+    </>
   );
 };
 

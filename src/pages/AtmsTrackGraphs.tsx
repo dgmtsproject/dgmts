@@ -6,6 +6,7 @@ import TrackMerger from "../components/MergeATMSTracks";
 import html2canvas from "html2canvas";
 import Plot from "react-plotly.js";
 import { Shape, Annotations } from "plotly.js";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 const AtmsTrackGraphs: React.FC = () => {
     const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
@@ -694,6 +695,7 @@ const AtmsTrackGraphs: React.FC = () => {
 
         <>
             <HeaNavLogo />
+            <MainContentWrapper>
             <TrackMerger onMergeSave={handleMergeClick} />
             <div
                 style={{
@@ -1307,6 +1309,7 @@ const AtmsTrackGraphs: React.FC = () => {
                     </div>
                 )}
             </div>
+            </MainContentWrapper>
 
 
         </>

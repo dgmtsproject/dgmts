@@ -1,63 +1,53 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
+import { supabase } from "../supabase"; // Your existing Supabase client
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import Header from "../components/Header";
 import { useAdminContext } from "../context/AdminContext";
-interface User {
-  username: string;
-  email: string;
-  password: string;
-}
+
+// interface User {
+//   username: string;
+//   email: string;
+//   password: string;
+//   role?: string; 
+// }
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const { setIsAdmin, setUserEmail } = useAdminContext();
 
-  const { setIsAdmin } = useAdminContext(); 
-
-  // Preload 10 random general users if not already in localStorage
-  if (!localStorage.getItem("json-users")) {
-    const generalUsers: User[] = [
-      { username: "John Doe", email: "john@gmail.com", password: "john123" },
-      { username: "Jane Smith", email: "jane@gmail.com", password: "jane123" },
-      { username: "Alice Johnson", email: "alice@gmail.com", password: "alice123" },
-      { username: "Bob Brown", email: "bob@gmail.com", password: "bob123" },
-      { username: "Charlie Davis", email: "charlie@gmail.com", password: "charlie123" },
-      { username: "Eve Miller", email: "eve@gmail.com", password: "eve123" },
-      { username: "Frank Wilson", email: "frank@gmail.com", password: "frank123" },
-      { username: "Grace Hall", email: "grace@gmail.com", password: "grace123" },
-      { username: "Hank Young", email: "hank@gmail.com", password: "hank123" },
-      { username: "Ivy King", email: "ivy@gmail.com", password: "ivy123" },
-    ];
-    localStorage.setItem("json-users", JSON.stringify(generalUsers));
-  }
-
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    // Hardcoded admin
-    if (email === "admin@gmail.com" && password === "adminadmin") {
-      toast.success("Admin login successful!");
-      setIsAdmin(true); 
-      setTimeout(() => navigate("/projects"), 2000);
-      return;
-    }
+    try {
+      const { data: users, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .eq("password", password);
 
-    const users: User[] = JSON.parse(localStorage.getItem("json-users") || "[]");
-    const user = users.find((u) => u.email === email && u.password === password);
+      if (error) throw error;
+      if (!users || users.length === 0) {
+        throw new Error("Invalid email or password");
+      }
 
-    if (user) {
-      toast.success("Login successful!");
+      const user = users[0];
+      const isAdmin = user.role === "admin";
+      setIsAdmin(isAdmin);
+      setUserEmail(email); // Store the email in context
+
+      toast.success(`${isAdmin ? "Admin" : "User"} login successful!`);
       setTimeout(() => navigate("/projects"), 2000);
-    } else {
-      toast.error("Invalid email or password!");
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Login failed";
+      toast.error(errorMessage);
     }
   };
 

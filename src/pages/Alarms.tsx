@@ -6,6 +6,7 @@ import React, { useState, useMemo } from "react";
 import logo from "../assets/logo.jpg";
 import alarmsData from "../data/alarmsData.json";
 import HeaNavLogo from "../components/HeaNavLogo";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 // Properly typed Alarm object with an index signature for dynamic key access
 type Alarm = {
@@ -50,6 +51,7 @@ const Alarms: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <div className="page">
         {/* <Header />
       <Navbar /> */}
@@ -163,6 +165,7 @@ const Alarms: React.FC = () => {
 
         <footer>© 2025 DGMTS. All rights reserved.</footer>
       </div>
+      </MainContentWrapper>
     </>
   );
 };

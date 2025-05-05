@@ -6,6 +6,7 @@ import TrackMerger from "../components/MergeAmtsRefTracks";
 import html2canvas from "html2canvas";
 import Plot from "react-plotly.js";
 import { toast } from "react-toastify";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 const AmtsRefGraphs: React.FC = () => {
 
@@ -277,7 +278,9 @@ const AmtsRefGraphs: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <TrackMerger onMergeSave={handleMergeClick} />
+
 
       <div
         style={{
@@ -740,6 +743,7 @@ const AmtsRefGraphs: React.FC = () => {
           </div>
         )}
       </div>
+      </MainContentWrapper>
     </>
   )
 }

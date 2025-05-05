@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import HeaNavLogo from "../components/HeaNavLogo";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 interface Instrument {
   description: string;
@@ -92,6 +93,7 @@ const ProjectForm: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
+      <MainContentWrapper>
       <div style={styles.formContainer}>
         <ToastContainer />
         <h2 style={styles.heading}>Project Form</h2>
@@ -289,6 +291,7 @@ const ProjectForm: React.FC = () => {
           Submit Project
         </button>
       </div>
+      </MainContentWrapper>
     </>
   );
 };
