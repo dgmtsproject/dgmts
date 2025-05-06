@@ -77,12 +77,22 @@ const NavSidebar: React.FC = () => {
             <ListItemText primary="Projects" />
           </ListItemButton>
 
-          <ListItemButton component={Link} to="/instruments">
+          {isAdmin && (
+              <ListItemButton component={Link} to="/instruments">
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <InstrumentsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Instruments" />
+            </ListItemButton>
+          )}
+          {!isAdmin && (
+          <ListItemButton component={Link} to="/instruments-list">
             <ListItemIcon sx={{ color: 'inherit' }}>
               <InstrumentsIcon />
             </ListItemIcon>
             <ListItemText primary="Instruments" />
           </ListItemButton>
+          )}
 
           <ListItemButton component={Link} to="/alarms">
             <ListItemIcon sx={{ color: 'inherit' }}>

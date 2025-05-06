@@ -9,7 +9,7 @@ import {
   Typography, Box
 } from '@mui/material';
 import MainContentWrapper from '../components/MainContentWrapper';
-
+import { useAdminContext } from '../context/AdminContext';
 type Instrument = {
   id: number;
   instrument_id: string;
@@ -31,6 +31,7 @@ const InstrumentsList: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [instrumentsData, setInstrumentsData] = useState<Instrument[]>([]);
+  const { isAdmin, userEmail } = useAdminContext();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(location.state?.project || null);
   const [loading, setLoading] = useState(false);
@@ -46,29 +47,45 @@ const InstrumentsList: React.FC = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('Projects')
-        .select('id, name')
+        .select('id, name, user_email')
         .order('name', { ascending: true });
-
+      if (!isAdmin && userEmail) {
+        query = query.eq('user_email', userEmail); // Only exact matches
+      }
+      const { data, error } = await query;
+  
       if (error) throw error;
-      setProjects(data || []);
+      const filteredData = isAdmin 
+        ? data 
+        : data?.filter(p => p.user_email === userEmail); 
+      setProjects(filteredData || []);
+      
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const fetchInstruments = async (projectId: number) => {
     setLoading(true);
     try {
-      // First get the project name
+      // First get the project details
       const { data: projectData } = await supabase
         .from('Projects')
-        .select('name')
+        .select('name, user_email')
         .eq('id', projectId)
         .single();
+
+      // Additional security check - verify user has access to this project
+      if (!isAdmin && projectData?.user_email !== userEmail && projectData?.user_email !== null) {
+        console.warn('User does not have access to this project');
+        navigate('/projects');
+        return;
+      }
 
       // Then get instruments for this project
       const { data: instrumentsData, error } = await supabase
@@ -111,37 +128,38 @@ const InstrumentsList: React.FC = () => {
   if (!selectedProject) {
     return (
       <>
-        
         <HeaNavLogo />
         <MainContentWrapper>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Button variant="contained" onClick={() => navigate('/projects')}>
-            Back to Projects
-          </Button>
-        </Box>
-        <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
-          <Typography variant="h5" align="center" gutterBottom>
-            Select Project to View Instruments
-          </Typography>
-          {loading ? (
-            <Typography align="center">Loading projects...</Typography>
-          ) : (
-            <FormControl fullWidth sx={{ mt: 3 }}>
-              <InputLabel>Project</InputLabel>
-              <Select
-                value=""
-                onChange={(e) => handleProjectChange(Number(e.target.value))}
-                label="Project"
-              >
-                {projects.map((project) => (
-                  <MenuItem key={project.id} value={project.id}>
-                    {project.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-        </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Button variant="contained" onClick={() => navigate('/projects')}>
+              Back to Projects
+            </Button>
+          </Box>
+          <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
+            <Typography variant="h5" align="center" gutterBottom>
+              Select Project to View Instruments
+            </Typography>
+            {loading ? (
+              <Typography align="center">Loading projects...</Typography>
+            ) : projects.length === 0 ? (
+              <Typography align="center">No projects available</Typography>
+            ) : (
+              <FormControl fullWidth sx={{ mt: 3 }}>
+                <InputLabel>Project</InputLabel>
+                <Select
+                  value=""
+                  onChange={(e) => handleProjectChange(Number(e.target.value))}
+                  label="Project"
+                >
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </Box>
         </MainContentWrapper>
       </>
     );
