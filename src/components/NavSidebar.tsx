@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Drawer,
@@ -25,26 +25,50 @@ import {
   ExpandMore,
   ExitToApp as LogoutIcon,
   Person as UserIcon,
-  VerifiedUser as AdminProfileIcon
+  VerifiedUser as AdminProfileIcon,
+  AccountTree as ProjectIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
+import { supabase } from '../supabase';
 
 const NavSidebar: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [openGraphs, setOpenGraphs] = useState(false);
-  const { isAdmin, setIsAdmin } = useAdminContext(); // Added setIsAdmin
+  const [openProject, setOpenProject] = useState(false);
+  const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
+  const { isAdmin, setIsAdmin, userEmail } = useAdminContext();
+
+  useEffect(() => {
+    const checkProjectAccess = async () => {
+      if (!userEmail) return;
+      
+      const { data, error } = await supabase
+        .from('Projects')
+        .select('name')
+        .eq('name', 'Long Bridge North')
+        .eq('user_email', userEmail)
+        .single();
+      setHasLongBridgeAccess(isAdmin || !!data);
+      if (error) {
+        console.error('Error fetching project access:', error);
+      }
+    };
+
+    checkProjectAccess();
+  }, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
     setOpenGraphs(!openGraphs);
   };
 
+  const handleProjectClick = () => {
+    setOpenProject(!openProject);
+  };
+
   const handleLogout = () => {
-    // Clear admin context
     setIsAdmin(false);
-    // Navigate to signin page
     navigate('/signin');
-    // You might want to add additional cleanup here if needed
   };
 
   return (
@@ -77,21 +101,20 @@ const NavSidebar: React.FC = () => {
             <ListItemText primary="Projects" />
           </ListItemButton>
 
-          {isAdmin && (
-              <ListItemButton component={Link} to="/instruments">
+          {isAdmin ? (
+            <ListItemButton component={Link} to="/instruments">
               <ListItemIcon sx={{ color: 'inherit' }}>
                 <InstrumentsIcon />
               </ListItemIcon>
               <ListItemText primary="Instruments" />
             </ListItemButton>
-          )}
-          {!isAdmin && (
-          <ListItemButton component={Link} to="/instruments-list">
-            <ListItemIcon sx={{ color: 'inherit' }}>
-              <InstrumentsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Instruments" />
-          </ListItemButton>
+          ) : (
+            <ListItemButton component={Link} to="/instruments-list">
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <InstrumentsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Instruments" />
+            </ListItemButton>
           )}
 
           <ListItemButton component={Link} to="/alarms">
@@ -124,13 +147,27 @@ const NavSidebar: React.FC = () => {
               >
                 <ListItemText primary="Custom Graphs" />
               </ListItemButton>
-              <ListItemButton 
-                component={Link} 
-                to="/single-prism-with-time"
-                sx={{ pl: 4 }}
-              >
-                <ListItemText primary="Single Prism" />
-              </ListItemButton>
+              
+              {/* Long Bridge North Project Section - only show if has access */}
+              {(isAdmin || hasLongBridgeAccess) && (
+                <>
+                  <ListItemButton onClick={handleProjectClick} sx={{ pl: 4 }}>
+                    <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                      <ProjectIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Long Bridge North" />
+                    {openProject ? <ExpandLess /> : <ExpandMore />}
+                  </ListItemButton>
+                  <Collapse in={openProject} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                      <ListItemButton 
+                        component={Link} 
+                        to="/single-prism-with-time"
+                        sx={{ pl: 6 }}
+                      >
+                        <ListItemText primary="Single Prism" />
+                      </ListItemButton>
+                      
               <ListItemButton 
                 component={Link} 
                 to="/multi-prisms-with-time"
@@ -145,13 +182,17 @@ const NavSidebar: React.FC = () => {
               >
                 <ListItemText primary="AMTS Track" />
               </ListItemButton>
-              <ListItemButton 
-                component={Link} 
-                to="/amts-ref-graphs"
-                sx={{ pl: 4 }}
-              >
-                <ListItemText primary="AMTS Ref" />
-              </ListItemButton>
+                      <ListItemButton 
+                        component={Link} 
+                        to="/amts-ref-graphs"
+                        sx={{ pl: 6 }}
+                      >
+                        <ListItemText primary="AMTS Ref" />
+                      </ListItemButton>
+                    </List>
+                  </Collapse>
+                </>
+              )}
             </List>
           </Collapse>
 
@@ -163,26 +204,24 @@ const NavSidebar: React.FC = () => {
           </ListItemButton>
 
           {isAdmin && (
-            <ListItemButton component={Link} to="/ProjectForm">
-              <ListItemIcon sx={{ color: 'inherit' }}>
-                <AdminIcon />
-              </ListItemIcon>
-              <ListItemText primary="Admin Setup" />
-            </ListItemButton>
-          )}
-
-          {isAdmin && (
-            <ListItemButton component={Link} to="/export-data">
-              <ListItemIcon sx={{ color: 'inherit' }}>
-                <ExportIcon />
-              </ListItemIcon>
-              <ListItemText primary="Export Data" />
-            </ListItemButton>
+            <>
+              <ListItemButton component={Link} to="/ProjectForm">
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <AdminIcon />
+                </ListItemIcon>
+                <ListItemText primary="Admin Setup" />
+              </ListItemButton>
+              <ListItemButton component={Link} to="/export-data">
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <ExportIcon />
+                </ListItemIcon>
+                <ListItemText primary="Export Data" />
+              </ListItemButton>
+            </>
           )}
         </List>
       </Box>
 
-      {/* User Profile and Logout Section */}
       <Box sx={{ pb: 2 }}>
         <Divider />
         <List>
@@ -198,7 +237,7 @@ const NavSidebar: React.FC = () => {
             </ListItemIcon>
             <ListItemText 
               primary={isAdmin ? "Admin" : "User"} 
-              secondary="Logged in" 
+              secondary={userEmail || "Not logged in"} 
             />
           </ListItemButton>
           <ListItemButton onClick={handleLogout}>

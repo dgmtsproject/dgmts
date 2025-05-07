@@ -11,13 +11,13 @@ interface MovementData {
   prism: string;
   values: string[];
   times: string[];
-  fullColumnName: string; 
+  fullColumnName: string;
 }
 const TrackGraphs: React.FC = () => {
 
   const processSaveRef = useRef<HTMLButtonElement>(null);
   const handleMergeClick = () => {
-    processSaveRef.current?.click(); 
+    processSaveRef.current?.click();
   };
 
   const [selectedRowTime1, setSelectedRowTime1] = useState<string>("placeholder");
@@ -436,53 +436,27 @@ const TrackGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <TrackMerger onMergeSave={handleMergeClick} />
-      <div
-        style={{
-          // padding: '2rem',
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.5rem",
-          backgroundColor: "#f4f7fa",
-          minHeight: "100vh",
-          fontFamily: "'Inter', sans-serif",
-          border: "4px solid black",
-          margin: "10px",
-          padding: "10px",
-        }}
-      >
-        <button
-          onClick={handleProcess}
-          ref={processSaveRef}
+        <TrackMerger onMergeSave={handleMergeClick} />
+        <div
           style={{
-            display: "none",
-            backgroundColor: "#2563eb",
-            color: "#ffffff",
-            padding: "0.75rem 1.5rem",
-            borderRadius: "0.375rem",
-            fontWeight: "500",
-            cursor: "pointer",
-            transition: "background-color 0.2s ease, transform 0.1s ease",
-            border: "none",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            // padding: '2rem',
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+            backgroundColor: "#f4f7fa",
+            minHeight: "100vh",
+            fontFamily: "'Inter', sans-serif",
+            border: "4px solid black",
+            margin: "2px",
+            padding: "2px",
           }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor = "#1d4ed8")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "#2563eb")
-          }
-          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
-          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          Process & Show Graph
-        </button>
-
-        {processedBlob && (
           <button
-            onClick={handleDownload}
+            onClick={handleProcess}
+            ref={processSaveRef}
             style={{
-              backgroundColor: "#16a34a",
+              display: "none",
+              backgroundColor: "#2563eb",
               color: "#ffffff",
               padding: "0.75rem 1.5rem",
               borderRadius: "0.375rem",
@@ -493,259 +467,617 @@ const TrackGraphs: React.FC = () => {
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
             onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor = "#15803d")
+              (e.currentTarget.style.backgroundColor = "#1d4ed8")
             }
             onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor = "#16a34a")
+              (e.currentTarget.style.backgroundColor = "#2563eb")
             }
-            onMouseDown={(e) =>
-              (e.currentTarget.style.transform = "scale(0.98)")
-            }
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            Download Final File
+            Process & Show Graph
           </button>
-        )}
-        {showGraph && (
-          <div
-            className="graph-container"
-            style={{
-              padding: "2rem",
-              backgroundColor: "#ffffff",
-              borderRadius: "0.5rem",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              marginTop: "1rem",
-            }}
-          >
-            <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
-              <h2
-                style={{
-                  fontWeight: "700",
-                  fontSize: "1.5rem",
-                  color: "#1f2937",
-                  marginBottom: "1rem",
-                }}
-              >
-                Select Headers For Prism Graph:
-              </h2>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
+
+          {processedBlob && (
+            <button
+              onClick={handleDownload}
+              style={{
+                backgroundColor: "#16a34a",
+                color: "#ffffff",
+                padding: "0.75rem 1.5rem",
+                borderRadius: "0.375rem",
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease, transform 0.1s ease",
+                border: "none",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#15803d")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = "#16a34a")
+              }
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.98)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              Download Final File
+            </button>
+          )}
+          {showGraph && (
+            <div
+              className="graph-container"
+              style={{
+                padding: "2rem",
+                backgroundColor: "#ffffff",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                marginTop: "1rem",
+              }}
+            >
+              <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
+                <h2
                   style={{
-                    fontWeight: "600",
+                    fontWeight: "700",
+                    fontSize: "1.5rem",
                     color: "#1f2937",
-                    fontSize: "0.9rem",
+                    marginBottom: "1rem",
                   }}
                 >
-                  Select First Header:
-                </label>
-                <select
-                  value={selectedRowTime1}
-                  onChange={(e) => setSelectedRowTime1(e.target.value)}
+                  Select Headers For Prism Graph:
+                </h2>
+                <div
                   style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginBottom: "1rem",
                   }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
-                  <option value="placeholder" disabled>
-                    Select First TimeStamp
-                  </option>
-                  {timeColumn.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
+                  <label
+                    style={{
+                      fontWeight: "600",
+                      color: "#1f2937",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Select First Header:
+                  </label>
+                  <select
+                    value={selectedRowTime1}
+                    onChange={(e) => setSelectedRowTime1(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select First TimeStamp
                     </option>
-                  ))}
+                    {timeColumn.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
 
-                </select>
-              </div>
+                  </select>
+                </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
+                <div
                   style={{
-                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: "600",
+                      color: "#1f2937",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Select Second TimeStamp:
+                  </label>
+                  <select
+                    value={selectedRowTime2}
+                    onChange={(e) => setSelectedRowTime2(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select Second TimeStamp
+                    </option>
+                    {timeColumn.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
+
+
+                  </select>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: "600",
+                      color: "#1f2937",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Select Third TimeStamp:
+                  </label>
+                  <select
+                    value={selectedRowTime3}
+                    onChange={(e) => setSelectedRowTime3(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select Third TimeStamp
+                    </option>
+                    {timeColumn.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
+
+                  </select>
+                  <select
+                    value={selectedTrack}
+                    onChange={(e) => setSelectedTrack(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select a Track
+                    </option>
+                    {selectedTrackOptions.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
+
+                  </select>
+                  <select
+                    value={selectedTrkColOption}
+                    onChange={(e) => setSelectedTrkColOption(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select Easting/Northing/Height
+                    </option>
+                    {selectedTrkColOptions.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
+
+                  </select>
+                  <select
+                    value={tracksizeoptions}
+                    onChange={(e) => setTrackSizeOptions(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select No. of Prisms
+                    </option>
+                    {trackSizeOptions.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
+
+                  </select>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginTop: "1rem",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontWeight: "600",
+                      color: "#1f2937",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    X Scale:
+                  </label>
+                  <input
+                    type="number"
+                    value={xScale}
+                    onChange={(e) => setXScale(Number(e.target.value))}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      width: "100px",
+                      transition: "border-color 0.2s ease",
+                    }}
+                    min="0.1"
+                    max="1.4"
+                    step="0.1"
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  />
+                  <label
+                    style={{
+                      fontWeight: "600",
+                      color: "#1f2937",
+                      fontSize: "0.9rem",
+                      marginLeft: "1rem",
+                    }}
+                  >
+                    Y Scale:
+                  </label>
+                  <input
+                    type="number"
+                    value={yScale}
+                    onChange={(e) => {
+                      const val = Math.max(0.1, Number(e.target.value));
+                      setYScale(val);
+                    }}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      width: "100px",
+                      transition: "border-color 0.2s ease",
+                    }}
+                    min="0.2"
+                    step="0.1"
+                    max="5.0"
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                  <button
+                    onClick={handleTimeSelects}
+                    style={{
+                      backgroundColor: "#2563eb",
+                      color: "#ffffff",
+                      padding: "0.75rem 1.5rem",
+                      borderRadius: "0.375rem",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s ease, transform 0.1s ease",
+                      border: "none",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    }}
+                    onMouseOver={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                    }
+                    onMouseOut={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#2563eb")
+                    }
+                    onMouseDown={(e) =>
+                      (e.currentTarget.style.transform = "scale(0.98)")
+                    }
+                    onMouseUp={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
+                  >
+                    Generate Prism Graph
+                  </button>
+                  <button
+                    onClick={handleDownloadPrismGraph}
+                    style={{
+                      backgroundColor: "#7c3aed",
+                      color: "#ffffff",
+                      padding: "0.75rem 1.5rem",
+                      borderRadius: "0.375rem",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s ease, transform 0.1s ease",
+                      border: "none",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    }}
+                    onMouseOver={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#6d28d9")
+                    }
+                    onMouseOut={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#7c3aed")
+                    }
+                    onMouseDown={(e) =>
+                      (e.currentTarget.style.transform = "scale(0.98)")
+                    }
+                    onMouseUp={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
+                  >
+                    Download Prism Graph
+                  </button>
+
+                </div>
+                {/* First Chart */}
+                <div id="prismchartContainer" style={{ marginTop: "2rem" }}>
+                  <div>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      Prisms Graph
+                    </h3>
+                    {combinedData.length > 0 ? (
+                      <Plot
+                        data={[
+                          {
+                            x: combinedData.map(item => item.header),
+                            y: combinedData.map(item => item.value1),
+                            type: 'scatter',
+                            mode: 'lines+markers',
+                            name: selectedRowTime1,
+                            line: { color: '#8884d8', shape: 'spline' },
+                            marker: { size: 6, color: '#8884d8' },
+                            hovertemplate: `<b>${selectedRowTime1}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+                            connectgaps: true
+                          },
+                          {
+                            x: combinedData.map(item => item.header),
+                            y: combinedData.map(item => item.value2),
+                            type: 'scatter',
+                            mode: 'lines+markers',
+                            name: selectedRowTime2,
+                            line: { color: '#82ca9d', shape: 'spline' },
+                            marker: { size: 6, color: '#82ca9d' },
+                            hovertemplate: `<b>${selectedRowTime2}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+                            connectgaps: true
+                          },
+                          {
+                            x: combinedData.map(item => item.header),
+                            y: combinedData.map(item => item.value3),
+                            type: 'scatter',
+                            mode: 'lines+markers',
+                            name: selectedRowTime3,
+                            line: { color: '#ff7300', shape: 'spline' },
+                            marker: { size: 6, color: '#ff7300' },
+                            hovertemplate: `<b>${selectedRowTime3}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+                            connectgaps: true
+                          }
+                        ]}
+                        layout={{
+                          width: 800 * xScale,
+                          height: 500,
+                          margin: { l: 60, r: 30, b: 100, t: 30, pad: 4 },
+                          xaxis: {
+                            title: 'Header',
+                            type: 'category',
+                            tickmode: 'auto',
+                            nticks: 6,
+                            tickangle: 0,
+                            gridcolor: '#f0f0f0',
+                            automargin: true,
+                            showgrid: true
+                          },
+                          yaxis: {
+                            range: [-0.5, 0.5],
+                            tickvals: yDomain.length === 2
+                              ? generateTicks(yDomain[0] * (1 / yScale), yDomain[1] * (1 / yScale))
+                              : [],
+                            gridcolor: '#f0f0f0',
+                            zeroline: true,
+                            zerolinecolor: '#f0f0f0'
+                          },
+                          legend: {
+                            orientation: 'h',
+                            y: -0.3,
+                            x: 0.5,
+                            xanchor: 'center'
+                          },
+                          plot_bgcolor: 'white',
+                          paper_bgcolor: 'white',
+                          hovermode: 'x unified',
+                          shapes: [{
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0,
+                            y1: 0,
+                            line: { color: '#f0f0f0', width: 2 }
+                          }]
+                        }}
+                        config={{
+                          displayModeBar: true,
+                          responsive: true,
+                          displaylogo: false,
+                          scrollZoom: true,
+                        }}
+                        style={{ maxHeight: '800px', width: '100%' }}
+                      />
+                    ) : null}
+
+                  </div>
+                </div>
+                <h2
+                  style={{
+                    fontWeight: "700",
+                    fontSize: "1.5rem",
                     color: "#1f2937",
-                    fontSize: "0.9rem",
+                    marginBottom: "1rem",
                   }}
                 >
-                  Select Second TimeStamp:
-                </label>
-                <select
-                  value={selectedRowTime2}
-                  onChange={(e) => setSelectedRowTime2(e.target.value)}
+                  Select "A" Headers For Movement Graph:
+                </h2>
+                <div
                   style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginBottom: "1rem",
                   }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 >
-                  <option value="placeholder" disabled>
-                    Select Second TimeStamp
-                  </option>
-                  {timeColumn.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
+
+
+                  <select
+                    value={movementSelectedTrack}
+                    onChange={(e) => setmovementSelectedTrack(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select a Track
                     </option>
-                  ))}
+                    {selectedTrackOptions.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
 
-
-                </select>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                <label
-                  style={{
-                    fontWeight: "600",
-                    color: "#1f2937",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Select Third TimeStamp:
-                </label>
-                <select
-                  value={selectedRowTime3}
-                  onChange={(e) => setSelectedRowTime3(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select Third TimeStamp
-                  </option>
-                  {timeColumn.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
+                  </select>
+                  <select
+                    value={movementSelectedTrkColOption}
+                    onChange={(e) => setmovementSelectedTrkColOption(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select Easting/Northing/Height
                     </option>
-                  ))}
+                    {selectedTrkColOptions.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
 
-                </select>
-                <select
-                  value={selectedTrack}
-                  onChange={(e) => setSelectedTrack(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select a Track
-                  </option>
-                  {selectedTrackOptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
+                  </select>
+                  <select
+                    value={movementTrackSizeoptions}
+                    onChange={(e) => setmovementTrackSizeOptions(e.target.value)}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0.375rem",
+                      padding: "0.5rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                      backgroundColor: "#f9fafb",
+                      outline: "none",
+                      transition: "border-color 0.2s ease",
+                      width: "200px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  >
+                    <option value="placeholder" disabled>
+                      Select No. of Prisms
                     </option>
-                  ))}
+                    {trackSizeOptions.map((header, index) => (
+                      <option key={index} value={header}>
+                        {header}
+                      </option>
+                    ))}
 
-                </select>
-                <select
-                  value={selectedTrkColOption}
-                  onChange={(e) => setSelectedTrkColOption(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select Easting/Northing/Height
-                  </option>
-                  {selectedTrkColOptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
-                </select>
-                <select
-                  value={tracksizeoptions}
-                  onChange={(e) => setTrackSizeOptions(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select No. of Prisms
-                  </option>
-                  {trackSizeOptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
-                </select>
+                  </select>
+                </div>
               </div>
               <div
                 style={{
@@ -766,8 +1098,8 @@ const TrackGraphs: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  value={xScale}
-                  onChange={(e) => setXScale(Number(e.target.value))}
+                  value={primsxScale}
+                  onChange={(e) => setprismxScale(Number(e.target.value))}
                   style={{
                     border: "1px solid #d1d5db",
                     borderRadius: "0.375rem",
@@ -797,10 +1129,10 @@ const TrackGraphs: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  value={yScale}
+                  value={prismyScale}
                   onChange={(e) => {
                     const val = Math.max(0.1, Number(e.target.value));
-                    setYScale(val);
+                    setprismYScale(val);
                   }}
                   style={{
                     border: "1px solid #d1d5db",
@@ -820,9 +1152,11 @@ const TrackGraphs: React.FC = () => {
                   onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
                 />
               </div>
+
               <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+
                 <button
-                  onClick={handleTimeSelects}
+                  onClick={handleMovementSelects}
                   style={{
                     backgroundColor: "#2563eb",
                     color: "#ffffff",
@@ -847,10 +1181,11 @@ const TrackGraphs: React.FC = () => {
                     (e.currentTarget.style.transform = "scale(1)")
                   }
                 >
-                  Generate Prism Graph
+                  Generate Movment Graph
                 </button>
+
                 <button
-                  onClick={handleDownloadPrismGraph}
+                  onClick={handleDownloadGraph}
                   style={{
                     backgroundColor: "#7c3aed",
                     color: "#ffffff",
@@ -875,459 +1210,139 @@ const TrackGraphs: React.FC = () => {
                     (e.currentTarget.style.transform = "scale(1)")
                   }
                 >
-                  Download Prism Graph
+                  Download Graph as Image
                 </button>
-
               </div>
-              {/* First Chart */}
-              <div id="prismchartContainer" style={{ marginTop: "2rem" }}>
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    Prisms Graph
-                  </h3>
-                  {combinedData.length > 0 ? (
-  <Plot
-    data={[
-      {
-        x: combinedData.map(item => item.header),
-        y: combinedData.map(item => item.value1),
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: selectedRowTime1,
-        line: { color: '#8884d8', shape: 'spline' },
-        marker: { size: 6, color: '#8884d8' },
-        hovertemplate: `<b>${selectedRowTime1}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
-        connectgaps: true
-      },
-      {
-        x: combinedData.map(item => item.header),
-        y: combinedData.map(item => item.value2),
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: selectedRowTime2,
-        line: { color: '#82ca9d', shape: 'spline' },
-        marker: { size: 6, color: '#82ca9d' },
-        hovertemplate: `<b>${selectedRowTime2}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
-        connectgaps: true
-      },
-      {
-        x: combinedData.map(item => item.header),
-        y: combinedData.map(item => item.value3),
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: selectedRowTime3,
-        line: { color: '#ff7300', shape: 'spline' },
-        marker: { size: 6, color: '#ff7300' },
-        hovertemplate: `<b>${selectedRowTime3}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
-        connectgaps: true
-      }
-    ]}
-    layout={{
-      width: 800 * xScale,
-      height: 500,
-      margin: { l: 60, r: 30, b: 100, t: 30, pad: 4 },
-      xaxis: {
-        title: 'Header',
-        type: 'category',
-        tickmode: 'auto',
-        nticks: 6, 
-        tickangle: 0,
-        gridcolor: '#f0f0f0',
-        automargin: true,
-        showgrid: true
-      },
-      yaxis: {
-        range: [-0.5, 0.5],
-        tickvals: yDomain.length === 2 
-          ? generateTicks(yDomain[0] * (1 / yScale), yDomain[1] * (1 / yScale))
-          : [],
-        gridcolor: '#f0f0f0',
-        zeroline: true,
-        zerolinecolor: '#f0f0f0'
-      },
-      legend: {
-        orientation: 'h',
-        y: -0.3, 
-        x: 0.5,
-        xanchor: 'center'
-      },
-      plot_bgcolor: 'white',
-      paper_bgcolor: 'white',
-      hovermode: 'x unified',
-      shapes: [{
-        type: 'line',
-        x0: 0,
-        x1: 1,
-        xref: 'paper',
-        y0: 0,
-        y1: 0,
-        line: { color: '#f0f0f0', width: 2 }
-      }]
-    }}
-    config={{
-      displayModeBar: true,
-      responsive: true,
-      displaylogo: false,
-      scrollZoom: true,
-    }}
-    style={{ maxHeight: '800px', width: '100%' }}
-  />
-) : null}
 
-                </div>
-              </div>
-              <h2
-                style={{
-                  fontWeight: "700",
-                  fontSize: "1.5rem",
-                  color: "#1f2937",
-                  marginBottom: "1rem",
-                }}
-              >
-                Select "A" Headers For Movement Graph:
-              </h2>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-
-
-                <select
-                  value={movementSelectedTrack}
-                  onChange={(e) => setmovementSelectedTrack(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select a Track
-                  </option>
-                  {selectedTrackOptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
-                </select>
-                <select
-                  value={movementSelectedTrkColOption}
-                  onChange={(e) => setmovementSelectedTrkColOption(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select Easting/Northing/Height
-                  </option>
-                  {selectedTrkColOptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
-                </select>
-                <select
-                  value={movementTrackSizeoptions}
-                  onChange={(e) => setmovementTrackSizeOptions(e.target.value)}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    padding: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: "#374151",
-                    backgroundColor: "#f9fafb",
-                    outline: "none",
-                    transition: "border-color 0.2s ease",
-                    width: "200px",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                >
-                  <option value="placeholder" disabled>
-                    Select No. of Prisms
-                  </option>
-                  {trackSizeOptions.map((header, index) => (
-                    <option key={index} value={header}>
-                      {header}
-                    </option>
-                  ))}
-
-                </select>
-              </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginTop: "1rem",
-              }}
-            >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                X Scale:
-              </label>
-              <input
-                type="number"
-                value={primsxScale}
-                onChange={(e) => setprismxScale(Number(e.target.value))}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.1"
-                max="1.4"
-                step="0.1"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                  marginLeft: "1rem",
-                }}
-              >
-                Y Scale:
-              </label>
-              <input
-                type="number"
-                value={prismyScale}
-                onChange={(e) => {
-                  const val = Math.max(0.1, Number(e.target.value));
-                  setprismYScale(val);
-                }}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.2"
-                step="0.1"
-                max="5.0"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-
-              <button
-                onClick={handleMovementSelects}
-                style={{
-                  backgroundColor: "#2563eb",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#2563eb")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                Generate Movment Graph
-              </button>
-
-              <button
-                onClick={handleDownloadGraph}
-                style={{
-                  backgroundColor: "#7c3aed",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#6d28d9")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#7c3aed")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                Download Graph as Image
-              </button>
-            </div>
-
-            <div id="chartContainer" style={{ marginTop: "2rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                {/* Movements Graph */}
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    Movements Graph
-                  </h3>
-                  <div style={{ height: 800 }}>
-                    {movementData.length > 0 ? (
-                      <Plot
-                        data={movementData.map((data, index) => ({
-                          x: data.times,
-                          y: data.values,
-                          type: 'scatter',
-                          mode: 'lines+markers',
-                          showlegend: false,
-                          line: {
-                            color: extendedColors[index % extendedColors.length],
-                            shape: 'spline'
-                          },
-                          marker: {
-                            size: 6,
-                            color: extendedColors[index % extendedColors.length]
-                          },
-                          hovertemplate: `
-                         <b>${data.fullColumnName}</b><br>
-                         Time: %{x}<br>
-                         Value: %{y:.6f}<extra></extra>
-                       `,
-                          connectgaps: true
-                        }))}
-                        layout={{
-                          width: 800 * primsxScale,
-                          height: 700,
-                          margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
-                          xaxis: {
-                            title: 'Time',
-                            type: 'category',
-                            tickmode: 'array',
-                            tickvals: getOptimizedTicks(movementData[0]?.times || []),
-                            tickangle: 0,
-                            gridcolor: '#f0f0f0',
-                            gridwidth: 1,
-                            showgrid: true,
-                            automargin: true
-                          },
-                          yaxis: {
-                            title: {
-                              text: 'Movement (inches)',
-                              standoff: 30,
-                              font: {
-                                size: 12,
-                                color: '#333'
-                              }
+              <div id="chartContainer" style={{ marginTop: "2rem", width: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem", width: "100%" }}>
+                  {/* Movements Graph */}
+                  <div style={{ width: "100%" }}>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      Movements Graph
+                    </h3>
+                    <div style={{
+                      height: "70vh",
+                      minHeight: "500px",
+                      width: "100%",
+                      position: "relative"
+                    }}>
+                      {movementData.length > 0 ? (
+                        <Plot
+                          data={movementData.map((data, index) => ({
+                            x: data.times,
+                            y: data.values,
+                            type: 'scatter',
+                            mode: 'lines+markers',
+                            showlegend: false,
+                            line: {
+                              color: extendedColors[index % extendedColors.length],
+                              shape: 'spline'
                             },
-                            tickmode: 'linear',
-                            dtick: 0.25,
-                            gridcolor: '#f0f0f0',
-                            zeroline: true,
-                            zerolinecolor: '#f0f0f0',
-                            autorange: true,
-                            // title_standoff: 30,
-                            automargin: true
-                          },
-                          plot_bgcolor: 'white',
-                          paper_bgcolor: 'white',
-                          annotations: [
-                            {
-                              x: 0.5,
-                              y: -0.15,
-                              xref: 'paper',
-                              yref: 'paper',
-                              text: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
-                              showarrow: false,
-                              font: {
-                                size: 12,
-                                color: '#333',
-                                weight: 800,
+                            marker: {
+                              size: 6,
+                              color: extendedColors[index % extendedColors.length]
+                            },
+                            hovertemplate: `
+                <b>${data.fullColumnName}</b><br>
+                Time: %{x}<br>
+                Value: %{y:.6f}<extra></extra>
+              `,
+                            connectgaps: true
+                          }))}
+                          layout={{
+                            autosize: true,
+                            margin: {
+                              l: 60,
+                              r: 30,
+                              b: 120,
+                              t: 30,
+                              pad: 4,
+                              // Remove autoexpand as it's not a valid property
+                            },
+                            xaxis: {
+                              title: 'Time',
+                              type: 'category',
+                              tickmode: 'array',
+                              tickvals: getOptimizedTicks(movementData[0]?.times || []),
+                              tickangle: 0,
+                              gridcolor: '#f0f0f0',
+                              gridwidth: 1,
+                              showgrid: true,
+                              automargin: true  
+                            },
+                            yaxis: {
+                              title: {
+                                text: 'Movement (inches)',
+                                standoff: 30,
+                                font: {
+                                  size: 12,
+                                  color: '#333'
+                                }
                               },
-                              xanchor: 'center',
-                              yanchor: 'top'
-                            }
-                          ],
-                          hovermode: 'x unified'
-                        }}
-                        config={{
-                          displayModeBar: true,
-                          responsive: true,
-                          displaylogo: false,
-                          scrollZoom: true,
-                        }}
-                      />
-                    ) : (
-                      <div style={{
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "1px dashed #ccc"
-                      }}>
-                        Select track, easting/northing/etc and prism number
-                      </div>
-                    )}
+                              tickmode: 'linear',
+                              dtick: 0.25,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              autorange: true,
+                              automargin: true  
+                            },
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white',
+                            annotations: [
+                              {
+                                x: 0.5,
+                                y: -0.15,
+                                xref: 'paper',
+                                yref: 'paper',
+                                text: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                                showarrow: false,
+                                font: {
+                                  size: 12,
+                                  color: '#333',
+                                  weight: 800,
+                                },
+                                xanchor: 'center',
+                                yanchor: 'top'
+                              }
+                            ],
+                            hovermode: 'closest',
+                          }}
+                          config={{
+                            displayModeBar: true,
+                            responsive: true,
+                            displaylogo: false,
+                            scrollZoom: true
+                          }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'absolute'
+                          }}
+                          useResizeHandler={true}
+                        />
+                      ) : (
+                        <div style={{
+                          height: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "1px dashed #ccc"
+                        }}>
+                          Select track, easting/northing/etc and prism number
+                        </div>
+                      )}
+                    </div>
                   </div>
-
                 </div>
               </div>
+              {/* // empty div for spacing and margin */}
+              <div style={{ height: "200px" }}></div>
             </div>
-            {/* // empty div for spacing and margin */}
-            <div style={{ height: "200px" }}></div>
-          </div>
-        )}
+          )}
 
-      </div>
+        </div>
       </MainContentWrapper>
 
     </>

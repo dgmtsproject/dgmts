@@ -46,6 +46,7 @@ const LineGraph = () => {
         }
 
         const { data, error } = await query;
+        console.log(data);
 
         if (error) throw error;
         
@@ -58,6 +59,7 @@ const LineGraph = () => {
 
     fetchUserProjects();
   }, [isAdmin, userEmail]);
+  console.log(userEmail);
 
   // Match Supabase projects with JSON data when project is selected
   useEffect(() => {
@@ -74,7 +76,6 @@ const LineGraph = () => {
 
       // Then find matching data in JSON
       const project = projectData.find((p) => p.name === projectName);
-      
       if (project && project.values) {
         setGraphData(project.values);
         
@@ -97,8 +98,10 @@ const LineGraph = () => {
 
   // Get available projects by matching Supabase projects with JSON data
   const availableProjects = projectData.filter(project => 
-    userProjects.some(userProject => userProject.name === project.name)
+    userProjects.some(userProject => userProject.name.trim() === project.name.trim())
   );
+  console.log(userProjects);
+
 
   return (
     <>
