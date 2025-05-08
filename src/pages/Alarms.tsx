@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 import HeaNavLogo from "../components/HeaNavLogo";
 import MainContentWrapper from "../components/MainContentWrapper";
 import { useAdminContext } from "../context/AdminContext";
 import logo from "../assets/logo.jpg";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
 
 type Alarm = {
   id: number;
@@ -26,6 +29,7 @@ const Alarms: React.FC = () => {
   const [filterAck, setFilterAck] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAdmin, userEmail } = useAdminContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAlarms = async () => {
@@ -74,6 +78,10 @@ const Alarms: React.FC = () => {
     }
   };
 
+  const handleAddAlarm = () => {
+    navigate("/add-alarms");
+  };
+
   // Define table columns
   const columns = [
     { key: 'timestamp', label: 'Timestamp' },
@@ -93,7 +101,25 @@ const Alarms: React.FC = () => {
       <MainContentWrapper>
         <div className="page">
           <div className="content" style={{ padding: "2rem" }}>
-            <h2>Alarms</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2>Alarms</h2>
+              {isAdmin && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddAlarm}
+                  style={{
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    textTransform: 'none',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Add Alarm
+                </Button>
+              )}
+            </div>
 
             {/* Filter controls */}
             <div style={{ marginBottom: "1rem", display: 'flex', gap: '1rem' }}>
