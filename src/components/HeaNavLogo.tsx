@@ -14,11 +14,11 @@ const HeaNavLogo = () => {
           alt="DGMTS Logo"
           style={{
             position: "fixed",
-            top: "65%",
-            left: "50%",
+            top: "68%",
+            left: "61%",
             transform: "translate(-50%, -50%)",
             width: "30vw",
-            opacity: 0.1,
+            opacity: 0.3,
             zIndex: -1,
             pointerEvents: "none",
           }}

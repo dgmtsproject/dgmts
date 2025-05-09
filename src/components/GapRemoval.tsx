@@ -25,8 +25,8 @@ const GapRemoval: React.FC = () => {
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
   const [drillstarttimedata, setDrillStartTimeData] = useState<string>("");
   const [drillendtimedata, setDrillEndTimeData] = useState<string>("");
-  const [trainStartTime, setTrainStartTime] = useState<string>("");
-const [trainEndTime, setTrainEndTime] = useState<string>("");
+  const [trackTrainTimes, setTrackTrainTimes] = useState<Record<string, string[]>>({});
+
   const [headers, setHeaders] = useState<string[]>([]);
   // seperate headers for the 
   const [showGraph, setShowGraph] = useState(false);
@@ -103,17 +103,30 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
       | string
     )[][];
 
-    const trackNumbers = new Set<string>();
+    const tracksInData = new Set<string>();
     if (jsonData.length > 0) {
         const headers = jsonData[0];
         headers.forEach(header => {
             if (typeof header === 'string') {
                 const match = header.match(/TK(\d+)/i);
                 if (match && match[1]) {
-                    trackNumbers.add(match[1]);
+                    tracksInData.add(match[1]);
                 }
             }
         });
+    }
+
+    const trackNumbers = new Set<string>();
+    if (jsonData.length > 0) {
+      const headers = jsonData[0];
+      headers.forEach(header => {
+        if (typeof header === 'string') {
+          const match = header.match(/TK(\d+)/i);
+          if (match && match[1]) {
+            trackNumbers.add(match[1]);
+          }
+        }
+      });
     }
     const drillFileData = localStorage.getItem("drillExcelFile");
     if (drillFileData) {
@@ -166,49 +179,41 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
         const trainWorksheet = trainWorkbook.Sheets[trainWorkbook.SheetNames[0]];
         const trainJsonData = XLSX.utils.sheet_to_json(trainWorksheet, { header: 1 });
 
-        // Initialize track time tracking
-        const trackTimes: Record<string, { first: string | null, last: string | null }> = {};
-        trackNumbers.forEach(track => {
-            trackTimes[track] = { first: null, last: null };
+        const newTrackTrainTimes: Record<string, string[]> = {};
+
+        // Initialize with tracks found in our data
+        tracksInData.forEach(track => {
+            newTrackTrainTimes[track] = [];
         });
 
-        // Process each train record
+        // Collect ALL train times for relevant tracks
         for (let i = 1; i < trainJsonData.length; i++) {
             const row = trainJsonData[i];
             if (Array.isArray(row) && row.length >= 4) {
-                const track = String(row[2]).trim().replace(/\D/g, ''); // Extract just numbers
+                const track = String(row[2]).trim().replace(/\D/g, '');
                 const timeStr = String(row[3]).trim();
 
-                if (trackNumbers.has(track)) {
-                    const timeDate = new Date(timeStr);
-                    
-                    // Update first time if this is earlier or not set
-                    if (!trackTimes[track].first || timeDate < new Date(trackTimes[track].first!)) {
-                        trackTimes[track].first = timeStr;
+                if (tracksInData.has(track)) {
+                    if (!newTrackTrainTimes[track]) {
+                        newTrackTrainTimes[track] = [];
                     }
-                    
-                    // Update last time if this is later or not set
-                    if (!trackTimes[track].last || timeDate > new Date(trackTimes[track].last!)) {
-                        trackTimes[track].last = timeStr;
-                    }
+                    newTrackTrainTimes[track].push(timeStr);
                 }
             }
         }
 
-        // Set state for the primary track (you can modify this logic)
-        const primaryTrack = Array.from(trackNumbers)[0]; // Get first track
-        if (primaryTrack && trackTimes[primaryTrack]) {
-            setTrainStartTime(trackTimes[primaryTrack].first || "");
-            setTrainEndTime(trackTimes[primaryTrack].last || "");
-        }
+        // Sort times chronologically for each track
+        Object.keys(newTrackTrainTimes).forEach(track => {
+            newTrackTrainTimes[track].sort((a, b) => 
+                new Date(a).getTime() - new Date(b).getTime()
+            );
+        });
 
-        console.log("Train Start Time:", trainStartTime);
-        console.log("Train End Time:", trainEndTime);
-    }else {
+        setTrackTrainTimes(newTrackTrainTimes);
+    } else {
       console.log("No train file data found");
     }
-
-    // Rest of your existing processing code...
+    console.log("Track Train Times:", trackTrainTimes);
     if (jsonData.length === 0) return;
 
     const headers = jsonData[0];
@@ -847,7 +852,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 30,
+                          r: 150, 
                           b: 100,
                           t: 30,
                           pad: 4
@@ -873,9 +878,9 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                           automargin: true,
                           range: graphData1?.length
                             ? [
-                                new Date(graphData1[0].time).toISOString(),
-                                new Date(graphData1[graphData1.length - 1].time).toISOString()
-                              ]
+                              new Date(graphData1[0].time).toISOString(),
+                              new Date(graphData1[graphData1.length - 1].time).toISOString()
+                            ]
                             : undefined
                         },
                         yaxis: {
@@ -900,7 +905,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillstarttimedata),
                               y1: 1,
-                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             },
                             {
@@ -911,34 +916,28 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillendtimedata),
                               y1: 1,
-                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             }
                           ] : []),
-                          ...(trainStartTime && trainEndTime ? [
-                            {
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                            times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
-                              x0: new Date(trainStartTime),
+                              x0: new Date(time),
                               y0: 0,
-                              x1: new Date(trainStartTime),
+                              x1: new Date(time),
                               y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(trainEndTime),
-                              y0: 0,
-                              x1: new Date(trainEndTime),
-                              y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
-                              opacity: 0.7
-                            }
-                          ] : [])
+                              line: { 
+                                color: '#2196F3',
+                                width: 2, 
+                                dash: 'solid' as 'solid' 
+                              },
+                              opacity: 0.7,
+                              name: `Track ${track}`
+                            }))
+                          )
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [
@@ -949,7 +948,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               yref: 'paper' as 'paper',
                               text: `Drill Start ${drillstarttimedata}`,
                               showarrow: false,
-                              font: { color: 'green', size: 10 },
+                              font: { color: 'red', size: 10 },
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
@@ -965,30 +964,23 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
-                          ...(trainStartTime ? [
-                            {
-                              x: 1,
-                              y: 0.93,
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
+                            times.map((time, timeIndex) => ({
+                              x: 1.05,
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Train Start ${trainStartTime}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${new Date(time).toLocaleTimeString()}`,
                               showarrow: false,
-                              font: { color: 'black' , size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(trainEndTime ? [
-                            {
-                              x: 1,
-                              y: 0.88,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Train End ${trainEndTime}`,
-                              showarrow: false,
-                              font: { color: 'black', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : [])
+                              font: { 
+                                color: '#2196F3',
+                                size: 10 
+                              },
+                              xanchor: 'left' as 'left',
+                              align: 'left' as 'left',
+                              bgcolor: 'rgba(255,255,255,0.8)'
+                            }))
+                          )
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1069,7 +1061,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 30,
+                          r: 150,
                           b: 80,
                           t: 30,
                           pad: 4
@@ -1093,11 +1085,11 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                           showgrid: true,
                           automargin: true,
                           range: graphData2?.length
-  ? [
-      new Date(graphData2[0].time).getTime(),
-      new Date(graphData2[graphData2.length - 1].time).getTime()
-    ]
-  : [0, 0] 
+                            ? [
+                              new Date(graphData2[0].time).getTime(),
+                              new Date(graphData2[graphData2.length - 1].time).getTime()
+                            ]
+                            : [0, 0]
                         },
                         yaxis: {
                           title: {
@@ -1127,7 +1119,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillstarttimedata),
                               y1: 1,
-                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             },
                             {
@@ -1138,34 +1130,28 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillendtimedata),
                               y1: 1,
-                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             }
                           ] : []),
-                          ...(trainStartTime && trainEndTime ? [
-                            {
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                            times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
-                              x0: new Date(trainStartTime),
+                              x0: new Date(time),
                               y0: 0,
-                              x1: new Date(trainStartTime),
+                              x1: new Date(time),
                               y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(trainEndTime),
-                              y0: 0,
-                              x1: new Date(trainEndTime),
-                              y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
-                              opacity: 0.7
-                            }
-                          ] : [])
+                              line: { 
+                                color: '#2196F3', // Different color per track
+                                width: 2, 
+                                dash: 'solid' as 'solid'  // Alternate pattern
+                              },
+                              opacity: 0.7,
+                              name: `Track ${track}`
+                            }))
+                          )
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [
@@ -1176,7 +1162,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               yref: 'paper' as 'paper',
                               text: `Drill Start ${drillstarttimedata}`,
                               showarrow: false,
-                              font: { color: 'green', size: 10 },
+                              font: { color: 'red', size: 10 },
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
@@ -1192,30 +1178,23 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
-                          ...(trainStartTime ? [
-                            {
-                              x: 1,
-                              y: 0.93,
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
+                            times.map((time, timeIndex) => ({
+                              x: 1.05,
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Train Start ${trainStartTime}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${new Date(time).toLocaleTimeString()}`,
                               showarrow: false,
-                              font: { color: 'black' , size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(trainEndTime ? [
-                            {
-                              x: 1,
-                              y: 0.88,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Train End ${trainEndTime}`,
-                              showarrow: false,
-                              font: { color: 'black', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : [])
+                              font: { 
+                                color: '#2196F3',
+                                size: 10 
+                              },
+                              xanchor: 'left' as 'left',
+                              align: 'left' as 'left',
+                              bgcolor: 'rgba(255,255,255,0.8)'
+                            }))
+                          )
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1290,7 +1269,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 30,
+                          r: 150,
                           b: 80,
                           t: 30,
                           pad: 4
@@ -1314,11 +1293,11 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                           showgrid: true,
                           automargin: true,
                           range: graphData3?.length
-  ? [
-      new Date(graphData3[0].time).getTime(),
-      new Date(graphData3[graphData3.length - 1].time).getTime()
-    ]
-  : [0, 0] 
+                            ? [
+                              new Date(graphData3[0].time).getTime(),
+                              new Date(graphData3[graphData3.length - 1].time).getTime()
+                            ]
+                            : [0, 0]
                         },
                         yaxis: {
                           title: selectedColumn3,
@@ -1342,7 +1321,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillstarttimedata),
                               y1: 1,
-                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             },
                             {
@@ -1353,34 +1332,28 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillendtimedata),
                               y1: 1,
-                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             }
                           ] : []),
-                          ...(trainStartTime && trainEndTime ? [
-                            {
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                            times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
-                              x0: new Date(trainStartTime),
+                              x0: new Date(time),
                               y0: 0,
-                              x1: new Date(trainStartTime),
+                              x1: new Date(time),
                               y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(trainEndTime),
-                              y0: 0,
-                              x1: new Date(trainEndTime),
-                              y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
-                              opacity: 0.7
-                            }
-                          ] : [])
+                              line: { 
+                                color: '#2196F3', // Different color per track
+                                width: 2, 
+                                dash: 'solid' as 'solid'  // Alternate pattern
+                              },
+                              opacity: 0.7,
+                              name: `Track ${track}`
+                            }))
+                          )
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [
@@ -1391,7 +1364,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               yref: 'paper' as 'paper',
                               text: `Drill Start ${drillstarttimedata}`,
                               showarrow: false,
-                              font: { color: 'green', size: 10 },
+                              font: { color: 'red', size: 10 },
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
@@ -1407,30 +1380,23 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
-                          ...(trainStartTime ? [
-                            {
-                              x: 1,
-                              y: 0.93,
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
+                            times.map((time, timeIndex) => ({
+                              x: 1.05,
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Train Start ${trainStartTime}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${new Date(time).toLocaleTimeString()}`,
                               showarrow: false,
-                              font: { color: 'black' , size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(trainEndTime ? [
-                            {
-                              x: 1,
-                              y: 0.88,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Train End ${trainEndTime}`,
-                              showarrow: false,
-                              font: { color: 'black', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : [])
+                              font: { 
+                                color: '#2196F3',
+                                size: 10 
+                              },
+                              xanchor: 'left' as 'left',
+                              align: 'left' as 'left',
+                              bgcolor: 'rgba(255,255,255,0.8)'
+                            }))
+                          )
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1537,7 +1503,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 30,
+                          r: 150,
                           b: 80,
                           t: 30,
                           pad: 4
@@ -1562,11 +1528,11 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                           showgrid: true,
                           automargin: true,
                           range: combinedGraphData?.length
-  ? [
-      new Date(combinedGraphData[0].time).getTime(),
-      new Date(combinedGraphData[combinedGraphData.length - 1].time).getTime()
-    ]
-  : [0, 0] 
+                            ? [
+                              new Date(combinedGraphData[0].time).getTime(),
+                              new Date(combinedGraphData[combinedGraphData.length - 1].time).getTime()
+                            ]
+                            : [0, 0]
                         },
                         yaxis: {
                           title: 'Value',
@@ -1590,7 +1556,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillstarttimedata),
                               y1: 1,
-                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             },
                             {
@@ -1601,34 +1567,28 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               y0: 0,
                               x1: new Date(drillendtimedata),
                               y1: 1,
-                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              line: { color: 'red', width: 1, },
                               opacity: 0.7
                             }
                           ] : []),
-                          ...(trainStartTime && trainEndTime ? [
-                            {
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                            times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
-                              x0: new Date(trainStartTime),
+                              x0: new Date(time),
                               y0: 0,
-                              x1: new Date(trainStartTime),
+                              x1: new Date(time),
                               y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(trainEndTime),
-                              y0: 0,
-                              x1: new Date(trainEndTime),
-                              y1: 1,
-                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
-                              opacity: 0.7
-                            }
-                          ] : [])
+                              line: { 
+                                color: '#2196F3', // Different color per track
+                                width: 2, 
+                                dash: 'solid' as 'solid'  // Alternate pattern
+                              },
+                              opacity: 0.7,
+                              name: `Track ${track}`
+                            }))
+                          )
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [
@@ -1639,7 +1599,7 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               yref: 'paper' as 'paper',
                               text: `Drill Start ${drillstarttimedata}`,
                               showarrow: false,
-                              font: { color: 'green', size: 10 },
+                              font: { color: 'red', size: 10 },
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
@@ -1655,30 +1615,23 @@ const [trainEndTime, setTrainEndTime] = useState<string>("");
                               xanchor: 'right' as 'right'
                             }
                           ] : []),
-                          ...(trainStartTime ? [
-                            {
-                              x: 1,
-                              y: 0.93,
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
+                            times.map((time, timeIndex) => ({
+                              x: 1.05,
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Train Start ${trainStartTime}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
                               showarrow: false,
-                              font: { color: 'black' , size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(trainEndTime ? [
-                            {
-                              x: 1,
-                              y: 0.88,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Train End ${trainEndTime}`,
-                              showarrow: false,
-                              font: { color: 'black', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : [])
+                              font: { 
+                                color: '#2196F3',
+                                size: 10 
+                              },
+                              xanchor: 'left' as 'left',
+                              align: 'left' as 'left',
+                              bgcolor: 'rgba(255,255,255,0.8)'
+                            }))
+                          )
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
