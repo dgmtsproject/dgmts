@@ -12,115 +12,84 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   }, []);
   const [fileA, setFileA] = useState<File | null>(null);
   const [fileB, setFileB] = useState<File | null>(null);
+  const [drillfile, setDrillfile] = useState<File | null>(null);
+  const [trainfile, setTrainfile] = useState<File | null>(null);
 
+  const readFile = async (file: File): Promise<(string | number | null)[][]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+  
+      reader.onload = (e) => {
+        try {
+          const result = e.target?.result;
+          if (!result) return reject("File read error: No result");
+  
+          if (file.name.endsWith('.csv')) {
+            Papa.parse(result.toString(), {
+              complete: (results) => {
 
-    const readFile = async (file: File): Promise<(string | number | null)[][]> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-  
-        reader.onload = (e) => {
-          try {
-            const result = e.target?.result;
-            if (!result) return reject("File read error: No result");
-  
-            // Handle CSV files
-            if (file.name.endsWith('.csv')) {
-              Papa.parse(result.toString(), {
-                complete: (results) => {
-                  const data = results.data as (string | number | null)[][];
-  
-                  // Convert numeric strings to numbers
-                  const processedData = data.map(row =>
-                    row.map(cell => {
-                      if (typeof cell === 'string' && !isNaN(Number(cell)) && cell.trim() !== '') {
+                let data = results.data as (string | number | null)[][];
+                data = data.filter(row => row.length > 0);
+                
+                const processedData = data.map(row => 
+                  row.map(cell => {
+                    if (cell === null || cell === undefined || cell === '') {
+                      return null;
+                    }
+                    if (typeof cell === 'string') {
+                      const date = new Date(cell);
+                      if (!isNaN(date.getTime())) {
+                        return date.toISOString();
+                      }
+       
+                      if (!isNaN(Number(cell))) {
                         return Number(cell);
                       }
-                      return cell;
-                    })
-                  );
-  
-                  resolve(processedData);
-                },
-                error: (error: any) => reject(error)
-              });
-            }
-            // Handle Excel files (previous logic)
-            else {
-              const data = new Uint8Array(result as ArrayBuffer);
-              const workbook = XLSX.read(data, { type: "array", cellDates: true });
-              const firstSheetName = workbook.SheetNames[0];
-              const sheet = workbook.Sheets[firstSheetName];
-  
-              const json: (string | number | null)[][] = [];
-              const range = XLSX.utils.decode_range(sheet["!ref"]!);
-  
-              for (let row = range.s.r; row <= range.e.r; row++) {
-                const rowData: (string | number | null)[] = [];
-                for (let col = range.s.c; col <= range.e.c; col++) {
-                  const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-                  const cell = sheet[cellAddress];
-                  if (!cell) {
-                    rowData.push(null);
-                    continue;
-                  }
-                  const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
-                  rowData.push(value);
-                }
-                json.push(rowData);
-              }
-              resolve(json);
-            }
-          } catch (err) {
-            reject(err);
-          }
-        };
-  
-        reader.onerror = (err) => reject(err);
-  
-        // Read differently based on file type
-        if (file.name.endsWith('.csv')) {
-          reader.readAsText(file); // reader call to read as text for CSV
-        } else {
-          reader.readAsArrayBuffer(file); // reader call to read as array buffer for Excel
-        }
-      });
-    };
+                    }
+                    return cell;
+                  })
+                );
+                
 
-  // const readExcel = (file: File): Promise<(string | number | null)[][]> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onload = (e: ProgressEvent<FileReader>) => {
-  //       const result = e.target?.result;
-  //       if (!result) return reject("File read error: No result");
+                if (processedData.length === 0) {
+                  return reject("CSV file is empty");
+                }
+                
+                resolve(processedData);
+              },
+              error: (error: any) => reject(error)
+            });
+          } else {
+
+            const data = new Uint8Array(result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array", cellDates: true });
+            const firstSheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[firstSheetName];
+
+            const json = XLSX.utils.sheet_to_json(sheet, {
+              header: 1, 
+              defval: null, 
+              raw: false 
+            }) as (string | number | null)[][];
+
+            const filteredJson = json.filter(row => row.length > 0);
+            
+            resolve(filteredJson);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      };
   
-  //       const data = new Uint8Array(result as ArrayBuffer);
-  //       const workbook = XLSX.read(data, { type: "array", cellDates: true });
-  //       const firstSheetName = workbook.SheetNames[0];
-  //       const sheet = workbook.Sheets[firstSheetName];
+      reader.onerror = (err) => reject(err);
   
-  //       const json: (string | number | null)[][] = [];
-  //       const range = XLSX.utils.decode_range(sheet["!ref"]!);
-  //       for (let row = range.s.r; row <= range.e.r; row++) {
-  //         const rowData: (string | number | null)[] = [];
-  //         for (let col = range.s.c; col <= range.e.c; col++) {
-  //           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-  //           const cell = sheet[cellAddress];
-  //           if (!cell) {
-  //             rowData.push(null);
-  //             continue;
-  //           }
-  //           // Preserve numbers as numbers, everything else as before
-  //           const value = cell.t === 'n' ? cell.v : (cell.w !== undefined ? cell.w : cell.v);
-  //           rowData.push(value);
-  //         }
-  //         json.push(rowData);
-  //       }
-  //       resolve(json);
-  //     };
-  //     reader.onerror = (err) => reject(err);
-  //     reader.readAsArrayBuffer(file);
-  //   });
-  // };
+      if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    });
+  };
 
   const parseDateHour = (timeStr: string | number | null): string | null => {
     if (!timeStr) return null;
@@ -177,14 +146,16 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
   };
 
   const handleMerge = async () => {
-    if (!fileA || !fileB) {
-      toast.error("Please select both files!");
+    if (!fileA || !fileB || !drillfile || !trainfile) {
+      toast.error("Please select all files!");
       return;
     }
     try {
-      const [dataA, dataB] = await Promise.all([
+      const [dataA, dataB, drilldata, traintimedata] = await Promise.all([
         readFile(fileA),
         readFile(fileB),
+        readFile(drillfile),
+        readFile(trainfile),
       ]);
       const headerA = dataA[0];
       const headerB = dataB[0];
@@ -233,6 +204,21 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
       const wbout = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
       localStorage.setItem("mergedExcelFile", wbout);
       toast.success("Saved after successful merge!");
+
+      // just add the drill and train time data to seperate files as drill-data and train-data
+      const drillws = XLSX.utils.aoa_to_sheet(drilldata);
+      const drillwb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(drillwb, drillws, "Drill Data");
+      const drillwbout = XLSX.write(drillwb, { bookType: "xlsx", type: "base64" });
+      localStorage.setItem("drillExcelFile", drillwbout);
+      toast.success("Saved drill data!");
+
+      const trainws = XLSX.utils.aoa_to_sheet(traintimedata);
+      const trainwb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(trainwb, trainws, "Train Data");
+      const trainwbout = XLSX.write(trainwb, { bookType: "xlsx", type: "base64" });
+      localStorage.setItem("trainExcelFile", trainwbout);
+      toast.success("Saved train data!");
     } catch (err) {
       toast.error("Error merging files");
       console.error(err);
@@ -315,6 +301,68 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
             type="file"
             accept=".xlsx, .xls, .csv"
             onChange={(e) => setFileB(e.target.files?.[0] || null)}
+            style={{
+              width: "98%",
+              padding: "0.5rem",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.375rem",
+              fontSize: "0.875rem",
+              color: "#374151",
+              backgroundColor: "#f9fafb",
+              outline: "none",
+              transition: "border-color 0.2s ease",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+          />
+        </div>
+        <div style={{ marginBottom: "2rem" }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "0.5rem",
+              fontWeight: "600",
+              color: "#1f2937",
+              fontSize: "0.9rem",
+            }}
+          >
+            Upload Drill Time File:
+          </label>
+          <input
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            onChange={(e) => setDrillfile(e.target.files?.[0] || null)}
+            style={{
+              width: "98%",
+              padding: "0.5rem",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.375rem",
+              fontSize: "0.875rem",
+              color: "#374151",
+              backgroundColor: "#f9fafb",
+              outline: "none",
+              transition: "border-color 0.2s ease",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+          />
+        </div>
+        <div style={{ marginBottom: "2rem" }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "0.5rem",
+              fontWeight: "600",
+              color: "#1f2937",
+              fontSize: "0.9rem",
+            }}
+          >
+            Upload Train Time File:
+          </label>
+          <input
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            onChange={(e) => setTrainfile(e.target.files?.[0] || null)}
             style={{
               width: "98%",
               padding: "0.5rem",

@@ -23,6 +23,10 @@ const GapRemoval: React.FC = () => {
   const [selectedColumn2, setSelectedColumn2] = useState<string>("placeholder");
   const [selectedColumn3, setSelectedColumn3] = useState<string>("placeholder");
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
+  const [drillstarttimedata, setDrillStartTimeData] = useState<string>("");
+  const [drillendtimedata, setDrillEndTimeData] = useState<string>("");
+  const [trainStartTime, setTrainStartTime] = useState<string>("");
+const [trainEndTime, setTrainEndTime] = useState<string>("");
   const [headers, setHeaders] = useState<string[]>([]);
   // seperate headers for the 
   const [showGraph, setShowGraph] = useState(false);
@@ -99,6 +103,112 @@ const GapRemoval: React.FC = () => {
       | string
     )[][];
 
+    const trackNumbers = new Set<string>();
+    if (jsonData.length > 0) {
+        const headers = jsonData[0];
+        headers.forEach(header => {
+            if (typeof header === 'string') {
+                const match = header.match(/TK(\d+)/i);
+                if (match && match[1]) {
+                    trackNumbers.add(match[1]);
+                }
+            }
+        });
+    }
+    const drillFileData = localStorage.getItem("drillExcelFile");
+    if (drillFileData) {
+      const drillByteCharacters = atob(drillFileData);
+      const drillByteNumbers = new Array(drillByteCharacters.length)
+        .fill(null)
+        .map((_, i) => drillByteCharacters.charCodeAt(i));
+      const drillByteArray = new Uint8Array(drillByteNumbers);
+
+      const drillWorkbook = XLSX.read(drillByteArray, { type: "array" });
+      const drillWorksheet = drillWorkbook.Sheets[drillWorkbook.SheetNames[0]];
+      const drillJsonData = XLSX.utils.sheet_to_json(drillWorksheet, { header: 1 });
+
+      console.log("Drill File Data:", drillJsonData);
+
+      let drillStartTime: string | null = null;
+      let drillEndTime: string | null = null;
+
+      for (const row of drillJsonData) {
+        if (Array.isArray(row) && row.length >= 2) {
+          const activity = String(row[0]).trim().toUpperCase();
+          const time = String(row[1]).trim();
+
+          if (activity === 'DRILL START' && !drillStartTime) {
+            drillStartTime = time;
+          } else if (activity === 'COMPLETED' && !drillEndTime) {
+            drillEndTime = time;
+          }
+          if (drillStartTime && drillEndTime) break;
+        }
+      }
+      setDrillStartTimeData(drillStartTime || "");
+      setDrillEndTimeData(drillEndTime || "");
+
+      console.log("Drill Start Time:", drillStartTime);
+      console.log("Drill End Time:", drillEndTime);
+    } else {
+      console.log("No drill file data found");
+    }
+
+    const trainFileData = localStorage.getItem("trainExcelFile");
+    if (trainFileData) {
+        const trainByteCharacters = atob(trainFileData);
+        const trainByteArray = new Uint8Array(trainByteCharacters.length);
+        for (let i = 0; i < trainByteCharacters.length; i++) {
+            trainByteArray[i] = trainByteCharacters.charCodeAt(i);
+        }
+
+        const trainWorkbook = XLSX.read(trainByteArray, { type: "array" });
+        const trainWorksheet = trainWorkbook.Sheets[trainWorkbook.SheetNames[0]];
+        const trainJsonData = XLSX.utils.sheet_to_json(trainWorksheet, { header: 1 });
+
+        // Initialize track time tracking
+        const trackTimes: Record<string, { first: string | null, last: string | null }> = {};
+        trackNumbers.forEach(track => {
+            trackTimes[track] = { first: null, last: null };
+        });
+
+        // Process each train record
+        for (let i = 1; i < trainJsonData.length; i++) {
+            const row = trainJsonData[i];
+            if (Array.isArray(row) && row.length >= 4) {
+                const track = String(row[2]).trim().replace(/\D/g, ''); // Extract just numbers
+                const timeStr = String(row[3]).trim();
+
+                if (trackNumbers.has(track)) {
+                    const timeDate = new Date(timeStr);
+                    
+                    // Update first time if this is earlier or not set
+                    if (!trackTimes[track].first || timeDate < new Date(trackTimes[track].first!)) {
+                        trackTimes[track].first = timeStr;
+                    }
+                    
+                    // Update last time if this is later or not set
+                    if (!trackTimes[track].last || timeDate > new Date(trackTimes[track].last!)) {
+                        trackTimes[track].last = timeStr;
+                    }
+                }
+            }
+        }
+
+        // Set state for the primary track (you can modify this logic)
+        const primaryTrack = Array.from(trackNumbers)[0]; // Get first track
+        if (primaryTrack && trackTimes[primaryTrack]) {
+            setTrainStartTime(trackTimes[primaryTrack].first || "");
+            setTrainEndTime(trackTimes[primaryTrack].last || "");
+        }
+
+        console.log("Train Start Time:", trainStartTime);
+        console.log("Train End Time:", trainEndTime);
+    }else {
+      console.log("No train file data found");
+    }
+
+    // Rest of your existing processing code...
     if (jsonData.length === 0) return;
 
     const headers = jsonData[0];
@@ -158,7 +268,6 @@ const GapRemoval: React.FC = () => {
     }
 
     result.unshift(newHeader);
-    // setTimeColumn(timeData);
 
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(result);
     for (let c = 3; c < newHeader.length; c += 3) {
@@ -195,25 +304,25 @@ const GapRemoval: React.FC = () => {
       saveAs(processedBlob, "difference_output.xlsx");
     }
   };
-  const getOptimizedTicks = (timeData: string | any[]) => {
-    if (!timeData || timeData.length === 0) return [];
+  // const getOptimizedTicks = (timeData: string | any[]) => {
+  //   if (!timeData || timeData.length === 0) return [];
 
-    const tickCount = Math.min(6, timeData.length);
-    const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
+  //   const tickCount = Math.min(6, timeData.length);
+  //   const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
 
-    const ticks = [];
-    ticks.push(timeData[0]);
+  //   const ticks = [];
+  //   ticks.push(timeData[0]);
 
-    for (let i = 1; i < tickCount - 1; i++) {
-      const index = Math.min(i * step, timeData.length - 1);
-      ticks.push(timeData[index]);
-    }
-    if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
-      ticks.push(timeData[timeData.length - 1]);
-    }
+  //   for (let i = 1; i < tickCount - 1; i++) {
+  //     const index = Math.min(i * step, timeData.length - 1);
+  //     ticks.push(timeData[index]);
+  //   }
+  //   if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
+  //     ticks.push(timeData[timeData.length - 1]);
+  //   }
 
-    return ticks;
-  };
+  //   return ticks;
+  // };
 
 
   const handleColumnSelect = () => {
@@ -271,6 +380,7 @@ const GapRemoval: React.FC = () => {
     setGraphData3(gData3.filter((item) => item.value !== 0));
 
 
+
     const combined = gData1.map((item, index) => ({
       index,
       value1: item.value,
@@ -281,20 +391,19 @@ const GapRemoval: React.FC = () => {
     setCombinedGraphData(
       combined.filter((item) => item.value1 !== 0 || item.value2 !== 0 || item.value3 !== 0));
   };
-  console.log("Graph Data 1:", graphData1);
-  console.log("Graph Data 2:", graphData2);
-  console.log("Combined Graph Data:", combinedGraphData);
-  const generateTicks = (min: number, max: number) => {
-    const range = max - min;
-    const approxSteps = 10;
-    const step = range / approxSteps;
 
-    const ticks = [];
-    for (let i = min; i <= max + 1e-9; i += step) {
-      ticks.push(Number(i.toFixed(2)));
-    }
-    return ticks;
-  };
+
+  // const generateTicks = (min: number, max: number) => {
+  //   const range = max - min;
+  //   const approxSteps = 10;
+  //   const step = range / approxSteps;
+
+  //   const ticks = [];
+  //   for (let i = min; i <= max + 1e-9; i += step) {
+  //     ticks.push(Number(i.toFixed(2)));
+  //   }
+  //   return ticks;
+  // };
 
 
   const handleDownloadGraph = () => {
@@ -310,8 +419,6 @@ const GapRemoval: React.FC = () => {
     }
   };
 
-  // console.log("Headers:", headers);
-  // all headers except difference headers
   const filteredHeaders = headers.filter(
     (header) =>
       typeof header === "string" &&
@@ -319,58 +426,43 @@ const GapRemoval: React.FC = () => {
       !header.toLowerCase().includes("time")
   );
 
+  // function formatDrillTime(timeString: string): string {
+  //   if (!timeString) return '';
+
+  //   const date = new Date(timeString);
+  //   if (isNaN(date.getTime())) return '';
+
+  //   // Format to match graph data's hourly format: 'MM/DD/YYYY HH:00'
+  //   const pad = (num: number) => num.toString().padStart(2, '0');
+  //   return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()} ${pad(date.getHours())}:00`;
+  // }
+
   return (
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <TrackMerger onMergeSave={handleMergeClick} />
-      
-      <div
-        style={{
-          // padding: '2rem',
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.5rem",
-          backgroundColor: "#f4f7fa",
-          minHeight: "100vh",
-          fontFamily: "'Inter', sans-serif",
-          border: "4px solid black",
-          margin: "10px",
-          padding: "10px",
-        }}
-      >
-        <button
-          onClick={handleProcess}
-          ref={processSaveRef}
-          style={{
-            display: "none",
-            backgroundColor: "#2563eb",
-            color: "#ffffff",
-            padding: "0.75rem 1.5rem",
-            borderRadius: "0.375rem",
-            fontWeight: "500",
-            cursor: "pointer",
-            transition: "background-color 0.2s ease, transform 0.1s ease",
-            border: "none",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor = "#1d4ed8")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "#2563eb")
-          }
-          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
-          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        >
-          Process & Show Graph
-        </button>
+        <TrackMerger onMergeSave={handleMergeClick} />
 
-        {processedBlob && (
+        <div
+          style={{
+            // padding: '2rem',
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+            backgroundColor: "#f4f7fa",
+            minHeight: "100vh",
+            fontFamily: "'Inter', sans-serif",
+            border: "4px solid black",
+            margin: "10px",
+            padding: "10px",
+          }}
+        >
           <button
-            onClick={handleDownload}
+            onClick={handleProcess}
+            ref={processSaveRef}
             style={{
-              backgroundColor: "#16a34a",
+              display: "none",
+              backgroundColor: "#2563eb",
               color: "#ffffff",
               padding: "0.75rem 1.5rem",
               borderRadius: "0.375rem",
@@ -381,805 +473,1248 @@ const GapRemoval: React.FC = () => {
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
             onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor = "#15803d")
+              (e.currentTarget.style.backgroundColor = "#1d4ed8")
             }
             onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor = "#16a34a")
+              (e.currentTarget.style.backgroundColor = "#2563eb")
             }
-            onMouseDown={(e) =>
-              (e.currentTarget.style.transform = "scale(0.98)")
-            }
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            Download Final File
+            Process & Show Graph
           </button>
-        )}
 
-        {showGraph && (
-          <div
-            style={{
-              padding: "2rem",
-              backgroundColor: "#ffffff",
-              borderRadius: "0.5rem",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              marginTop: "1rem",
-            }}
-          >
-            <div
+          {processedBlob && (
+            <button
+              onClick={handleDownload}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
+                backgroundColor: "#16a34a",
+                color: "#ffffff",
+                padding: "0.75rem 1.5rem",
+                borderRadius: "0.375rem",
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease, transform 0.1s ease",
+                border: "none",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               }}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#15803d")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = "#16a34a")
+              }
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.98)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select First Header:
-              </label>
-              <select
-                value={selectedColumn1}
-                onChange={(e) => setSelectedColumn1(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {filteredHeaders.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
-                {differenceOptions.map(({ label, value }, index) => (
-                  <option key={index} value={value}>
-                    {label}
-                  </option>
-                ))}
+              Download Final File
+            </button>
+          )}
 
-              </select>
-            </div>
-
+          {showGraph && (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select Second Header:
-              </label>
-              <select
-                value={selectedColumn2}
-                onChange={(e) => setSelectedColumn2(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-                {filteredHeaders.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
-                {differenceOptions.map(({ label, value }, index) => (
-                  <option key={index} value={value}>
-                    {label}
-                  </option>
-                ))}
-
-              </select>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select Third Header:
-              </label>
-              <select
-                value={selectedColumn3}
-                onChange={(e) => setSelectedColumn3(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select a header
-                </option>
-
-                {filteredHeaders.map((header, index) => (
-                  <option key={index} value={header}>
-                    {header}
-                  </option>
-                ))}
-                {differenceOptions.map(({ label, value }, index) => (
-                  <option key={index} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
+                padding: "2rem",
+                backgroundColor: "#ffffff",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 marginTop: "1rem",
               }}
             >
-              <label
+              <div
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                X Scale:
-              </label>
-              <input
-                type="number"
-                value={xScale}
-                onChange={(e) => setXScale(Number(e.target.value))}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select First Header:
+                </label>
+                <select
+                  value={selectedColumn1}
+                  onChange={(e) => setSelectedColumn1(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
+                  </option>
+                  {filteredHeaders.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                  {differenceOptions.map(({ label, value }, index) => (
+                    <option key={index} value={value}>
+                      {label}
+                    </option>
+                  ))}
+
+                </select>
+              </div>
+
+              <div
                 style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.1"
-                max="1.4"
-                step="0.1"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                  marginLeft: "1rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Y Scale:
-              </label>
-              <input
-                type="number"
-                value={yScale}
-                onChange={(e) => {
-                  const val = Math.max(0.1, Number(e.target.value));
-                  setYScale(val);
-                }}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.2"
-                step="0.1"
-                max="5.0"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-            </div>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Second Header:
+                </label>
+                <select
+                  value={selectedColumn2}
+                  onChange={(e) => setSelectedColumn2(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
+                  </option>
+                  {filteredHeaders.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                  {differenceOptions.map(({ label, value }, index) => (
+                    <option key={index} value={value}>
+                      {label}
+                    </option>
+                  ))}
 
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-              <button
-                onClick={handleColumnSelect}
+                </select>
+              </div>
+
+              <div
                 style={{
-                  backgroundColor: "#2563eb",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#2563eb")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
               >
-                Generate Graphs
-              </button>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select Third Header:
+                </label>
+                <select
+                  value={selectedColumn3}
+                  onChange={(e) => setSelectedColumn3(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select a header
+                  </option>
 
-              <button
-                onClick={handleDownloadGraph}
+                  {filteredHeaders.map((header, index) => (
+                    <option key={index} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                  {differenceOptions.map(({ label, value }, index) => (
+                    <option key={index} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div
                 style={{
-                  backgroundColor: "#7c3aed",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginTop: "1rem",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#6d28d9")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#7c3aed")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
               >
-                Download Graphs as Image
-              </button>
-            </div>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  X Scale:
+                </label>
+                <input
+                  type="number"
+                  value={xScale}
+                  onChange={(e) => setXScale(Number(e.target.value))}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    width: "100px",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  min="0.1"
+                  max="1.4"
+                  step="0.1"
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                    marginLeft: "1rem",
+                  }}
+                >
+                  Y Scale:
+                </label>
+                <input
+                  type="number"
+                  value={yScale}
+                  onChange={(e) => {
+                    const val = Math.max(0.1, Number(e.target.value));
+                    setYScale(val);
+                  }}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    width: "100px",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  min="0.2"
+                  step="0.1"
+                  max="5.0"
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+              </div>
 
-            <div id="chartContainer" style={{ marginTop: "2rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                {/* First Chart */}
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    First Graph ({selectedColumn1})
-                  </h3>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                <button
+                  onClick={handleColumnSelect}
+                  style={{
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.375rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease, transform 0.1s ease",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#2563eb")
+                  }
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.98)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  Generate Graphs
+                </button>
 
-                  <Plot
-                    data={[
-                      {
-                        x: graphData1.map(item => item.time),
-                        y: graphData1.map(item => item.value),
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        name: selectedColumn1,
-                        line: {
-                          color: '#8884d8',
-                          shape: 'spline'
-                        },
-                        marker: {
-                          size: 6,
-                          color: '#8884d8'
-                        },
-                        hoverinfo: 'y+name',
-                        hovertemplate: `
-                              <b>${selectedColumn1}</b><br>
-                                Time: %{x}<br>
-                              Value: %{y:.6f}<extra></extra>
-                                  `
-                      }
-                    ]}
-                    layout={{
-                      width: 800 * xScale,
-                      height: 500,
-                      margin: {
-                        l: 60,
-                        r: 30,
-                        b: 100, 
-                        t: 30,
-                        pad: 4
-                      },
-                      xaxis: {
-                        title: {
-                          text: 'Time',
-                          standoff: 25,
-                          position: 'bottom right',
-                          font: {
-                            size: 12,
-                            weight: 600
-                          },
-                        },
-                        
-                        type: 'category',
-                        tickmode: 'array',
-                        tickvals: getOptimizedTicks(graphData1.map(item => item.time)),
-                        tickangle: 0,
-                        gridcolor: '#f0f0f0',
-                        gridwidth: 1,
-                        showgrid: true,
-                        automargin: true
-                      },
-                    
-                      yaxis: {
-                        title: selectedColumn1,
-                        range: [-0.5 / yScale, 0.5 / yScale],
-                        tickmode: 'linear', // Changed from 'array' to 'linear'
-                        dtick: 0.25, // Sets 0.25-inch intervals
-                        gridcolor: '#f0f0f0',
-                        gridwidth: 1,
-                        zeroline: true,
-                        zerolinecolor: '#f0f0f0',
-                        zerolinewidth: 1,
-                        showgrid: true
-                      },
-                      plot_bgcolor: 'white',
-                      paper_bgcolor: 'white',
-                      showlegend: true,
-                      legend: {
-                        orientation: 'h',
-                        y: -0.2,
-                        x: 0.5,
-                        xanchor: 'center'
-                      },
-                      hovermode: 'x unified',
-                      hoverlabel: {
-                        bgcolor: 'white',
-                        bordercolor: '#ddd',
-                        font: {
-                          family: 'Arial',
-                          size: 12,
-                          color: 'black'
-                        }
-                      }
-                    }}
-                    config={{
-                      displayModeBar: true,
-                      responsive: true,
-                      displaylogo: false,
-                      scrollZoom: true
-                    }}
-                    style={{ maxHeight: '800px' }}
-                  />
+                <button
+                  onClick={handleDownloadGraph}
+                  style={{
+                    backgroundColor: "#7c3aed",
+                    color: "#ffffff",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.375rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease, transform 0.1s ease",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#6d28d9")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#7c3aed")
+                  }
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.98)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  Download Graphs as Image
+                </button>
+              </div>
 
-                </div>
+              <div id="chartContainer" style={{ marginTop: "2rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                  {/* First Chart */}
+                  <div>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      First Graph ({selectedColumn1})
+                    </h3>
 
-                {/* Second Chart */}
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    Second Graph ({selectedColumn2})
-                  </h3>
-
-                  <Plot
-                    data={[
-                      {
-                        x: graphData2.map(item => item.time),
-                        y: graphData2.map(item => item.value),
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        name: selectedColumn2,
-                        line: {
-                          color: '#82ca9d', // Matching your Recharts green color exactly
-                          shape: 'spline',
-                          width: 2
-                        },
-                        marker: {
-                          size: 8, // Increased to match Recharts' activeDot size
-                          color: '#82ca9d',
+                    <Plot
+                      data={[
+                        {
+                          x: graphData1.map(item => new Date(item.time)),
+                          y: graphData1.map(item => item.value),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          name: selectedColumn1,
                           line: {
-                            width: 1,
-                            color: '#fff'
-                          }
+                            color: '#8884d8',
+                            shape: 'spline'
+                          },
+                          marker: {
+                            size: 6,
+                            color: '#8884d8'
+                          },
+                          hoverinfo: 'y+name',
+                          hovertemplate: `
+        <b>${selectedColumn1}</b><br>
+        Time: %{x|%m/%d/%Y %H:%M}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                        }
+                      ]}
+                      layout={{
+                        width: 800 * xScale,
+                        height: 500,
+                        margin: {
+                          l: 60,
+                          r: 30,
+                          b: 100,
+                          t: 30,
+                          pad: 4
                         },
-                        hovertemplate: `
-        <b>${selectedColumn2}</b><br>
-        <b>Time:</b> %{x}<br>
-        <b>Value:</b> %{y:.7f}<extra></extra>
-      `,
+                        xaxis: {
+                          title: {
+                            text: 'Time',
+                            standoff: 25,
+                            position: 'bottom right',
+                            font: {
+                              size: 12,
+                              weight: 600
+                            }
+                          },
+                          type: 'date',
+                          tickmode: 'auto',
+                          nticks: Math.min(10, graphData1.length),
+                          tickformat: '%m/%d %H:%M',
+                          tickangle: 0,
+                          gridcolor: '#f0f0f0',
+                          gridwidth: 1,
+                          showgrid: true,
+                          automargin: true,
+                          range: graphData1?.length
+                            ? [
+                                new Date(graphData1[0].time).toISOString(),
+                                new Date(graphData1[graphData1.length - 1].time).toISOString()
+                              ]
+                            : undefined
+                        },
+                        yaxis: {
+                          title: selectedColumn1,
+                          range: [-0.5 / yScale, 0.5 / yScale],
+                          tickmode: 'linear',
+                          dtick: 0.25,
+                          gridcolor: '#f0f0f0',
+                          gridwidth: 1,
+                          zeroline: true,
+                          zerolinecolor: '#f0f0f0',
+                          zerolinewidth: 1,
+                          showgrid: true
+                        },
+                        shapes: [
+                          ...(drillstarttimedata && drillendtimedata ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillstarttimedata),
+                              y0: 0,
+                              x1: new Date(drillstarttimedata),
+                              y1: 1,
+                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillendtimedata),
+                              y0: 0,
+                              x1: new Date(drillendtimedata),
+                              y1: 1,
+                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            }
+                          ] : []),
+                          ...(trainStartTime && trainEndTime ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainStartTime),
+                              y0: 0,
+                              x1: new Date(trainStartTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainEndTime),
+                              y0: 0,
+                              x1: new Date(trainEndTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            }
+                          ] : [])
+                        ],
+                        annotations: [
+                          ...(drillstarttimedata ? [
+                            {
+                              x: 1,
+                              y: 1.03,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill Start ${drillstarttimedata}`,
+                              showarrow: false,
+                              font: { color: 'green', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(drillendtimedata ? [
+                            {
+                              x: 1,
+                              y: 0.98,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill End ${drillendtimedata}`,
+                              showarrow: false,
+                              font: { color: 'red', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainStartTime ? [
+                            {
+                              x: 1,
+                              y: 0.93,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train Start ${trainStartTime}`,
+                              showarrow: false,
+                              font: { color: 'black' , size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainEndTime ? [
+                            {
+                              x: 1,
+                              y: 0.88,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train End ${trainEndTime}`,
+                              showarrow: false,
+                              font: { color: 'black', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : [])
+                        ],
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: true,
+                        legend: {
+                          orientation: 'h',
+                          y: -0.2,
+                          x: 0.5,
+                          xanchor: 'center'
+                        },
+                        hovermode: 'x unified',
                         hoverlabel: {
-                          bgcolor: '#fff',
-                          bordercolor: '#82ca9d',
+                          bgcolor: 'white',
+                          bordercolor: '#ddd',
                           font: {
                             family: 'Arial',
                             size: 12,
-                            color: '#333'
+                            color: 'black'
                           }
                         }
-                      }
-                    ]}
-                    layout={{
-                      width: 800 * xScale,
-                      height: 500,
-                      margin: {
-                        l: 60,
-                        r: 30,
-                        b: 80,
-                        t: 30,
-                        pad: 4
-                      },
-                      xaxis: {
-                        title: {
-                          text: 'Time',
-                          standoff: 25,
-                          position: 'bottom right',
-                          font: {
-                            size: 12,
-                            weight: 600
+                      }}
+                      config={{
+                        displayModeBar: true,
+                        responsive: true,
+                        displaylogo: false,
+                        scrollZoom: true
+                      }}
+                      style={{ maxHeight: '800px' }}
+                    />
+
+                  </div>
+
+                  {/* Second Chart */}
+                  <div>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      Second Graph ({selectedColumn2})
+                    </h3>
+
+                    <Plot
+                      data={[
+                        {
+                          x: graphData2.map(item => new Date(item.time)),
+                          y: graphData2.map(item => item.value),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          name: selectedColumn2,
+                          line: {
+                            color: '#82ca9d',
+                            shape: 'spline',
+                            width: 2
                           },
-                        },
-                        type: 'category',
-                        tickmode: 'array',
-                        tickvals: getOptimizedTicks(graphData2.map(item => item.time)),
-                        tickangle: 0,
-                        gridcolor: 'rgba(240, 240, 240, 0.7)',
-                        gridwidth: 1,
-                        showgrid: true,
-                        automargin: true,
-                        tickfont: {
-                          size: 11
-                        }
-                      },
-                      yaxis: {
-                        title: {
-                          text: selectedColumn2,
-                          standoff: 15
-                        },
-                        range: [-0.5 / yScale, 0.5 / yScale],
-                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'linear', // Changed from 'array' to 'linear'
-                        dtick: 0.25, // Sets 0.25-inch intervals
-                        nticks: 6,
-                        gridcolor: 'rgba(240, 240, 240, 0.7)',
-                        gridwidth: 1,
-                        zeroline: true,
-                        zerolinecolor: 'rgba(240, 240, 240, 0.7)',
-                        zerolinewidth: 1,
-                        tickfont: {
-                          size: 11
-                        }
-                      },
-                      plot_bgcolor: 'white',
-                      paper_bgcolor: 'white',
-                      showlegend: true,
-                      legend: {
-                        orientation: 'h',
-                        y: -0.2,
-                        x: 0.5,
-                        xanchor: 'center',
-                        font: {
-                          size: 12
-                        }
-                      },
-                      hovermode: 'x unified',
-                      hoverlabel: {
-                        bgcolor: 'white',
-                        bordercolor: '#ddd',
-                        font: {
-                          family: 'Arial',
-                          size: 12,
-                          color: 'black'
-                        }
-                      }
-                    }}
-                    config={{
-                      displayModeBar: true,
-                      responsive: true,
-                      displaylogo: false,
-                      scrollZoom: true
-
-                    }}
-                    style={{
-                      maxHeight: '800px',
-                      border: '1px solid #f0f0f0',
-                      borderRadius: '4px'
-                    }}
-                  />
-
-                </div>
-
-                {/* Third Chart */}
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    Third Graph ({selectedColumn3})
-                  </h3>
-
-                  <Plot
-                    data={[
-                      {
-                        x: graphData3.map(item => item.time),
-                        y: graphData3.map(item => item.value),
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        name: selectedColumn3,
-                        line: {
-                          color: '#ff7300',
-                          shape: 'spline'
-                        },
-                        marker: {
-                          size: 6,
-                          color: '#ff7300'
-                        },
-                        hoverinfo: 'y+name',
-                        hovertemplate: `
-                                      <b>${selectedColumn3}</b><br>
-                                      Time: %{x}<br>
-                                      Value: %{y:.7f}<extra></extra>
-                                      `
-                      }
-                    ]}
-                    layout={{
-                      width: 800 * xScale,
-                      height: 500,
-                      margin: {
-                        l: 60,
-                        r: 30,
-                        b: 80,
-                        t: 30,
-                        pad: 4
-                      },
-                      xaxis: {
-                        title: {
-                          text: 'Time',
-                          standoff: 25,
-                          position: 'bottom right',
-                          font: {
-                            size: 12,
-                            weight: 600
+                          marker: {
+                            size: 8,
+                            color: '#82ca9d',
+                            line: {
+                              width: 1,
+                              color: '#fff'
+                            }
                           },
-                        },
-                        type: 'category',
-                        tickmode: 'array',
-                        tickvals: getOptimizedTicks(graphData3.map(item => item.time)), // Custom function to select ticks
-                        tickangle: 0,
-                        gridcolor: '#f0f0f0',
-                        gridwidth: 1,
-                        showgrid: true,
-                        automargin: true
-                      },
-                      yaxis: {
-                        title: selectedColumn3,
-                        range: [-0.5 / yScale, 0.5 / yScale],
-                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'linear',
-                        dtick: 0.25,
-                        nticks: 6,
-                        gridcolor: '#f0f0f0',
-                        gridwidth: 1,
-                        zeroline: true,
-                        zerolinecolor: '#f0f0f0',
-                        zerolinewidth: 1
-                      },
-                      plot_bgcolor: 'white',
-                      paper_bgcolor: 'white',
-                      showlegend: true,
-                      legend: {
-                        orientation: 'h',
-                        y: -0.2,
-                        x: 0.5,
-                        xanchor: 'center'
-                      },
-                      hovermode: 'x unified',
-                      hoverlabel: {
-                        bgcolor: 'white',
-                        bordercolor: '#ddd',
-                        font: {
-                          family: 'Arial',
-                          size: 12,
-                          color: 'black'
-                        }
-                      }
-                    }}
-                    config={{
-                      displayModeBar: true,
-                      responsive: true,
-                      displaylogo: false,
-                      scrollZoom: true
-                    }}
-                    style={{ maxHeight: '800px' }}
-                  />
-
-                </div>
-
-                {/* Combined Chart */}
-                <div>
-                  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                    Combined Graph
-                  </h3>
-
-                  <Plot
-                    data={[
-                      {
-                        x: combinedGraphData.map(item => item.time),
-                        y: combinedGraphData.map(item => item.value1),
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        name: selectedColumn1,
-                        line: {
-                          color: '#8884d8',
-                          shape: 'spline'
-                        },
-                        marker: {
-                          size: 6,
-                          color: '#8884d8'
-                        },
-                        hovertemplate: `
-        <b>${selectedColumn1}</b><br>
-        Time: %{x}<br>
-        Value: %{y:.6f}<extra></extra>
-      `
-                      },
-                      {
-                        x: combinedGraphData.map(item => item.time),
-                        y: combinedGraphData.map(item => item.value2),
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        name: selectedColumn2,
-                        line: {
-                          color: '#82ca9d',
-                          shape: 'spline'
-                        },
-                        marker: {
-                          size: 6,
-                          color: '#82ca9d'
-                        },
-                        hovertemplate: `
+                          hovertemplate: `
         <b>${selectedColumn2}</b><br>
-        Time: %{x}<br>
-        Value: %{y:.6f}<extra></extra>
-      `
-                      },
-                      {
-                        x: combinedGraphData.map(item => item.time),
-                        y: combinedGraphData.map(item => item.value3),
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        name: selectedColumn3,
-                        line: {
-                          color: '#ff7300',
-                          shape: 'spline'
-                        },
-                        marker: {
-                          size: 6,
-                          color: '#ff7300'
-                        },
-                        hovertemplate: `
-        <b>${selectedColumn3}</b><br>
-        Time: %{x}<br>
-        Value: %{y:.6f}<extra></extra>
-      `
-                      }
-                    ]}
-                    layout={{
-                      width: 800 * xScale,
-                      height: 500,
-                      margin: {
-                        l: 60,
-                        r: 30,
-                        b: 80,
-                        t: 30,
-                        pad: 4
-                      },
-                      xaxis: {
-                        title: {
-                          text: 'Time',
-                          standoff: 25,
-                          position: 'bottom right',
-                          font: {
-                            size: 12,
-                            weight: 600
-                          },
-                        },
-                        type: 'category',
-                        tickmode: 'array',
-                        tickvals: getOptimizedTicks(combinedGraphData.map(item => item.time)),
-                        tickangle: 0,
-                        gridcolor: '#f0f0f0',
-                        gridwidth: 1,
-                        showgrid: true,
-                        automargin: true
-                      },
-                      yaxis: {
-                        title: 'Value',
-                        range: [-0.5 / yScale, 0.5 / yScale],
-                        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                        tickmode: 'linear',
-                        dtick: 0.25,
-                        nticks: 6,
-                        gridcolor: '#f0f0f0',
-                        gridwidth: 1,
-                        zeroline: true,
-                        zerolinecolor: '#f0f0f0',
-                        zerolinewidth: 1
-                      },
-                      plot_bgcolor: 'white',
-                      paper_bgcolor: 'white',
-                      showlegend: true,
-                      legend: {
-                        orientation: 'h',
-                        y: -0.2,
-                        x: 0.5,
-                        xanchor: 'center'
-                      },
-                      hovermode: 'x unified',
-                      hoverlabel: {
-                        bgcolor: 'white',
-                        bordercolor: '#ddd',
-                        font: {
-                          family: 'Arial',
-                          size: 12,
-                          color: 'black'
+        Time: %{x|%m/%d/%Y %H:%M}<br>
+        Value: %{y:.7f}<extra></extra>
+      `,
+                          hoverlabel: {
+                            bgcolor: '#fff',
+                            bordercolor: '#82ca9d',
+                            font: {
+                              family: 'Arial',
+                              size: 12,
+                              color: '#333'
+                            }
+                          }
                         }
-                      }
-                    }}
-                    config={{
-                      displayModeBar: true,
-                      responsive: true,
-                      displaylogo: false,
-                      scrollZoom: true
-                    }}
-                    style={{ maxHeight: '800px' }}
-                  />
+                      ]}
+                      layout={{
+                        width: 800 * xScale,
+                        height: 500,
+                        margin: {
+                          l: 60,
+                          r: 30,
+                          b: 80,
+                          t: 30,
+                          pad: 4
+                        },
+                        xaxis: {
+                          title: {
+                            text: 'Time',
+                            standoff: 25,
+                            font: {
+                              size: 12,
+                              weight: 600
+                            },
+                          },
+                          type: 'date',
+                          tickmode: 'auto',
+                          nticks: Math.min(10, graphData2.length),
+                          tickformat: '%m/%d %H:%M',
+                          tickangle: 0,
+                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          gridwidth: 1,
+                          showgrid: true,
+                          automargin: true,
+                          range: graphData2?.length
+  ? [
+      new Date(graphData2[0].time).getTime(),
+      new Date(graphData2[graphData2.length - 1].time).getTime()
+    ]
+  : [0, 0] 
+                        },
+                        yaxis: {
+                          title: {
+                            text: selectedColumn2,
+                            standoff: 15
+                          },
+                          range: [-0.5 / yScale, 0.5 / yScale],
+                          tickmode: 'linear',
+                          dtick: 0.25,
+                          nticks: 6,
+                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          gridwidth: 1,
+                          zeroline: true,
+                          zerolinecolor: 'rgba(240, 240, 240, 0.7)',
+                          zerolinewidth: 1,
+                          tickfont: {
+                            size: 11
+                          }
+                        },
+                        shapes: [
+                          ...(drillstarttimedata && drillendtimedata ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillstarttimedata),
+                              y0: 0,
+                              x1: new Date(drillstarttimedata),
+                              y1: 1,
+                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillendtimedata),
+                              y0: 0,
+                              x1: new Date(drillendtimedata),
+                              y1: 1,
+                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            }
+                          ] : []),
+                          ...(trainStartTime && trainEndTime ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainStartTime),
+                              y0: 0,
+                              x1: new Date(trainStartTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainEndTime),
+                              y0: 0,
+                              x1: new Date(trainEndTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            }
+                          ] : [])
+                        ],
+                        annotations: [
+                          ...(drillstarttimedata ? [
+                            {
+                              x: 1,
+                              y: 1.03,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill Start ${drillstarttimedata}`,
+                              showarrow: false,
+                              font: { color: 'green', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(drillendtimedata ? [
+                            {
+                              x: 1,
+                              y: 0.98,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill End ${drillendtimedata}`,
+                              showarrow: false,
+                              font: { color: 'red', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainStartTime ? [
+                            {
+                              x: 1,
+                              y: 0.93,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train Start ${trainStartTime}`,
+                              showarrow: false,
+                              font: { color: 'black' , size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainEndTime ? [
+                            {
+                              x: 1,
+                              y: 0.88,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train End ${trainEndTime}`,
+                              showarrow: false,
+                              font: { color: 'black', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : [])
+                        ],
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: true,
+                        legend: {
+                          orientation: 'h',
+                          y: -0.2,
+                          x: 0.5,
+                          xanchor: 'center',
+                          font: {
+                            size: 12
+                          }
+                        },
+                        hovermode: 'x unified',
+                        hoverlabel: {
+                          bgcolor: 'white',
+                          bordercolor: '#ddd',
+                          font: {
+                            family: 'Arial',
+                            size: 12,
+                            color: 'black'
+                          }
+                        }
+                      }}
+                      config={{
+                        displayModeBar: true,
+                        responsive: true,
+                        displaylogo: false,
+                        scrollZoom: true
+                      }}
+                      style={{
+                        maxHeight: '800px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: '4px'
+                      }}
+                    />
 
+                  </div>
+
+                  {/* Third Chart */}
+                  <div>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      Third Graph ({selectedColumn3})
+                    </h3>
+
+                    <Plot
+                      data={[
+                        {
+                          x: graphData3.map(item => new Date(item.time)),
+                          y: graphData3.map(item => item.value),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          name: selectedColumn3,
+                          line: {
+                            color: '#ff7300',
+                            shape: 'spline'
+                          },
+                          marker: {
+                            size: 6,
+                            color: '#ff7300'
+                          },
+                          hoverinfo: 'y+name',
+                          hovertemplate: `
+        <b>${selectedColumn3}</b><br>
+        Time: %{x|%m/%d/%Y %H:%M}<br>
+        Value: %{y:.7f}<extra></extra>
+      `
+                        }
+                      ]}
+                      layout={{
+                        width: 800 * xScale,
+                        height: 500,
+                        margin: {
+                          l: 60,
+                          r: 30,
+                          b: 80,
+                          t: 30,
+                          pad: 4
+                        },
+                        xaxis: {
+                          title: {
+                            text: 'Time',
+                            standoff: 25,
+                            font: {
+                              size: 12,
+                              weight: 600
+                            },
+                          },
+                          type: 'date',
+                          tickmode: 'auto',
+                          nticks: Math.min(10, graphData3.length),
+                          tickformat: '%m/%d %H:%M',
+                          tickangle: 0,
+                          gridcolor: '#f0f0f0',
+                          gridwidth: 1,
+                          showgrid: true,
+                          automargin: true,
+                          range: graphData3?.length
+  ? [
+      new Date(graphData3[0].time).getTime(),
+      new Date(graphData3[graphData3.length - 1].time).getTime()
+    ]
+  : [0, 0] 
+                        },
+                        yaxis: {
+                          title: selectedColumn3,
+                          range: [-0.5 / yScale, 0.5 / yScale],
+                          tickmode: 'linear',
+                          dtick: 0.25,
+                          nticks: 6,
+                          gridcolor: '#f0f0f0',
+                          gridwidth: 1,
+                          zeroline: true,
+                          zerolinecolor: '#f0f0f0',
+                          zerolinewidth: 1
+                        },
+                        shapes: [
+                          ...(drillstarttimedata && drillendtimedata ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillstarttimedata),
+                              y0: 0,
+                              x1: new Date(drillstarttimedata),
+                              y1: 1,
+                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillendtimedata),
+                              y0: 0,
+                              x1: new Date(drillendtimedata),
+                              y1: 1,
+                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            }
+                          ] : []),
+                          ...(trainStartTime && trainEndTime ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainStartTime),
+                              y0: 0,
+                              x1: new Date(trainStartTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainEndTime),
+                              y0: 0,
+                              x1: new Date(trainEndTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            }
+                          ] : [])
+                        ],
+                        annotations: [
+                          ...(drillstarttimedata ? [
+                            {
+                              x: 1,
+                              y: 1.03,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill Start ${drillstarttimedata}`,
+                              showarrow: false,
+                              font: { color: 'green', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(drillendtimedata ? [
+                            {
+                              x: 1,
+                              y: 0.98,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill End ${drillendtimedata}`,
+                              showarrow: false,
+                              font: { color: 'red', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainStartTime ? [
+                            {
+                              x: 1,
+                              y: 0.93,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train Start ${trainStartTime}`,
+                              showarrow: false,
+                              font: { color: 'black' , size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainEndTime ? [
+                            {
+                              x: 1,
+                              y: 0.88,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train End ${trainEndTime}`,
+                              showarrow: false,
+                              font: { color: 'black', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : [])
+                        ],
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: true,
+                        legend: {
+                          orientation: 'h',
+                          y: -0.2,
+                          x: 0.5,
+                          xanchor: 'center'
+                        },
+                        hovermode: 'x unified',
+                        hoverlabel: {
+                          bgcolor: 'white',
+                          bordercolor: '#ddd',
+                          font: {
+                            family: 'Arial',
+                            size: 12,
+                            color: 'black'
+                          }
+                        }
+                      }}
+                      config={{
+                        displayModeBar: true,
+                        responsive: true,
+                        displaylogo: false,
+                        scrollZoom: true
+                      }}
+                      style={{ maxHeight: '800px' }}
+                    />
+
+                  </div>
+
+                  {/* Combined Chart */}
+                  <div>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      Combined Graph
+                    </h3>
+
+                    <Plot
+                      data={[
+                        {
+                          x: combinedGraphData.map(item => new Date(item.time)),
+                          y: combinedGraphData.map(item => item.value1),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          name: selectedColumn1,
+                          line: {
+                            color: '#8884d8',
+                            shape: 'spline'
+                          },
+                          marker: {
+                            size: 6,
+                            color: '#8884d8'
+                          },
+                          hovertemplate: `
+        <b>${selectedColumn1}</b><br>
+        Time: %{x|%m/%d/%Y %H:%M}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                        },
+                        {
+                          x: combinedGraphData.map(item => new Date(item.time)),
+                          y: combinedGraphData.map(item => item.value2),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          name: selectedColumn2,
+                          line: {
+                            color: '#82ca9d',
+                            shape: 'spline'
+                          },
+                          marker: {
+                            size: 6,
+                            color: '#82ca9d'
+                          },
+                          hovertemplate: `
+        <b>${selectedColumn2}</b><br>
+        Time: %{x|%m/%d/%Y %H:%M}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                        },
+                        {
+                          x: combinedGraphData.map(item => new Date(item.time)),
+                          y: combinedGraphData.map(item => item.value3),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          name: selectedColumn3,
+                          line: {
+                            color: '#ff7300',
+                            shape: 'spline'
+                          },
+                          marker: {
+                            size: 6,
+                            color: '#ff7300'
+                          },
+                          hovertemplate: `
+        <b>${selectedColumn3}</b><br>
+        Time: %{x|%m/%d/%Y %H:%M}<br>
+        Value: %{y:.6f}<extra></extra>
+      `
+                        }
+                      ]}
+                      layout={{
+                        width: 800 * xScale,
+                        height: 500,
+                        margin: {
+                          l: 60,
+                          r: 30,
+                          b: 80,
+                          t: 30,
+                          pad: 4
+                        },
+                        xaxis: {
+                          title: {
+                            text: 'Time',
+                            standoff: 25,
+                            position: 'bottom right',
+                            font: {
+                              size: 12,
+                              weight: 600
+                            },
+                          },
+                          type: 'date',
+                          tickmode: 'auto',
+                          nticks: Math.min(10, combinedGraphData.length),
+                          tickformat: '%m/%d %H:%M',
+                          tickangle: 0,
+                          gridcolor: '#f0f0f0',
+                          gridwidth: 1,
+                          showgrid: true,
+                          automargin: true,
+                          range: combinedGraphData?.length
+  ? [
+      new Date(combinedGraphData[0].time).getTime(),
+      new Date(combinedGraphData[combinedGraphData.length - 1].time).getTime()
+    ]
+  : [0, 0] 
+                        },
+                        yaxis: {
+                          title: 'Value',
+                          range: [-0.5 / yScale, 0.5 / yScale],
+                          tickmode: 'linear',
+                          dtick: 0.25,
+                          nticks: 6,
+                          gridcolor: '#f0f0f0',
+                          gridwidth: 1,
+                          zeroline: true,
+                          zerolinecolor: '#f0f0f0',
+                          zerolinewidth: 1
+                        },
+                        shapes: [
+                          ...(drillstarttimedata && drillendtimedata ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillstarttimedata),
+                              y0: 0,
+                              x1: new Date(drillstarttimedata),
+                              y1: 1,
+                              line: { color: 'green', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(drillendtimedata),
+                              y0: 0,
+                              x1: new Date(drillendtimedata),
+                              y1: 1,
+                              line: { color: 'red', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            }
+                          ] : []),
+                          ...(trainStartTime && trainEndTime ? [
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainStartTime),
+                              y0: 0,
+                              x1: new Date(trainStartTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' },  
+                              opacity: 0.7
+                            },
+                            {
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(trainEndTime),
+                              y0: 0,
+                              x1: new Date(trainEndTime),
+                              y1: 1,
+                              line: { color: 'black', width: 2, dash: 'dot' as 'dot' }, 
+                              opacity: 0.7
+                            }
+                          ] : [])
+                        ],
+                        annotations: [
+                          ...(drillstarttimedata ? [
+                            {
+                              x: 1,
+                              y: 1.03,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill Start ${drillstarttimedata}`,
+                              showarrow: false,
+                              font: { color: 'green', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(drillendtimedata ? [
+                            {
+                              x: 1,
+                              y: 0.98,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Drill End ${drillendtimedata}`,
+                              showarrow: false,
+                              font: { color: 'red', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainStartTime ? [
+                            {
+                              x: 1,
+                              y: 0.93,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train Start ${trainStartTime}`,
+                              showarrow: false,
+                              font: { color: 'black' , size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : []),
+                          ...(trainEndTime ? [
+                            {
+                              x: 1,
+                              y: 0.88,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `Train End ${trainEndTime}`,
+                              showarrow: false,
+                              font: { color: 'black', size: 10 },
+                              xanchor: 'right' as 'right'
+                            }
+                          ] : [])
+                        ],
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: true,
+                        legend: {
+                          orientation: 'h',
+                          y: -0.2,
+                          x: 0.5,
+                          xanchor: 'center'
+                        },
+                        hovermode: 'x unified',
+                        hoverlabel: {
+                          bgcolor: 'white',
+                          bordercolor: '#ddd',
+                          font: {
+                            family: 'Arial',
+                            size: 12,
+                            color: 'black'
+                          }
+                        }
+                      }}
+                      config={{
+                        displayModeBar: true,
+                        responsive: true,
+                        displaylogo: false,
+                        scrollZoom: true
+                      }}
+                      style={{ maxHeight: '800px' }}
+                    />
+
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </MainContentWrapper>
     </>
   );
