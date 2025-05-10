@@ -105,15 +105,15 @@ const GapRemoval: React.FC = () => {
 
     const tracksInData = new Set<string>();
     if (jsonData.length > 0) {
-        const headers = jsonData[0];
-        headers.forEach(header => {
-            if (typeof header === 'string') {
-                const match = header.match(/TK(\d+)/i);
-                if (match && match[1]) {
-                    tracksInData.add(match[1]);
-                }
-            }
-        });
+      const headers = jsonData[0];
+      headers.forEach(header => {
+        if (typeof header === 'string') {
+          const match = header.match(/TK(\d+)/i);
+          if (match && match[1]) {
+            tracksInData.add(match[1]);
+          }
+        }
+      });
     }
 
     const trackNumbers = new Set<string>();
@@ -169,47 +169,47 @@ const GapRemoval: React.FC = () => {
 
     const trainFileData = localStorage.getItem("trainExcelFile");
     if (trainFileData) {
-        const trainByteCharacters = atob(trainFileData);
-        const trainByteArray = new Uint8Array(trainByteCharacters.length);
-        for (let i = 0; i < trainByteCharacters.length; i++) {
-            trainByteArray[i] = trainByteCharacters.charCodeAt(i);
-        }
+      const trainByteCharacters = atob(trainFileData);
+      const trainByteArray = new Uint8Array(trainByteCharacters.length);
+      for (let i = 0; i < trainByteCharacters.length; i++) {
+        trainByteArray[i] = trainByteCharacters.charCodeAt(i);
+      }
 
-        const trainWorkbook = XLSX.read(trainByteArray, { type: "array" });
-        const trainWorksheet = trainWorkbook.Sheets[trainWorkbook.SheetNames[0]];
-        const trainJsonData = XLSX.utils.sheet_to_json(trainWorksheet, { header: 1 });
+      const trainWorkbook = XLSX.read(trainByteArray, { type: "array" });
+      const trainWorksheet = trainWorkbook.Sheets[trainWorkbook.SheetNames[0]];
+      const trainJsonData = XLSX.utils.sheet_to_json(trainWorksheet, { header: 1 });
 
-        const newTrackTrainTimes: Record<string, string[]> = {};
+      const newTrackTrainTimes: Record<string, string[]> = {};
 
-        // Initialize with tracks found in our data
-        tracksInData.forEach(track => {
-            newTrackTrainTimes[track] = [];
-        });
+      // Initialize with tracks found in our data
+      tracksInData.forEach(track => {
+        newTrackTrainTimes[track] = [];
+      });
 
-        // Collect ALL train times for relevant tracks
-        for (let i = 1; i < trainJsonData.length; i++) {
-            const row = trainJsonData[i];
-            if (Array.isArray(row) && row.length >= 4) {
-                const track = String(row[2]).trim().replace(/\D/g, '');
-                const timeStr = String(row[3]).trim();
+      // Collect ALL train times for relevant tracks
+      for (let i = 1; i < trainJsonData.length; i++) {
+        const row = trainJsonData[i];
+        if (Array.isArray(row) && row.length >= 4) {
+          const track = String(row[2]).trim().replace(/\D/g, '');
+          const timeStr = String(row[3]).trim();
 
-                if (tracksInData.has(track)) {
-                    if (!newTrackTrainTimes[track]) {
-                        newTrackTrainTimes[track] = [];
-                    }
-                    newTrackTrainTimes[track].push(timeStr);
-                }
+          if (tracksInData.has(track)) {
+            if (!newTrackTrainTimes[track]) {
+              newTrackTrainTimes[track] = [];
             }
+            newTrackTrainTimes[track].push(timeStr);
+          }
         }
+      }
 
-        // Sort times chronologically for each track
-        Object.keys(newTrackTrainTimes).forEach(track => {
-            newTrackTrainTimes[track].sort((a, b) => 
-                new Date(a).getTime() - new Date(b).getTime()
-            );
-        });
+      // Sort times chronologically for each track
+      Object.keys(newTrackTrainTimes).forEach(track => {
+        newTrackTrainTimes[track].sort((a, b) =>
+          new Date(a).getTime() - new Date(b).getTime()
+        );
+      });
 
-        setTrackTrainTimes(newTrackTrainTimes);
+      setTrackTrainTimes(newTrackTrainTimes);
     } else {
       console.log("No train file data found");
     }
@@ -852,7 +852,7 @@ const GapRemoval: React.FC = () => {
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 150, 
+                          r: 150,
                           b: 100,
                           t: 30,
                           pad: 4
@@ -920,7 +920,7 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7
                             }
                           ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
                             times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
@@ -929,10 +929,10 @@ const GapRemoval: React.FC = () => {
                               y0: 0,
                               x1: new Date(time),
                               y1: 1,
-                              line: { 
+                              line: {
                                 color: '#2196F3',
-                                width: 2, 
-                                dash: 'solid' as 'solid' 
+                                width: 2,
+                                dash: 'solid' as 'solid'
                               },
                               opacity: 0.7,
                               name: `Track ${track}`
@@ -967,14 +967,14 @@ const GapRemoval: React.FC = () => {
                           ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
                             times.map((time, timeIndex) => ({
                               x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${new Date(time).toLocaleTimeString()}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
                               showarrow: false,
-                              font: { 
+                              font: {
                                 color: '#2196F3',
-                                size: 10 
+                                size: 10
                               },
                               xanchor: 'left' as 'left',
                               align: 'left' as 'left',
@@ -1134,7 +1134,7 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7
                             }
                           ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
                             times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
@@ -1143,9 +1143,9 @@ const GapRemoval: React.FC = () => {
                               y0: 0,
                               x1: new Date(time),
                               y1: 1,
-                              line: { 
+                              line: {
                                 color: '#2196F3', // Different color per track
-                                width: 2, 
+                                width: 2,
                                 dash: 'solid' as 'solid'  // Alternate pattern
                               },
                               opacity: 0.7,
@@ -1181,14 +1181,14 @@ const GapRemoval: React.FC = () => {
                           ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
                             times.map((time, timeIndex) => ({
                               x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${new Date(time).toLocaleTimeString()}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
                               showarrow: false,
-                              font: { 
+                              font: {
                                 color: '#2196F3',
-                                size: 10 
+                                size: 10
                               },
                               xanchor: 'left' as 'left',
                               align: 'left' as 'left',
@@ -1336,7 +1336,7 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7
                             }
                           ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
                             times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
@@ -1345,9 +1345,9 @@ const GapRemoval: React.FC = () => {
                               y0: 0,
                               x1: new Date(time),
                               y1: 1,
-                              line: { 
+                              line: {
                                 color: '#2196F3', // Different color per track
-                                width: 2, 
+                                width: 2,
                                 dash: 'solid' as 'solid'  // Alternate pattern
                               },
                               opacity: 0.7,
@@ -1383,14 +1383,14 @@ const GapRemoval: React.FC = () => {
                           ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
                             times.map((time, timeIndex) => ({
                               x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${new Date(time).toLocaleTimeString()}`,
+                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
                               showarrow: false,
-                              font: { 
+                              font: {
                                 color: '#2196F3',
-                                size: 10 
+                                size: 10
                               },
                               xanchor: 'left' as 'left',
                               align: 'left' as 'left',
@@ -1571,7 +1571,7 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7
                             }
                           ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => 
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
                             times.map((time) => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
@@ -1580,9 +1580,9 @@ const GapRemoval: React.FC = () => {
                               y0: 0,
                               x1: new Date(time),
                               y1: 1,
-                              line: { 
+                              line: {
                                 color: '#2196F3', // Different color per track
-                                width: 2, 
+                                width: 2,
                                 dash: 'solid' as 'solid'  // Alternate pattern
                               },
                               opacity: 0.7,
@@ -1618,14 +1618,14 @@ const GapRemoval: React.FC = () => {
                           ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
                             times.map((time, timeIndex) => ({
                               x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08), 
+                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
                               xref: 'paper' as 'paper',
                               yref: 'paper' as 'paper',
                               text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
                               showarrow: false,
-                              font: { 
+                              font: {
                                 color: '#2196F3',
-                                size: 10 
+                                size: 10
                               },
                               xanchor: 'left' as 'left',
                               align: 'left' as 'left',

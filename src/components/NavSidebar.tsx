@@ -42,7 +42,7 @@ const NavSidebar: React.FC = () => {
   useEffect(() => {
     const checkProjectAccess = async () => {
       if (!userEmail) return;
-      
+
       const { data, error } = await supabase
         .from('Projects')
         .select('name')
@@ -133,21 +133,21 @@ const NavSidebar: React.FC = () => {
           </ListItemButton>
           <Collapse in={openGraphs} timeout="auto" unmountOnExit>
             <List component="div" disablePadding sx={{ bgcolor: '#003087' }}>
-              <ListItemButton 
-                component={Link} 
+              <ListItemButton
+                component={Link}
                 to="/project-graphs"
                 sx={{ pl: 4 }}
               >
                 <ListItemText primary="Project Graphs" />
               </ListItemButton>
-              <ListItemButton 
-                component={Link} 
+              <ListItemButton
+                component={Link}
                 to="/view-custom-graphs"
                 sx={{ pl: 4 }}
               >
                 <ListItemText primary="Custom Graphs" />
               </ListItemButton>
-              
+
               {/* Long Bridge North Project Section - only show if has access */}
               {(isAdmin || hasLongBridgeAccess) && (
                 <>
@@ -160,34 +160,41 @@ const NavSidebar: React.FC = () => {
                   </ListItemButton>
                   <Collapse in={openProject} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
-                      <ListItemButton 
-                        component={Link} 
+                      <ListItemButton
+                        component={Link}
                         to="/single-prism-with-time"
-                        sx={{ pl: 6 }}
+                        sx={{ pl: 4 }}
                       >
                         <ListItemText primary="Single Prism" />
                       </ListItemButton>
-                      
-              <ListItemButton 
-                component={Link} 
-                to="/multi-prisms-with-time"
-                sx={{ pl: 4 }}
-              >
-                <ListItemText primary="Multiple Prisms" />
-              </ListItemButton>
-              <ListItemButton 
-                component={Link} 
-                to="/amts-track-graphs"
-                sx={{ pl: 4 }}
-              >
-                <ListItemText primary="AMTS Track" />
-              </ListItemButton>
-                      <ListItemButton 
-                        component={Link} 
+
+                      <ListItemButton
+                        component={Link}
+                        to="/multi-prisms-with-time"
+                        sx={{ pl: 4 }}
+                      >
+                        <ListItemText primary="Multiple Prisms" />
+                      </ListItemButton>
+                      <ListItemButton
+                        component={Link}
+                        to="/amts-track-graphs"
+                        sx={{ pl: 4 }}
+                      >
+                        <ListItemText primary="AMTS Track" />
+                      </ListItemButton>
+                      <ListItemButton
+                        component={Link}
                         to="/amts-ref-graphs"
-                        sx={{ pl: 6 }}
+                        sx={{ pl: 4 }}
                       >
                         <ListItemText primary="AMTS Ref" />
+                      </ListItemButton>
+                      <ListItemButton
+                        component={Link}
+                        to="/data-summary"
+                        sx={{ pl: 4 }}
+                      >
+                        <ListItemText primary="Data Summary" />
                       </ListItemButton>
                     </List>
                   </Collapse>
@@ -227,17 +234,17 @@ const NavSidebar: React.FC = () => {
         <List>
           <ListItemButton>
             <ListItemIcon sx={{ color: 'inherit' }}>
-              <Avatar sx={{ 
+              <Avatar sx={{
                 bgcolor: isAdmin ? theme.palette.secondary.main : theme.palette.info.main,
-                width: 32, 
-                height: 32 
+                width: 32,
+                height: 32
               }}>
                 {isAdmin ? <AdminProfileIcon fontSize="small" /> : <UserIcon fontSize="small" />}
               </Avatar>
             </ListItemIcon>
-            <ListItemText 
-              primary={isAdmin ? "Admin" : "User"} 
-              secondary={userEmail || "Not logged in"} 
+            <ListItemText
+              primary={isAdmin ? "Admin" : "User"}
+              secondary={userEmail || "Not logged in"}
             />
           </ListItemButton>
           <ListItemButton onClick={handleLogout}>

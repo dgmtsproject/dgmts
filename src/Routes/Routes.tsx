@@ -23,6 +23,7 @@ import AtmsTrackGraphs from "../pages/AtmsTrackGraphs";
 import AmtsRefGraphs from "../pages/AmtsRefGraphs";
 import InstrumentsList from "../pages/InstrumentsList";
 import AddAlarms from "../pages/Add-Alarms";
+import DataSummmary from "../pages/DataSummmary";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -50,6 +51,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/amts-ref-graphs" element={<AmtsRefGraphs />} />
       <Route path="/instruments-list" element={<InstrumentsList />} />
       <Route path="/add-alarms" element={<AddAlarms/>}/>
+      <Route path="/data-summary" element={<DataSummmary/>} />
     </Routes>
   );
 };
