@@ -330,6 +330,16 @@ const GapRemoval: React.FC = () => {
   // };
 
 
+  function formatTime(timeString: string): string {
+    const date = new Date(timeString);
+    return date.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }
   const handleColumnSelect = () => {
     if (!selectedColumn1 || !selectedColumn2 || !selectedColumn3) return;
     const timeIndex = headers.indexOf("Time");
@@ -831,14 +841,8 @@ const GapRemoval: React.FC = () => {
                           type: 'scatter',
                           mode: 'lines+markers',
                           name: selectedColumn1,
-                          line: {
-                            color: '#8884d8',
-                            shape: 'spline'
-                          },
-                          marker: {
-                            size: 6,
-                            color: '#8884d8'
-                          },
+                          line: { color: '#8884d8', shape: 'spline' },
+                          marker: { size: 6, color: '#8884d8' },
                           hoverinfo: 'y+name',
                           hovertemplate: `
         <b>${selectedColumn1}</b><br>
@@ -853,7 +857,7 @@ const GapRemoval: React.FC = () => {
                         margin: {
                           l: 60,
                           r: 150,
-                          b: 100,
+                          b: 150,
                           t: 30,
                           pad: 4
                         },
@@ -862,10 +866,7 @@ const GapRemoval: React.FC = () => {
                             text: 'Time',
                             standoff: 25,
                             position: 'bottom right',
-                            font: {
-                              size: 12,
-                              weight: 600
-                            }
+                            font: { size: 12, weight: 600 }
                           },
                           type: 'date',
                           tickmode: 'auto',
@@ -876,15 +877,13 @@ const GapRemoval: React.FC = () => {
                           gridwidth: 1,
                           showgrid: true,
                           automargin: true,
-                          range: graphData1?.length
-                            ? [
-                              new Date(graphData1[0].time).toISOString(),
-                              new Date(graphData1[graphData1.length - 1].time).toISOString()
-                            ]
-                            : undefined
+                          range: graphData1?.length ? [
+                            new Date(graphData1[0].time).toISOString(),
+                            new Date(graphData1[graphData1.length - 1].time).toISOString()
+                          ] : undefined
                         },
                         yaxis: {
-                          title: selectedColumn1,
+                          title: { text: selectedColumn1 },
                           range: [-0.5 / yScale, 0.5 / yScale],
                           tickmode: 'linear',
                           dtick: 0.25,
@@ -896,32 +895,30 @@ const GapRemoval: React.FC = () => {
                           showgrid: true
                         },
                         shapes: [
-                          ...(drillstarttimedata && drillendtimedata ? [
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillstarttimedata),
-                              y0: 0,
-                              x1: new Date(drillstarttimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillendtimedata),
-                              y0: 0,
-                              x1: new Date(drillendtimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            }
-                          ] : []),
+                          ...(drillstarttimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillstarttimedata),
+                            y0: 0,
+                            x1: new Date(drillstarttimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillendtimedata),
+                            y0: 0,
+                            x1: new Date(drillendtimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
                           ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map((time) => ({
+                            times.map(time => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
@@ -931,7 +928,7 @@ const GapRemoval: React.FC = () => {
                               y1: 1,
                               line: {
                                 color: '#2196F3',
-                                width: 2,
+                                width: 3,
                                 dash: 'solid' as 'solid'
                               },
                               opacity: 0.7,
@@ -940,66 +937,77 @@ const GapRemoval: React.FC = () => {
                           )
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [
-                            {
-                              x: 1,
-                              y: 1.03,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill Start ${drillstarttimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(drillendtimedata ? [
-                            {
-                              x: 1,
-                              y: 0.98,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill End ${drillendtimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
-                            times.map((time, timeIndex) => ({
-                              x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
-                              showarrow: false,
-                              font: {
-                                color: '#2196F3',
-                                size: 10
+                          ...(drillstarttimedata ? [{
+                            x: 0,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'left' as 'left',
+                            align: 'left' as 'left',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            x: 1,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'right' as 'right',
+                            align: 'right' as 'right',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
+                            if (times.length === 0) return [];
+                            const firstTime = times[0];
+                            const lastTime = times[times.length - 1];
+                            const yPos = -0.25;
+                            return [
+                              {
+                                x: 0,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'left' as 'left',
+                                align: 'left' as 'left',
+                                bgcolor: 'rgba(255,255,255,0.8)'
                               },
-                              xanchor: 'left' as 'left',
-                              align: 'left' as 'left',
-                              bgcolor: 'rgba(255,255,255,0.8)'
-                            }))
-                          )
+                              ...(firstTime !== lastTime ? [{
+                                x: 1,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'right' as 'right',
+                                align: 'right' as 'right',
+                                bgcolor: 'rgba(255,255,255,0.8)'
+                              }] : [])
+                            ];
+                          })
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
                         showlegend: true,
                         legend: {
                           orientation: 'h',
-                          y: -0.2,
+                          y: -0.25,
                           x: 0.5,
-                          xanchor: 'center'
+                          xanchor: 'center' as 'center'
                         },
                         hovermode: 'x unified',
                         hoverlabel: {
                           bgcolor: 'white',
                           bordercolor: '#ddd',
-                          font: {
-                            family: 'Arial',
-                            size: 12,
-                            color: 'black'
-                          }
+                          font: { family: 'Arial', size: 12, color: 'black' }
                         }
                       }}
                       config={{
@@ -1110,32 +1118,30 @@ const GapRemoval: React.FC = () => {
                           }
                         },
                         shapes: [
-                          ...(drillstarttimedata && drillendtimedata ? [
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillstarttimedata),
-                              y0: 0,
-                              x1: new Date(drillstarttimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillendtimedata),
-                              y0: 0,
-                              x1: new Date(drillendtimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            }
-                          ] : []),
+                          ...(drillstarttimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillstarttimedata),
+                            y0: 0,
+                            x1: new Date(drillstarttimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillendtimedata),
+                            y0: 0,
+                            x1: new Date(drillendtimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
                           ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map((time) => ({
+                            times.map(time => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
@@ -1144,9 +1150,9 @@ const GapRemoval: React.FC = () => {
                               x1: new Date(time),
                               y1: 1,
                               line: {
-                                color: '#2196F3', // Different color per track
-                                width: 2,
-                                dash: 'solid' as 'solid'  // Alternate pattern
+                                color: '#2196F3',
+                                width: 3,
+                                dash: 'solid' as 'solid'
                               },
                               opacity: 0.7,
                               name: `Track ${track}`
@@ -1154,47 +1160,62 @@ const GapRemoval: React.FC = () => {
                           )
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [
-                            {
-                              x: 1,
-                              y: 1.03,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill Start ${drillstarttimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(drillendtimedata ? [
-                            {
-                              x: 1,
-                              y: 0.98,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill End ${drillendtimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
-                            times.map((time, timeIndex) => ({
-                              x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
-                              showarrow: false,
-                              font: {
-                                color: '#2196F3',
-                                size: 10
+                          ...(drillstarttimedata ? [{
+                            x: 0,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'left' as 'left',
+                            align: 'left' as 'left',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            x: 1,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'right' as 'right',
+                            align: 'right' as 'right',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
+                            if (times.length === 0) return [];
+                            const firstTime = times[0];
+                            const lastTime = times[times.length - 1];
+                            const yPos = -0.25;
+                            return [
+                              {
+                                x: 0,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'left' as 'left',
+                                align: 'left' as 'left',
+                                bgcolor: 'rgba(255,255,255,0.8)'
                               },
-                              xanchor: 'left' as 'left',
-                              align: 'left' as 'left',
-                              bgcolor: 'rgba(255,255,255,0.8)'
-                            }))
-                          )
+                              ...(firstTime !== lastTime ? [{
+                                x: 1,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'right' as 'right',
+                                align: 'right' as 'right',
+                                bgcolor: 'rgba(255,255,255,0.8)'
+                              }] : [])
+                            ];
+                          })
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1300,7 +1321,7 @@ const GapRemoval: React.FC = () => {
                             : [0, 0]
                         },
                         yaxis: {
-                          title: selectedColumn3,
+                          title: { text: selectedColumn3 },
                           range: [-0.5 / yScale, 0.5 / yScale],
                           tickmode: 'linear',
                           dtick: 0.25,
@@ -1312,32 +1333,30 @@ const GapRemoval: React.FC = () => {
                           zerolinewidth: 1
                         },
                         shapes: [
-                          ...(drillstarttimedata && drillendtimedata ? [
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillstarttimedata),
-                              y0: 0,
-                              x1: new Date(drillstarttimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillendtimedata),
-                              y0: 0,
-                              x1: new Date(drillendtimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            }
-                          ] : []),
+                          ...(drillstarttimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillstarttimedata),
+                            y0: 0,
+                            x1: new Date(drillstarttimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillendtimedata),
+                            y0: 0,
+                            x1: new Date(drillendtimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
                           ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map((time) => ({
+                            times.map(time => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
@@ -1346,9 +1365,9 @@ const GapRemoval: React.FC = () => {
                               x1: new Date(time),
                               y1: 1,
                               line: {
-                                color: '#2196F3', // Different color per track
-                                width: 2,
-                                dash: 'solid' as 'solid'  // Alternate pattern
+                                color: '#2196F3',
+                                width: 3,
+                                dash: 'solid' as 'solid'
                               },
                               opacity: 0.7,
                               name: `Track ${track}`
@@ -1356,47 +1375,62 @@ const GapRemoval: React.FC = () => {
                           )
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [
-                            {
-                              x: 1,
-                              y: 1.03,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill Start ${drillstarttimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(drillendtimedata ? [
-                            {
-                              x: 1,
-                              y: 0.98,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill End ${drillendtimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
-                            times.map((time, timeIndex) => ({
-                              x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
-                              showarrow: false,
-                              font: {
-                                color: '#2196F3',
-                                size: 10
+                          ...(drillstarttimedata ? [{
+                            x: 0,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'left' as 'left',
+                            align: 'left' as 'left',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            x: 1,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'right' as 'right',
+                            align: 'right' as 'right',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
+                            if (times.length === 0) return [];
+                            const firstTime = times[0];
+                            const lastTime = times[times.length - 1];
+                            const yPos = -0.25;
+                            return [
+                              {
+                                x: 0,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'left' as 'left',
+                                align: 'left' as 'left',
+                                bgcolor: 'rgba(255,255,255,0.8)'
                               },
-                              xanchor: 'left' as 'left',
-                              align: 'left' as 'left',
-                              bgcolor: 'rgba(255,255,255,0.8)'
-                            }))
-                          )
+                              ...(firstTime !== lastTime ? [{
+                                x: 1,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'right' as 'right',
+                                align: 'right' as 'right',
+                                bgcolor: 'rgba(255,255,255,0.8)'
+                              }] : [])
+                            ];
+                          })
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1535,7 +1569,7 @@ const GapRemoval: React.FC = () => {
                             : [0, 0]
                         },
                         yaxis: {
-                          title: 'Value',
+                          title: { text: 'Value' },
                           range: [-0.5 / yScale, 0.5 / yScale],
                           tickmode: 'linear',
                           dtick: 0.25,
@@ -1547,32 +1581,30 @@ const GapRemoval: React.FC = () => {
                           zerolinewidth: 1
                         },
                         shapes: [
-                          ...(drillstarttimedata && drillendtimedata ? [
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillstarttimedata),
-                              y0: 0,
-                              x1: new Date(drillstarttimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            },
-                            {
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(drillendtimedata),
-                              y0: 0,
-                              x1: new Date(drillendtimedata),
-                              y1: 1,
-                              line: { color: 'red', width: 1, },
-                              opacity: 0.7
-                            }
-                          ] : []),
+                          ...(drillstarttimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillstarttimedata),
+                            y0: 0,
+                            x1: new Date(drillstarttimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillendtimedata),
+                            y0: 0,
+                            x1: new Date(drillendtimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
                           ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map((time) => ({
+                            times.map(time => ({
                               type: 'line' as 'line',
                               xref: 'x' as 'x',
                               yref: 'paper' as 'paper',
@@ -1581,9 +1613,9 @@ const GapRemoval: React.FC = () => {
                               x1: new Date(time),
                               y1: 1,
                               line: {
-                                color: '#2196F3', // Different color per track
-                                width: 2,
-                                dash: 'solid' as 'solid'  // Alternate pattern
+                                color: '#2196F3',
+                                width: 3,
+                                dash: 'solid' as 'solid'
                               },
                               opacity: 0.7,
                               name: `Track ${track}`
@@ -1591,47 +1623,62 @@ const GapRemoval: React.FC = () => {
                           )
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [
-                            {
-                              x: 1,
-                              y: 1.03,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill Start ${drillstarttimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...(drillendtimedata ? [
-                            {
-                              x: 1,
-                              y: 0.98,
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Drill End ${drillendtimedata}`,
-                              showarrow: false,
-                              font: { color: 'red', size: 10 },
-                              xanchor: 'right' as 'right'
-                            }
-                          ] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times], trackIndex) =>
-                            times.map((time, timeIndex) => ({
-                              x: 1.05,
-                              y: 0.9 - (trackIndex * 0.2) - (timeIndex * 0.08),
-                              xref: 'paper' as 'paper',
-                              yref: 'paper' as 'paper',
-                              text: `Track ${track} Train ${timeIndex + 1}<br>${time}`,
-                              showarrow: false,
-                              font: {
-                                color: '#2196F3',
-                                size: 10
+                          ...(drillstarttimedata ? [{
+                            x: 0,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'left' as 'left',
+                            align: 'left' as 'left',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            x: 1,
+                            y: -0.15,
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'right' as 'right',
+                            align: 'right' as 'right',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
+                            if (times.length === 0) return [];
+                            const firstTime = times[0];
+                            const lastTime = times[times.length - 1];
+                            const yPos = -0.25;
+                            return [
+                              {
+                                x: 0,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'left' as 'left',
+                                align: 'left' as 'left',
+                                bgcolor: 'rgba(255,255,255,0.8)'
                               },
-                              xanchor: 'left' as 'left',
-                              align: 'left' as 'left',
-                              bgcolor: 'rgba(255,255,255,0.8)'
-                            }))
-                          )
+                              ...(firstTime !== lastTime ? [{
+                                x: 1,
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'right' as 'right',
+                                align: 'right' as 'right',
+                                bgcolor: 'rgba(255,255,255,0.8)'
+                              }] : [])
+                            ];
+                          })
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',

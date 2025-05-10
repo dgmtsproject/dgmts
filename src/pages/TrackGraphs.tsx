@@ -45,6 +45,9 @@ const TrackGraphs: React.FC = () => {
   const [headers, setHeaders] = useState<string[]>([]);
 
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
+  const [drillstarttimedata, setDrillStartTimeData] = useState<string>("");
+  const [drillendtimedata, setDrillEndTimeData] = useState<string>("");
+  const [trackTrainTimes, setTrackTrainTimes] = useState<Record<string, string[]>>({});
   const [showGraph, setShowGraph] = useState(false);
   const [timeColumn, setTimeColumn] = useState<string[]>([]);
   const [processedData, setProcessedData] = useState<string[][]>([]);
@@ -76,6 +79,119 @@ const TrackGraphs: React.FC = () => {
       | string
     )[][];
 
+    const tracksInData = new Set<string>();
+    if (jsonData.length > 0) {
+      const headers = jsonData[0];
+      headers.forEach(header => {
+        if (typeof header === 'string') {
+          const match = header.match(/TK(\d+)/i);
+          if (match && match[1]) {
+            tracksInData.add(match[1]);
+          }
+        }
+      });
+    }
+
+    const trackNumbers = new Set<string>();
+    if (jsonData.length > 0) {
+      const headers = jsonData[0];
+      headers.forEach(header => {
+        if (typeof header === 'string') {
+          const match = header.match(/TK(\d+)/i);
+          if (match && match[1]) {
+            trackNumbers.add(match[1]);
+          }
+        }
+      });
+    }
+    const drillFileData = localStorage.getItem("drillExcelFile");
+    if (drillFileData) {
+      const drillByteCharacters = atob(drillFileData);
+      const drillByteNumbers = new Array(drillByteCharacters.length)
+        .fill(null)
+        .map((_, i) => drillByteCharacters.charCodeAt(i));
+      const drillByteArray = new Uint8Array(drillByteNumbers);
+
+      const drillWorkbook = XLSX.read(drillByteArray, { type: "array" });
+      const drillWorksheet = drillWorkbook.Sheets[drillWorkbook.SheetNames[0]];
+      const drillJsonData = XLSX.utils.sheet_to_json(drillWorksheet, { header: 1 });
+
+      console.log("Drill File Data:", drillJsonData);
+
+      let drillStartTime: string | null = null;
+      let drillEndTime: string | null = null;
+
+      for (const row of drillJsonData) {
+        if (Array.isArray(row) && row.length >= 2) {
+          const activity = String(row[0]).trim().toUpperCase();
+          const time = String(row[1]).trim();
+
+          if (activity === 'DRILL START' && !drillStartTime) {
+            drillStartTime = time;
+          } else if (activity === 'COMPLETED' && !drillEndTime) {
+            drillEndTime = time;
+          }
+          if (drillStartTime && drillEndTime) break;
+        }
+      }
+      setDrillStartTimeData(drillStartTime || "");
+      setDrillEndTimeData(drillEndTime || "");
+
+      console.log("Drill Start Time:", drillStartTime);
+      console.log("Drill End Time:", drillEndTime);
+    } else {
+      console.log("No drill file data found");
+    }
+
+    const trainFileData = localStorage.getItem("trainExcelFile");
+    if (trainFileData) {
+      const trainByteCharacters = atob(trainFileData);
+      const trainByteArray = new Uint8Array(trainByteCharacters.length);
+      for (let i = 0; i < trainByteCharacters.length; i++) {
+        trainByteArray[i] = trainByteCharacters.charCodeAt(i);
+      }
+
+      const trainWorkbook = XLSX.read(trainByteArray, { type: "array" });
+      const trainWorksheet = trainWorkbook.Sheets[trainWorkbook.SheetNames[0]];
+      const trainJsonData = XLSX.utils.sheet_to_json(trainWorksheet, { header: 1 });
+
+      const newTrackTrainTimes: Record<string, string[]> = {};
+
+      // Initialize with tracks found in our data
+      tracksInData.forEach(track => {
+        newTrackTrainTimes[track] = [];
+      });
+
+      // Collect ALL train times for relevant tracks
+      for (let i = 1; i < trainJsonData.length; i++) {
+        const row = trainJsonData[i];
+        if (Array.isArray(row) && row.length >= 4) {
+          const track = String(row[2]).trim().replace(/\D/g, '');
+          const timeStr = String(row[3]).trim();
+
+          if (tracksInData.has(track)) {
+            if (!newTrackTrainTimes[track]) {
+              newTrackTrainTimes[track] = [];
+            }
+            newTrackTrainTimes[track].push(timeStr);
+          }
+        }
+      }
+
+      // Sort times chronologically for each track
+      Object.keys(newTrackTrainTimes).forEach(track => {
+        newTrackTrainTimes[track].sort((a, b) =>
+          new Date(a).getTime() - new Date(b).getTime()
+        );
+      });
+
+      setTrackTrainTimes(newTrackTrainTimes);
+    } else {
+      console.log("No train file data found");
+    }
+    console.log("Track Train Times:", trackTrainTimes);
+
+
     if (jsonData.length === 0) return;
 
     const headers = jsonData[0];
@@ -85,7 +201,7 @@ const TrackGraphs: React.FC = () => {
 
     for (let i = 1; i < jsonData.length; i++) {
       const row = jsonData[i];
-      const newRow: (string | number)[] = [row[0]]; // keep the first column (timestamp)
+      const newRow: (string | number)[] = [row[0]];
       timeData.push(row[0]?.toString() || "");
 
       for (let j = 1; j < headers.length; j += 2) {
@@ -167,31 +283,41 @@ const TrackGraphs: React.FC = () => {
     setProcessedData(result as string[][]);
   };
 
-  const getOptimizedTicks = (timeData: string | any[]) => {
-    if (!timeData || timeData.length === 0) return [];
+  // const getOptimizedTicks = (timeData: string | any[]) => {
+  //   if (!timeData || timeData.length === 0) return [];
 
-    const tickCount = Math.min(6, timeData.length);
-    const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
+  //   const tickCount = Math.min(6, timeData.length);
+  //   const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
 
-    const ticks = [];
-    ticks.push(timeData[0]);
+  //   const ticks = [];
+  //   ticks.push(timeData[0]);
 
-    for (let i = 1; i < tickCount - 1; i++) {
-      const index = Math.min(i * step, timeData.length - 1);
-      ticks.push(timeData[index]);
-    }
-    if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
-      ticks.push(timeData[timeData.length - 1]);
-    }
+  //   for (let i = 1; i < tickCount - 1; i++) {
+  //     const index = Math.min(i * step, timeData.length - 1);
+  //     ticks.push(timeData[index]);
+  //   }
+  //   if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
+  //     ticks.push(timeData[timeData.length - 1]);
+  //   }
 
-    return ticks;
-  };
+  //   return ticks;
+  // };
 
   const handleDownload = () => {
     if (processedBlob) {
       saveAs(processedBlob, "difference_output.xlsx");
     }
   };
+    function formatTime(timeString: string): string {
+    const date = new Date(timeString);
+    return date.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }
 
   const handleTimeSelects = () => {
     if (!processedData.length || !headers.length) return;
@@ -925,9 +1051,9 @@ const TrackGraphs: React.FC = () => {
                         layout={{
                           width: 800 * xScale,
                           height: 500,
-                          margin: { l: 60, r: 30, b: 100, t: 30, pad: 4 },
+                          margin: { l: 60, r: 150, b: 100, t: 30, pad: 4 },
                           xaxis: {
-                            title: 'Header',
+                            title: {text: 'Prisms'},
                             type: 'category',
                             tickmode: 'auto',
                             nticks: 6,
@@ -944,7 +1070,8 @@ const TrackGraphs: React.FC = () => {
                             gridcolor: '#f0f0f0',
                             zeroline: true,
                             zerolinecolor: '#f0f0f0'
-                          },
+                          }
+                          ,
                           legend: {
                             orientation: 'h',
                             y: -0.3,
@@ -1230,7 +1357,7 @@ const TrackGraphs: React.FC = () => {
                       {movementData.length > 0 ? (
                         <Plot
                           data={movementData.map((data, index) => ({
-                            x: data.times,
+                            x: data.times.map(time => new Date(time)), 
                             y: data.values,
                             type: 'scatter',
                             mode: 'lines+markers',
@@ -1244,32 +1371,35 @@ const TrackGraphs: React.FC = () => {
                               color: extendedColors[index % extendedColors.length]
                             },
                             hovertemplate: `
-                <b>${data.fullColumnName}</b><br>
-                Time: %{x}<br>
-                Value: %{y:.6f}<extra></extra>
-              `,
+      <b>${data.fullColumnName}</b><br>
+      Time: %{x|%m/%d/%Y %H:%M}<br>
+      Value: %{y:.6f}<extra></extra>
+    `,
                             connectgaps: true
                           }))}
                           layout={{
                             autosize: true,
                             margin: {
                               l: 60,
-                              r: 30,
+                              r: 150,
                               b: 120,
                               t: 30,
                               pad: 4,
-                              // Remove autoexpand as it's not a valid property
                             },
                             xaxis: {
-                              title: 'Time',
-                              type: 'category',
-                              tickmode: 'array',
-                              tickvals: getOptimizedTicks(movementData[0]?.times || []),
+                              title: { text: 'Time' },
+                              type: 'date', // Changed from 'category' to 'date'
+                              tickformat: '%m/%d %H:%M', // Added date format
                               tickangle: 0,
                               gridcolor: '#f0f0f0',
                               gridwidth: 1,
                               showgrid: true,
-                              automargin: true  
+                              automargin: true,
+                              // Optional: Set range based on your data
+                              range: movementData[0]?.times?.length ? [
+                                new Date(movementData[0].times[0]).getTime(),
+                                new Date(movementData[0].times[movementData[0].times.length - 1]).getTime()
+                              ] : undefined
                             },
                             yaxis: {
                               title: {
@@ -1286,27 +1416,110 @@ const TrackGraphs: React.FC = () => {
                               zeroline: true,
                               zerolinecolor: '#f0f0f0',
                               autorange: true,
-                              automargin: true  
+                              automargin: true
                             },
                             plot_bgcolor: 'white',
                             paper_bgcolor: 'white',
-                            annotations: [
+                        shapes: [
+                          ...(drillstarttimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillstarttimedata),
+                            y0: 0,
+                            x1: new Date(drillstarttimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(drillendtimedata),
+                            y0: 0,
+                            x1: new Date(drillendtimedata),
+                            y1: 1,
+                            line: { color: 'red', width: 3 },
+                            opacity: 0.7
+                          }] : []),
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
+                            times.map(time => ({
+                              type: 'line' as 'line',
+                              xref: 'x' as 'x',
+                              yref: 'paper' as 'paper',
+                              x0: new Date(time),
+                              y0: 0,
+                              x1: new Date(time),
+                              y1: 1,
+                              line: {
+                                color: '#2196F3',
+                                width: 3,
+                                dash: 'solid' as 'solid'
+                              },
+                              opacity: 0.7,
+                              name: `Track ${track}`
+                            }))
+                          )
+                        ],
+                        annotations: [
+                          ...(drillstarttimedata ? [{
+                            x: 0, 
+                            y: -0.15, 
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'left' as 'left',
+                            align: 'left' as 'left',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...(drillendtimedata ? [{
+                            x: 1,
+                            y: -0.15, 
+                            xref: 'paper' as 'paper',
+                            yref: 'paper' as 'paper',
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            showarrow: false,
+                            font: { size: 10 },
+                            xanchor: 'right' as 'right',
+                            align: 'right' as 'right',
+                            bgcolor: 'rgba(255,255,255,0.8)'
+                          }] : []),
+                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
+                            if (times.length === 0) return [];
+                            const firstTime = times[0];
+                            const lastTime = times[times.length - 1];
+                            const yPos = -0.25 ; 
+                          return [
                               {
-                                x: 0.5,
-                                y: -0.15,
-                                xref: 'paper',
-                                yref: 'paper',
-                                text: `${movementSelectedTrack}-${movementSelectedTrkColOption}`,
+                                x: 0, 
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
                                 showarrow: false,
-                                font: {
-                                  size: 12,
-                                  color: '#333',
-                                  weight: 800,
-                                },
-                                xanchor: 'center',
-                                yanchor: 'top'
-                              }
-                            ],
+                                font: { size: 10 },
+                                xanchor: 'left' as 'left',
+                                align: 'left' as 'left',
+                                bgcolor: 'rgba(255,255,255,0.8)'
+                              },
+                              ...(firstTime !== lastTime ? [{
+                                x: 1, 
+                                y: yPos,
+                                xref: 'paper' as 'paper',
+                                yref: 'paper' as 'paper',
+                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                showarrow: false,
+                                font: { size: 10 },
+                                xanchor: 'right' as 'right',
+                                align: 'right' as 'right',
+                                bgcolor: 'rgba(255,255,255,0.8)'
+                              }] : [])
+                            ];
+                          })
+                        ],
                             hovermode: 'closest',
                           }}
                           config={{

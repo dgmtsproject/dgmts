@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import * as XLSX from "xlsx";
 import MainContentWrapper from '../components/MainContentWrapper';
 import HeaNavLogo from '../components/HeaNavLogo';
 import excelFile from '../assets/files/track-files-and-amts.xlsx?url';
-
+import TrackMerger from '../components/MergeATMSTracks';
 const DataSummary: React.FC = () => {
     const [processedData, setProcessedData] = React.useState<any[]>([]);
     const [headers, setHeaders] = React.useState<string[]>([]);
     const [lessthanValue, setLessThanValue] = React.useState<number | null>(null);
     const [greaterthanValue, setGreaterThanValue] = React.useState<number | null>(null);
     const [showSummary, setShowSummary] = React.useState(false);
+    const processSaveRef = useRef<HTMLButtonElement>(null);
 
     const handleNumberChange = (
         e: React.ChangeEvent<HTMLInputElement>,
@@ -23,10 +24,15 @@ const DataSummary: React.FC = () => {
         }
     };
 
+    const handleMergeClick = () => {
+        processSaveRef.current?.click();
+    };
+
     useEffect(() => {
         const loadAndProcessExcel = async () => {
             try {
-                const response = await fetch(excelFile);
+                const fileData = localStorage.getItem("mergedExcelFile") || excelFile;
+                const response = await fetch(fileData);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -43,6 +49,169 @@ const DataSummary: React.FC = () => {
         loadAndProcessExcel();
     }, []);
 
+    const handleProcess = () => {
+        const fileData = localStorage.getItem("mergedExcelFile");
+        if (!fileData) return;
+
+        const byteCharacters = atob(fileData);
+        const byteNumbers = new Array(byteCharacters.length)
+            .fill(null)
+            .map((_, i) => byteCharacters.charCodeAt(i));
+        const byteArray = new Uint8Array(byteNumbers);
+
+        const workbook = XLSX.read(byteArray, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+
+        if (jsonData.length === 0) return;
+
+        const headers = jsonData[0];
+        const result: (string | number)[][] = [];
+        const timeData: string[] = [];
+
+        // Find indices for different data sections
+        const tk2StartIndex = 1; // TK-2 data starts right after timestamp
+        const tk2EndIndex = headers.findIndex(h =>
+            typeof h === 'string' && h.includes('LBN-TP-TK3')
+        );
+        const tk3StartIndex = tk2EndIndex > 0 ? tk2EndIndex :
+            headers.findIndex(h => typeof h === 'string' && h.includes('LBN-TP-TK3'));
+        const tk3EndIndex = headers.findIndex(h =>
+            typeof h === 'string' && h.includes('LBN-AMTS')
+        );
+        const atmsStartIndex = tk3EndIndex > 0 ? tk3EndIndex :
+            headers.findIndex(h => typeof h === 'string' && h.includes('LBN-AMTS'));
+
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            const newRow: (string | number)[] = [row[0]];
+            timeData.push(row[0]?.toString() || "");
+
+            // Process TK-2 data (pairs of columns)
+            for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
+                const val1 = row[j];
+                const val2 = row[j + 1];
+                newRow.push(val1 ?? "", val2 ?? "");
+
+                if (
+                    val1 !== undefined &&
+                    val2 !== undefined &&
+                    !isNaN(Number(val1)) &&
+                    !isNaN(Number(val2))
+                ) {
+                    const diff = Number(val1) - Number(val2);
+                    newRow.push(diff);
+                } else {
+                    newRow.push("");
+                }
+            }
+
+            // Process TK-3 data (pairs of columns)
+            if (tk3StartIndex > 0) {
+                for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
+                    const val1 = row[j];
+                    const val2 = row[j + 1];
+                    newRow.push(val1 ?? "", val2 ?? "");
+
+                    if (
+                        val1 !== undefined &&
+                        val2 !== undefined &&
+                        !isNaN(Number(val1)) &&
+                        !isNaN(Number(val2))
+                    ) {
+                        const diff = Number(val1) - Number(val2);
+                        newRow.push(diff);
+                    } else {
+                        newRow.push("");
+                    }
+                }
+            }
+
+            // Add AMTS data (no processing, just append)
+            if (atmsStartIndex > 0) {
+                newRow.push(...row.slice(atmsStartIndex));
+            }
+
+            result.push(newRow);
+        }
+
+        const newHeader: (string | number)[] = [headers[0]]; // timestamp
+
+        // Create headers for TK-2 differences
+        for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
+            const h1 = headers[j] ?? `Col${j}`;
+            const h2 = headers[j + 1] ?? `Col${j + 1}`;
+            let label = "Difference";
+
+            if (typeof h1 === "string" && typeof h2 === "string") {
+                const baseName1 = h1.split(' - ')[0];
+                const baseName2 = h2.split(' - ')[0];
+                const baseName = baseName1 === baseName2 ? baseName1 : `${baseName1},${baseName2}`;
+
+                if (h1.toLowerCase().includes("easting") || h2.toLowerCase().includes("easting")) {
+                    label = `${baseName} - Easting Difference`;
+                } else if (h1.toLowerCase().includes("northing") || h2.toLowerCase().includes("northing")) {
+                    label = `${baseName} - Northing Difference`;
+                } else if (h1.toLowerCase().includes("height") || h2.toLowerCase().includes("height")) {
+                    label = `${baseName} - Height Difference`;
+                } else {
+                    label = `${baseName} - Difference`;
+                }
+            }
+            newHeader.push(h1, h2, label);
+        }
+
+        // Create headers for TK-3 differences
+        if (tk3StartIndex > 0) {
+            for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
+                const h1 = headers[j] ?? `Col${j}`;
+                const h2 = headers[j + 1] ?? `Col${j + 1}`;
+                let label = "Difference";
+
+                if (typeof h1 === "string" && typeof h2 === "string") {
+                    const baseName1 = h1.split(' - ')[0];
+                    const baseName2 = h2.split(' - ')[0];
+                    const baseName = baseName1 === baseName2 ? baseName1 : `${baseName1},${baseName2}`;
+
+                    if (h1.toLowerCase().includes("easting") || h2.toLowerCase().includes("easting")) {
+                        label = `${baseName} - Easting Difference `;
+                    } else if (h1.toLowerCase().includes("northing") || h2.toLowerCase().includes("northing")) {
+                        label = `${baseName} - Northing Difference `;
+                    } else if (h1.toLowerCase().includes("height") || h2.toLowerCase().includes("height")) {
+                        label = `${baseName} - Height Difference `;
+                    } else {
+                        label = `${baseName} - Difference `;
+                    }
+                }
+                newHeader.push(h1, h2, label);
+            }
+        }
+
+        // Add AMTS headers
+        if (atmsStartIndex > 0) {
+            newHeader.push(...headers.slice(atmsStartIndex));
+        }
+
+        result.unshift(newHeader);
+
+        const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(result);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Processed");
+
+        const wbout = XLSX.write(wb, {
+            bookType: "xlsx",
+            type: "array",
+            cellStyles: true,
+        });
+
+        const blob = new Blob([wbout], { type: "application/octet-stream" });
+
+        localStorage.setItem("mergedExcelFile", JSON.stringify(blob));
+        localStorage.setItem("processedHeaders", JSON.stringify(newHeader));
+        localStorage.setItem("processedData", JSON.stringify(result));
+        setHeaders(newHeader as string[]);
+        setProcessedData(result as string[][]);
+    };
 
     const generateTableData = (track: 'TK2' | 'TK3', range: { start: number, end: number }, types: string[]) => {
         if (!processedData.length || !headers.length) return [];
@@ -249,7 +418,7 @@ const DataSummary: React.FC = () => {
             console.log(title);
             return XLSX.utils.aoa_to_sheet(wsData);
 
-    
+
 
         };
 
@@ -269,7 +438,9 @@ const DataSummary: React.FC = () => {
     return (
         <>
             <HeaNavLogo />
+
             <MainContentWrapper>
+                <TrackMerger onMergeSave={handleMergeClick} />
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
                     Data Summary
                 </h1>
@@ -340,6 +511,32 @@ const DataSummary: React.FC = () => {
                             disabled={lessthanValue === null && greaterthanValue === null}
                         >
                             Generate Summary
+                        </button>
+                        <button
+                            onClick={handleProcess}
+                            ref={processSaveRef}
+                            style={{
+                                display: "none",
+                                backgroundColor: "#2563eb",
+                                color: "#ffffff",
+                                padding: "0.75rem 1.5rem",
+                                borderRadius: "0.375rem",
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                transition: "background-color 0.2s ease, transform 0.1s ease",
+                                border: "none",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            }}
+                            onMouseOver={(e) =>
+                                (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                            }
+                            onMouseOut={(e) =>
+                                (e.currentTarget.style.backgroundColor = "#2563eb")
+                            }
+                            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+                            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                        >
+                            Process & Show Graph
                         </button>
                     </div>
                 </div>

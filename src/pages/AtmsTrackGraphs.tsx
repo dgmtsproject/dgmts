@@ -1106,7 +1106,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                         height: 500,
                                         margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 },
                                         xaxis: {
-                                            title: 'Distance',
+                                            title: {text: 'Distance'},
                                             type: 'linear',
                                             tickmode: 'auto',
                                             nticks: 10,
@@ -1258,7 +1258,7 @@ const AtmsTrackGraphs: React.FC = () => {
                                         height: 500,
                                         margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 }, // Increased left margin for y-axis label
                                         xaxis: {
-                                            title: 'Distance',
+                                            title: {text: 'Distance'},
                                             type: 'linear',
                                             tickmode: 'auto',
                                             nticks: 10,
