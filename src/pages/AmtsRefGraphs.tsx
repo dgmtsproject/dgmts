@@ -608,7 +608,7 @@ const AmtsRefGraphs: React.FC = () => {
       height: 500,
       margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
       xaxis: {
-        title: 'Time',
+        title: { text: 'Time' },
         type: 'category',
         tickmode: 'array',
         tickvals: allLinesData1[0]?.x ? getOptimizedTicks(allLinesData1[0].x) : [],
@@ -676,7 +676,7 @@ const AmtsRefGraphs: React.FC = () => {
       height: 500,
       margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
       xaxis: {
-        title: 'Time',
+        title: { text: 'Time' },
         type: 'category',
         tickmode: 'array',
         tickvals: allLinesData2[0]?.x ? getOptimizedTicks(allLinesData2[0].x) : [],
