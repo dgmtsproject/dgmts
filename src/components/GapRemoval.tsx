@@ -828,7 +828,7 @@ const GapRemoval: React.FC = () => {
               <div id="chartContainer" style={{ marginTop: "2rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                   {/* First Chart */}
-                  <div>
+                  <div style={{ width: '100%', overflowX: 'auto' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                       First Graph ({selectedColumn1})
                     </h3>
@@ -845,18 +845,19 @@ const GapRemoval: React.FC = () => {
                           marker: { size: 6, color: '#8884d8' },
                           hoverinfo: 'y+name',
                           hovertemplate: `
-        <b>${selectedColumn1}</b><br>
-        Time: %{x|%m/%d/%Y %H:%M}<br>
-        Value: %{y:.6f}<extra></extra>
-      `
+                                  <b>${selectedColumn1}</b><br>
+                                  Time: %{x|%m/%d/%Y %H:%M}<br>
+                                  Value: %{y:.6f}<extra></extra>
+                                      `,
+                          connectgaps: true
                         }
                       ]}
                       layout={{
-                        width: 800 * xScale,
+                        autosize: true,
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 150,
+                          r: 30,
                           b: 150,
                           t: 30,
                           pad: 4
@@ -870,29 +871,29 @@ const GapRemoval: React.FC = () => {
                           },
                           type: 'date',
                           tickmode: 'auto',
-                          nticks: Math.min(10, graphData1.length),
+                          nticks: undefined,
                           tickformat: '%m/%d %H:%M',
                           tickangle: 0,
                           gridcolor: '#f0f0f0',
                           gridwidth: 1,
                           showgrid: true,
                           automargin: true,
-                          range: graphData1?.length ? [
-                            new Date(graphData1[0].time).toISOString(),
-                            new Date(graphData1[graphData1.length - 1].time).toISOString()
-                          ] : undefined
+                          autorange: true
                         },
                         yaxis: {
-                          title: { text: selectedColumn1 },
-                          range: [-0.5 / yScale, 0.5 / yScale],
-                          tickmode: 'linear',
-                          dtick: 0.25,
+                          title: {
+                            text: 'Movement Inches',
+                            standoff: 15
+                          },
+                          autorange: true,
+                          tickmode: 'auto',
                           gridcolor: '#f0f0f0',
                           gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
                           zerolinewidth: 1,
-                          showgrid: true
+                          showgrid: true,
+                          fixedrange: false
                         },
                         shapes: [
                           ...(drillstarttimedata ? [{
@@ -999,7 +1000,7 @@ const GapRemoval: React.FC = () => {
                         showlegend: true,
                         legend: {
                           orientation: 'h',
-                          y: -0.25,
+                          y: -0.35,
                           x: 0.5,
                           xanchor: 'center' as 'center'
                         },
@@ -1016,9 +1017,13 @@ const GapRemoval: React.FC = () => {
                         displaylogo: false,
                         scrollZoom: true
                       }}
-                      style={{ maxHeight: '800px' }}
+                      style={{
+                        width: '100%',
+                        minWidth: '800px',
+                        height: '100%'
+                      }}
+                      useResizeHandler={true}
                     />
-
                   </div>
 
                   {/* Second Chart */}
@@ -1049,10 +1054,10 @@ const GapRemoval: React.FC = () => {
                             }
                           },
                           hovertemplate: `
-        <b>${selectedColumn2}</b><br>
-        Time: %{x|%m/%d/%Y %H:%M}<br>
-        Value: %{y:.7f}<extra></extra>
-      `,
+                                    <b>${selectedColumn2}</b><br>
+                                    Time: %{x|%m/%d/%Y %H:%M}<br>
+                                    Value: %{y:.7f}<extra></extra>
+                                    `,
                           hoverlabel: {
                             bgcolor: '#fff',
                             bordercolor: '#82ca9d',
@@ -1065,12 +1070,12 @@ const GapRemoval: React.FC = () => {
                         }
                       ]}
                       layout={{
-                        width: 800 * xScale,
+                        autosize: true,
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 150,
-                          b: 80,
+                          r: 30,
+                          b: 150,
                           t: 30,
                           pad: 4
                         },
@@ -1085,7 +1090,7 @@ const GapRemoval: React.FC = () => {
                           },
                           type: 'date',
                           tickmode: 'auto',
-                          nticks: Math.min(10, graphData2.length),
+                          nticks: undefined,
                           tickformat: '%m/%d %H:%M',
                           tickangle: 0,
                           gridcolor: 'rgba(240, 240, 240, 0.7)',
@@ -1101,21 +1106,18 @@ const GapRemoval: React.FC = () => {
                         },
                         yaxis: {
                           title: {
-                            text: selectedColumn2,
+                            text: 'Movement Inches',
                             standoff: 15
                           },
-                          range: [-0.5 / yScale, 0.5 / yScale],
-                          tickmode: 'linear',
-                          dtick: 0.25,
-                          nticks: 6,
-                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          autorange: true,
+                          tickmode: 'auto',
+                          gridcolor: '#f0f0f0',
                           gridwidth: 1,
                           zeroline: true,
-                          zerolinecolor: 'rgba(240, 240, 240, 0.7)',
+                          zerolinecolor: '#f0f0f0',
                           zerolinewidth: 1,
-                          tickfont: {
-                            size: 11
-                          }
+                          showgrid: true,
+                          fixedrange: false
                         },
                         shapes: [
                           ...(drillstarttimedata ? [{
@@ -1247,10 +1249,11 @@ const GapRemoval: React.FC = () => {
                         scrollZoom: true
                       }}
                       style={{
-                        maxHeight: '800px',
-                        border: '1px solid #f0f0f0',
-                        borderRadius: '4px'
+                        width: '100%',
+                        minWidth: '800px',
+                        height: '100%'
                       }}
+                      useResizeHandler={true}
                     />
 
                   </div>
@@ -1286,12 +1289,12 @@ const GapRemoval: React.FC = () => {
                         }
                       ]}
                       layout={{
-                        width: 800 * xScale,
+                        autosize: true,
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 150,
-                          b: 80,
+                          r: 30,
+                          b: 150,
                           t: 30,
                           pad: 4
                         },
@@ -1320,17 +1323,20 @@ const GapRemoval: React.FC = () => {
                             ]
                             : [0, 0]
                         },
-                        yaxis: {
-                          title: { text: selectedColumn3 },
-                          range: [-0.5 / yScale, 0.5 / yScale],
-                          tickmode: 'linear',
-                          dtick: 0.25,
-                          nticks: 6,
+                         yaxis: {
+                          title: {
+                            text: 'Movement Inches',
+                            standoff: 15
+                          },
+                          autorange: true,
+                          tickmode: 'auto',
                           gridcolor: '#f0f0f0',
                           gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          zerolinewidth: 1
+                          zerolinewidth: 1,
+                          showgrid: true,
+                          fixedrange: false
                         },
                         shapes: [
                           ...(drillstarttimedata ? [{
@@ -1458,7 +1464,12 @@ const GapRemoval: React.FC = () => {
                         displaylogo: false,
                         scrollZoom: true
                       }}
-                      style={{ maxHeight: '800px' }}
+                      style={{
+                        width: '100%',
+                        minWidth: '800px',
+                        height: '100%'
+                      }}
+                      useResizeHandler={true}
                     />
 
                   </div>
@@ -1533,12 +1544,12 @@ const GapRemoval: React.FC = () => {
                         }
                       ]}
                       layout={{
-                        width: 800 * xScale,
+                        autosize: true,
                         height: 500,
                         margin: {
                           l: 60,
-                          r: 150,
-                          b: 80,
+                          r: 30,
+                          b: 150,
                           t: 30,
                           pad: 4
                         },
@@ -1569,16 +1580,19 @@ const GapRemoval: React.FC = () => {
                             : [0, 0]
                         },
                         yaxis: {
-                          title: { text: 'Value' },
-                          range: [-0.5 / yScale, 0.5 / yScale],
-                          tickmode: 'linear',
-                          dtick: 0.25,
-                          nticks: 6,
+                          title: {
+                            text: 'Movement Inches',
+                            standoff: 15
+                          },
+                          autorange: true,
+                          tickmode: 'auto',
                           gridcolor: '#f0f0f0',
                           gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          zerolinewidth: 1
+                          zerolinewidth: 1,
+                          showgrid: true,
+                          fixedrange: false
                         },
                         shapes: [
                           ...(drillstarttimedata ? [{
@@ -1706,7 +1720,12 @@ const GapRemoval: React.FC = () => {
                         displaylogo: false,
                         scrollZoom: true
                       }}
-                      style={{ maxHeight: '800px' }}
+                      style={{
+                        width: '100%',
+                        minWidth: '800px',
+                        height: '100%'
+                      }}
+                      useResizeHandler={true}
                     />
 
                   </div>

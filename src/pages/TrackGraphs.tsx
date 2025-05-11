@@ -308,7 +308,7 @@ const TrackGraphs: React.FC = () => {
       saveAs(processedBlob, "difference_output.xlsx");
     }
   };
-    function formatTime(timeString: string): string {
+  function formatTime(timeString: string): string {
     const date = new Date(timeString);
     return date.toLocaleString('en-US', {
       month: '2-digit',
@@ -478,21 +478,21 @@ const TrackGraphs: React.FC = () => {
       });
     }
   };
-  const generateTicks = (min: number, max: number) => {
-    if (typeof min !== 'number' || typeof max !== 'number' || isNaN(min) || isNaN(max)) {
-      return [];
-    }
+  // const generateTicks = (min: number, max: number) => {
+  //   if (typeof min !== 'number' || typeof max !== 'number' || isNaN(min) || isNaN(max)) {
+  //     return [];
+  //   }
 
-    const range = max - min;
-    const approxSteps = 10;
-    const step = range / approxSteps;
+  //   const range = max - min;
+  //   const approxSteps = 10;
+  //   const step = range / approxSteps;
 
-    const ticks = [];
-    for (let i = min; i <= max + 1e-9; i += step) {
-      ticks.push(Number(i.toFixed(2)));
-    }
-    return ticks;
-  };
+  //   const ticks = [];
+  //   for (let i = min; i <= max + 1e-9; i += step) {
+  //     ticks.push(Number(i.toFixed(2)));
+  //   }
+  //   return ticks;
+  // };
   interface GenerateTrackOptionsProps {
     headers: string[];
   }
@@ -1012,95 +1012,112 @@ const TrackGraphs: React.FC = () => {
                       Prisms Graph
                     </h3>
                     {combinedData.length > 0 ? (
-                      <Plot
-                        data={[
-                          {
-                            x: combinedData.map(item => item.header),
-                            y: combinedData.map(item => item.value1),
-                            type: 'scatter',
-                            mode: 'lines+markers',
-                            name: selectedRowTime1,
-                            line: { color: '#8884d8', shape: 'spline' },
-                            marker: { size: 6, color: '#8884d8' },
-                            hovertemplate: `<b>${selectedRowTime1}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
-                            connectgaps: true
-                          },
-                          {
-                            x: combinedData.map(item => item.header),
-                            y: combinedData.map(item => item.value2),
-                            type: 'scatter',
-                            mode: 'lines+markers',
-                            name: selectedRowTime2,
-                            line: { color: '#82ca9d', shape: 'spline' },
-                            marker: { size: 6, color: '#82ca9d' },
-                            hovertemplate: `<b>${selectedRowTime2}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
-                            connectgaps: true
-                          },
-                          {
-                            x: combinedData.map(item => item.header),
-                            y: combinedData.map(item => item.value3),
-                            type: 'scatter',
-                            mode: 'lines+markers',
-                            name: selectedRowTime3,
-                            line: { color: '#ff7300', shape: 'spline' },
-                            marker: { size: 6, color: '#ff7300' },
-                            hovertemplate: `<b>${selectedRowTime3}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
-                            connectgaps: true
-                          }
-                        ]}
-                        layout={{
-                          width: 800 * xScale,
-                          height: 500,
-                          margin: { l: 60, r: 150, b: 100, t: 30, pad: 4 },
-                          xaxis: {
-                            title: {text: 'Prisms'},
-                            type: 'category',
-                            tickmode: 'auto',
-                            nticks: 6,
-                            tickangle: 0,
-                            gridcolor: '#f0f0f0',
-                            automargin: true,
-                            showgrid: true
-                          },
-                          yaxis: {
-                            range: [-0.5, 0.5],
-                            tickvals: yDomain.length === 2
-                              ? generateTicks(yDomain[0] * (1 / yScale), yDomain[1] * (1 / yScale))
-                              : [],
-                            gridcolor: '#f0f0f0',
-                            zeroline: true,
-                            zerolinecolor: '#f0f0f0'
-                          }
-                          ,
-                          legend: {
-                            orientation: 'h',
-                            y: -0.3,
-                            x: 0.5,
-                            xanchor: 'center'
-                          },
-                          plot_bgcolor: 'white',
-                          paper_bgcolor: 'white',
-                          hovermode: 'x unified',
-                          shapes: [{
-                            type: 'line',
-                            x0: 0,
-                            x1: 1,
-                            xref: 'paper',
-                            y0: 0,
-                            y1: 0,
-                            line: { color: '#f0f0f0', width: 2 }
-                          }]
-                        }}
-                        config={{
-                          displayModeBar: true,
-                          responsive: true,
-                          displaylogo: false,
-                          scrollZoom: true,
-                        }}
-                        style={{ maxHeight: '800px', width: '100%' }}
-                      />
+                      <div style={{ width: '100%', overflowX: 'auto' }}>
+                        <Plot
+                          data={[
+                            {
+                              x: combinedData.map(item => item.header),
+                              y: combinedData.map(item => item.value1),
+                              type: 'scatter',
+                              mode: 'lines+markers',
+                              name: selectedRowTime1,
+                              line: { color: '#8884d8', shape: 'spline' },
+                              marker: { size: 6, color: '#8884d8' },
+                              hovertemplate: `<b>${selectedRowTime1}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+                              connectgaps: true
+                            },
+                            {
+                              x: combinedData.map(item => item.header),
+                              y: combinedData.map(item => item.value2),
+                              type: 'scatter',
+                              mode: 'lines+markers',
+                              name: selectedRowTime2,
+                              line: { color: '#82ca9d', shape: 'spline' },
+                              marker: { size: 6, color: '#82ca9d' },
+                              hovertemplate: `<b>${selectedRowTime2}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+                              connectgaps: true
+                            },
+                            {
+                              x: combinedData.map(item => item.header),
+                              y: combinedData.map(item => item.value3),
+                              type: 'scatter',
+                              mode: 'lines+markers',
+                              name: selectedRowTime3,
+                              line: { color: '#ff7300', shape: 'spline' },
+                              marker: { size: 6, color: '#ff7300' },
+                              hovertemplate: `<b>${selectedRowTime3}</b><br>Header: %{x}<br>Value: %{y:.6f}<extra></extra>`,
+                              connectgaps: true
+                            }
+                          ]}
+                          layout={{
+                            autosize: true, // Enable automatic sizing
+                            height: 500,
+                            margin: {
+                              l: 60,
+                              r: 30, // Reduced right margin
+                              b: 100,
+                              t: 30,
+                              pad: 4,
+                            },
+                            xaxis: {
+                              title: { text: 'Prisms' },
+                              type: 'category',
+                              tickmode: 'auto', 
+                              nticks: undefined, 
+                              tickangle: 0,
+                              gridcolor: '#f0f0f0',
+                              automargin: true, 
+                              showgrid: true,
+                              autorange: true, 
+                              tickformat: '', 
+                              ticklabelstep: 1, 
+                              tickfont: {
+                                size: 10 
+                              }
+                            },
+                            yaxis: {
+                              autorange: true, // Let Plotly determine the best range
+                              tickmode: 'auto', // Automatic tick generation
+                              dtick: 'auto', // Automatic tick interval
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              fixedrange: false // Allows zooming/panning
+                            },
+                            legend: {
+                              orientation: 'h',
+                              y: -0.3,
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white',
+                            hovermode: 'x unified',
+                            shapes: [{
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0,
+                              y1: 0,
+                              line: { color: '#f0f0f0', width: 2 }
+                            }]
+                          }}
+                          config={{
+                            displayModeBar: true,
+                            responsive: true, // Enable responsive behavior
+                            displaylogo: false,
+                            scrollZoom: true,
+                          }}
+                          style={{
+                            width: '100%', // Full width
+                            height: '100%',
+                            minWidth: '800px' // Minimum width to prevent squishing
+                          }}
+                          useResizeHandler={true} // Important for responsive behavior
+                        />
+                      </div>
                     ) : null}
-
                   </div>
                 </div>
                 <h2
@@ -1357,7 +1374,7 @@ const TrackGraphs: React.FC = () => {
                       {movementData.length > 0 ? (
                         <Plot
                           data={movementData.map((data, index) => ({
-                            x: data.times.map(time => new Date(time)), 
+                            x: data.times.map(time => new Date(time)),
                             y: data.values,
                             type: 'scatter',
                             mode: 'lines+markers',
@@ -1420,106 +1437,106 @@ const TrackGraphs: React.FC = () => {
                             },
                             plot_bgcolor: 'white',
                             paper_bgcolor: 'white',
-                        shapes: [
-                          ...(drillstarttimedata ? [{
-                            type: 'line' as 'line',
-                            xref: 'x' as 'x',
-                            yref: 'paper' as 'paper',
-                            x0: new Date(drillstarttimedata),
-                            y0: 0,
-                            x1: new Date(drillstarttimedata),
-                            y1: 1,
-                            line: { color: 'red', width: 3 },
-                            opacity: 0.7
-                          }] : []),
-                          ...(drillendtimedata ? [{
-                            type: 'line' as 'line',
-                            xref: 'x' as 'x',
-                            yref: 'paper' as 'paper',
-                            x0: new Date(drillendtimedata),
-                            y0: 0,
-                            x1: new Date(drillendtimedata),
-                            y1: 1,
-                            line: { color: 'red', width: 3 },
-                            opacity: 0.7
-                          }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map(time => ({
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(time),
-                              y0: 0,
-                              x1: new Date(time),
-                              y1: 1,
-                              line: {
-                                color: '#2196F3',
-                                width: 3,
-                                dash: 'solid' as 'solid'
-                              },
-                              opacity: 0.7,
-                              name: `Track ${track}`
-                            }))
-                          )
-                        ],
-                        annotations: [
-                          ...(drillstarttimedata ? [{
-                            x: 0, 
-                            y: -0.15, 
-                            xref: 'paper' as 'paper',
-                            yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
-                            showarrow: false,
-                            font: { size: 10 },
-                            xanchor: 'left' as 'left',
-                            align: 'left' as 'left',
-                            bgcolor: 'rgba(255,255,255,0.8)'
-                          }] : []),
-                          ...(drillendtimedata ? [{
-                            x: 1,
-                            y: -0.15, 
-                            xref: 'paper' as 'paper',
-                            yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
-                            showarrow: false,
-                            font: { size: 10 },
-                            xanchor: 'right' as 'right',
-                            align: 'right' as 'right',
-                            bgcolor: 'rgba(255,255,255,0.8)'
-                          }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
-                            if (times.length === 0) return [];
-                            const firstTime = times[0];
-                            const lastTime = times[times.length - 1];
-                            const yPos = -0.25 ; 
-                          return [
-                              {
-                                x: 0, 
-                                y: yPos,
+                            shapes: [
+                              ...(drillstarttimedata ? [{
+                                type: 'line' as 'line',
+                                xref: 'x' as 'x',
+                                yref: 'paper' as 'paper',
+                                x0: new Date(drillstarttimedata),
+                                y0: 0,
+                                x1: new Date(drillstarttimedata),
+                                y1: 1,
+                                line: { color: 'red', width: 3 },
+                                opacity: 0.7
+                              }] : []),
+                              ...(drillendtimedata ? [{
+                                type: 'line' as 'line',
+                                xref: 'x' as 'x',
+                                yref: 'paper' as 'paper',
+                                x0: new Date(drillendtimedata),
+                                y0: 0,
+                                x1: new Date(drillendtimedata),
+                                y1: 1,
+                                line: { color: 'red', width: 3 },
+                                opacity: 0.7
+                              }] : []),
+                              ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
+                                times.map(time => ({
+                                  type: 'line' as 'line',
+                                  xref: 'x' as 'x',
+                                  yref: 'paper' as 'paper',
+                                  x0: new Date(time),
+                                  y0: 0,
+                                  x1: new Date(time),
+                                  y1: 1,
+                                  line: {
+                                    color: '#2196F3',
+                                    width: 3,
+                                    dash: 'solid' as 'solid'
+                                  },
+                                  opacity: 0.7,
+                                  name: `Track ${track}`
+                                }))
+                              )
+                            ],
+                            annotations: [
+                              ...(drillstarttimedata ? [{
+                                x: 0,
+                                y: -0.15,
                                 xref: 'paper' as 'paper',
                                 yref: 'paper' as 'paper',
-                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
+                                text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
                                 showarrow: false,
                                 font: { size: 10 },
                                 xanchor: 'left' as 'left',
                                 align: 'left' as 'left',
                                 bgcolor: 'rgba(255,255,255,0.8)'
-                              },
-                              ...(firstTime !== lastTime ? [{
-                                x: 1, 
-                                y: yPos,
+                              }] : []),
+                              ...(drillendtimedata ? [{
+                                x: 1,
+                                y: -0.15,
                                 xref: 'paper' as 'paper',
                                 yref: 'paper' as 'paper',
-                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
                                 showarrow: false,
                                 font: { size: 10 },
                                 xanchor: 'right' as 'right',
                                 align: 'right' as 'right',
                                 bgcolor: 'rgba(255,255,255,0.8)'
-                              }] : [])
-                            ];
-                          })
-                        ],
+                              }] : []),
+                              ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
+                                if (times.length === 0) return [];
+                                const firstTime = times[0];
+                                const lastTime = times[times.length - 1];
+                                const yPos = -0.25;
+                                return [
+                                  {
+                                    x: 0,
+                                    y: yPos,
+                                    xref: 'paper' as 'paper',
+                                    yref: 'paper' as 'paper',
+                                    text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
+                                    showarrow: false,
+                                    font: { size: 10 },
+                                    xanchor: 'left' as 'left',
+                                    align: 'left' as 'left',
+                                    bgcolor: 'rgba(255,255,255,0.8)'
+                                  },
+                                  ...(firstTime !== lastTime ? [{
+                                    x: 1,
+                                    y: yPos,
+                                    xref: 'paper' as 'paper',
+                                    yref: 'paper' as 'paper',
+                                    text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
+                                    showarrow: false,
+                                    font: { size: 10 },
+                                    xanchor: 'right' as 'right',
+                                    align: 'right' as 'right',
+                                    bgcolor: 'rgba(255,255,255,0.8)'
+                                  }] : [])
+                                ];
+                              })
+                            ],
                             hovermode: 'closest',
                           }}
                           config={{
