@@ -210,3 +210,11 @@ html {
   z-index: 0;
   pointer-events: none;
 }
+
+.pdf-page {
+  page-break-after: always;
+  break-after: page;
+}
+.pdf-page:last-child {
+  page-break-after: auto;
+}

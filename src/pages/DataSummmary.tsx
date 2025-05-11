@@ -4,6 +4,8 @@ import MainContentWrapper from '../components/MainContentWrapper';
 import HeaNavLogo from '../components/HeaNavLogo';
 import excelFile from '../assets/files/track-files-and-amts.xlsx?url';
 import TrackMerger from '../components/MergeATMSTracks';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { toast } from 'react-toastify';
 const DataSummary: React.FC = () => {
     const [processedData, setProcessedData] = React.useState<any[]>([]);
     const [headers, setHeaders] = React.useState<string[]>([]);
@@ -69,8 +71,8 @@ const DataSummary: React.FC = () => {
         const result: (string | number)[][] = [];
         const timeData: string[] = [];
 
-        // Find indices for different data sections
-        const tk2StartIndex = 1; // TK-2 data starts right after timestamp
+
+        const tk2StartIndex = 1; 
         const tk2EndIndex = headers.findIndex(h =>
             typeof h === 'string' && h.includes('LBN-TP-TK3')
         );
@@ -87,7 +89,6 @@ const DataSummary: React.FC = () => {
             const newRow: (string | number)[] = [row[0]];
             timeData.push(row[0]?.toString() || "");
 
-            // Process TK-2 data (pairs of columns)
             for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
                 const val1 = row[j];
                 const val2 = row[j + 1];
@@ -340,7 +341,36 @@ const DataSummary: React.FC = () => {
         }
         setShowSummary(true);
     };
+    const exportToPDF = () => {
+        toast.info('Downloading PDF...');
+        const element = document.getElementById('pdf-content');
 
+        if (!element) {
+            alert('Content not found');
+            return;
+        }
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+            const opt = {
+                margin: 0.3,
+                filename: 'Data_Summary_Output.pdf',
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: {
+                    scale: 2,
+                    scrollY: 0,
+                },
+                jsPDF: {
+                    unit: 'in',
+                    format: 'letter',
+                    orientation: 'portrait',
+                },
+            };
+            // @ts-ignore
+            window.html2pdf().set(opt).from(element).save();
+        }, 300);
+
+        
+    }
 
     const DataTable = ({ title, data }: { title: string, data: any[] }) => {
         if (!data.length) return null;
@@ -395,45 +425,45 @@ const DataSummary: React.FC = () => {
         );
     };
 
-    const exportToExcel = () => {
-        const wb = XLSX.utils.book_new();
+    // const exportToExcel = () => {
+    //     const wb = XLSX.utils.book_new();
 
-        const prepareWorksheet = (data: any[], title: string) => {
-            const wsData = [
-                // Header row
-                ['Measurement', 'Data Points', `< ${lessthanValue ?? 'N/A'}`, '% Less Than',
-                    `> ${greaterthanValue ?? 'N/A'}`, '% Greater Than', 'Avg +ve', 'Avg -ve'],
-                // Data rows
-                ...data.map(row => [
-                    row.measurementType,
-                    row.totalPoints,
-                    row.lessThanCount,
-                    row.lessThanPercent,
-                    row.greaterThanCount,
-                    row.greaterThanPercent,
-                    row.avgPositive,
-                    row.avgNegative
-                ])
-            ];
-            console.log(title);
-            return XLSX.utils.aoa_to_sheet(wsData);
+    //     const prepareWorksheet = (data: any[], title: string) => {
+    //         const wsData = [
+    //             // Header row
+    //             ['Measurement', 'Data Points', `< ${lessthanValue ?? 'N/A'}`, '% Less Than',
+    //                 `> ${greaterthanValue ?? 'N/A'}`, '% Greater Than', 'Avg +ve', 'Avg -ve'],
+    //             // Data rows
+    //             ...data.map(row => [
+    //                 row.measurementType,
+    //                 row.totalPoints,
+    //                 row.lessThanCount,
+    //                 row.lessThanPercent,
+    //                 row.greaterThanCount,
+    //                 row.greaterThanPercent,
+    //                 row.avgPositive,
+    //                 row.avgNegative
+    //             ])
+    //         ];
+    //         console.log(title);
+    //         return XLSX.utils.aoa_to_sheet(wsData);
 
 
 
-        };
+    //     };
 
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(allPrismsDataTK2, 'Track 2 All Prisms'), 'TK2 All Prisms');
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(ohioBridgeDataTK2, 'Track 2 Ohio Bridge'), 'TK2 Ohio Bridge');
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(track2Prisms12to22Data, 'Track 2 Prisms 12-22'), 'TK2 Prisms 12-22');
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(washingtonChannelDataTK2, 'Track 2 Wash Channel'), 'TK2 Wash Channel');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(allPrismsDataTK2, 'Track 2 All Prisms'), 'TK2 All Prisms');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(ohioBridgeDataTK2, 'Track 2 Ohio Bridge'), 'TK2 Ohio Bridge');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(track2Prisms12to22Data, 'Track 2 Prisms 12-22'), 'TK2 Prisms 12-22');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(washingtonChannelDataTK2, 'Track 2 Wash Channel'), 'TK2 Wash Channel');
 
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(allPrismsDataTK3, 'Track 3 All Prisms'), 'TK3 All Prisms');
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(ohioBridgeDataTK3, 'Track 3 Ohio Bridge'), 'TK3 Ohio Bridge');
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(track3Prisms12to22Data, 'Track 3 Prisms 12-22'), 'TK3 Prisms 12-22');
-        XLSX.utils.book_append_sheet(wb, prepareWorksheet(washingtonChannelDataTK3, 'Track 3 Wash Channel'), 'TK3 Wash Channel');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(allPrismsDataTK3, 'Track 3 All Prisms'), 'TK3 All Prisms');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(ohioBridgeDataTK3, 'Track 3 Ohio Bridge'), 'TK3 Ohio Bridge');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(track3Prisms12to22Data, 'Track 3 Prisms 12-22'), 'TK3 Prisms 12-22');
+    //     XLSX.utils.book_append_sheet(wb, prepareWorksheet(washingtonChannelDataTK3, 'Track 3 Wash Channel'), 'TK3 Wash Channel');
 
-        XLSX.writeFile(wb, 'Data_Summary_Output.xlsx');
-    };
+    //     XLSX.writeFile(wb, 'Data_Summary_Output.xlsx');
+    // };
 
     return (
         <>
@@ -544,9 +574,9 @@ const DataSummary: React.FC = () => {
                 {showSummary && (
                     <>
                         <button
-                            onClick={exportToExcel}
+                            onClick={exportToPDF}
                             style={{
-                                backgroundColor: "#10b981",
+                                backgroundColor: "#ef4444", // Red color
                                 color: "#ffffff",
                                 padding: "0.75rem 1.5rem",
                                 borderRadius: "0.375rem",
@@ -555,12 +585,16 @@ const DataSummary: React.FC = () => {
                                 transition: "background-color 0.2s ease, transform 0.1s ease",
                                 border: "none",
                                 boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "0.5rem"
                             }}
                             onMouseOver={(e) =>
-                                (e.currentTarget.style.backgroundColor = "#059669")
+                                (e.currentTarget.style.backgroundColor = "#dc2626") // Darker red on hover
                             }
                             onMouseOut={(e) =>
-                                (e.currentTarget.style.backgroundColor = "#10b981")
+                                (e.currentTarget.style.backgroundColor = "#ef4444")
                             }
                             onMouseDown={(e) =>
                                 (e.currentTarget.style.transform = "scale(0.98)")
@@ -569,18 +603,27 @@ const DataSummary: React.FC = () => {
                                 (e.currentTarget.style.transform = "scale(1)")
                             }
                         >
-                            Export to Excel
+                            <PictureAsPdfIcon style={{ fontSize: '20px' }} />
+                            Export to PDF
                         </button>
-                        <DataTable title="Track 2 All Prisms" data={allPrismsDataTK2} />
-                        <DataTable title="Track 2 Prisms over Ohio Bridge (7 to 11)" data={ohioBridgeDataTK2} />
-                        <DataTable title="Track 2 Prisms (12 to 22)" data={track2Prisms12to22Data} />
-                        <DataTable title="Track 2 Prisms over Washington Channel Bridge (23 to 28)" data={washingtonChannelDataTK2} />
-
-                        {/* Track 3 Tables */}
-                        <DataTable title="Track 3 All Prisms" data={allPrismsDataTK3} />
-                        <DataTable title="Track 3 Prisms over Ohio Bridge (7 to 11)" data={ohioBridgeDataTK3} />
-                        <DataTable title="Track 3 Prisms (12 to 22)" data={track3Prisms12to22Data} />
-                        <DataTable title="Track 3 Prisms over Washington Channel Bridge (23 to 28)" data={washingtonChannelDataTK3} />
+                        <div id="pdf-content">
+                            <div className="pdf-page">
+                                <DataTable title="Track 2 All Prisms" data={allPrismsDataTK2} />
+                                <DataTable title="Track 2 Prisms over Ohio Bridge (7 to 11)" data={ohioBridgeDataTK2} />
+                            </div>
+                            <div className="pdf-page">
+                                <DataTable title="Track 2 Prisms (12 to 22)" data={track2Prisms12to22Data} />
+                                <DataTable title="Track 2 Prisms over Washington Channel Bridge (23 to 28)" data={washingtonChannelDataTK2} />
+                            </div>
+                            <div className="pdf-page">
+                                <DataTable title="Track 3 All Prisms" data={allPrismsDataTK3} />
+                                <DataTable title="Track 3 Prisms over Ohio Bridge (7 to 11)" data={ohioBridgeDataTK3} />
+                            </div>
+                            <div className="pdf-page">
+                                <DataTable title="Track 3 Prisms (12 to 22)" data={track3Prisms12to22Data} />
+                                <DataTable title="Track 3 Prisms over Washington Channel Bridge (23 to 28)" data={washingtonChannelDataTK3} />
+                            </div>
+                        </div>
                     </>
                 )}
             </MainContentWrapper>
