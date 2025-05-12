@@ -26,7 +26,8 @@ import {
   ExitToApp as LogoutIcon,
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
-  AccountTree as ProjectIcon
+  AccountTree as ProjectIcon,
+  TableChart as TableChartIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -195,6 +196,16 @@ const NavSidebar: React.FC = () => {
                         sx={{ pl: 4 }}
                       >
                         <ListItemText primary="Data Summary" />
+                      </ListItemButton>
+                      <ListItemButton
+                        component={Link}
+                        to="/reading-tables"
+                        sx={{ pl: 4 }}
+                      >
+                    <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                      <TableChartIcon fontSize="small" />
+                    </ListItemIcon>
+                        <ListItemText primary="Reading Tables" />
                       </ListItemButton>
                     </List>
                   </Collapse>

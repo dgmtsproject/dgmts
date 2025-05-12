@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ag-grid-community/client-side-row-model": "^32.3.5",
+    "@ag-grid-community/core": "^32.3.5",
     "@aternus/csv-to-xlsx": "^2.1.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -20,6 +22,8 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/react-toastify": "^4.0.2",
     "@types/recharts": "^1.8.29",
+    "ag-grid-community": "^33.2.4",
+    "ag-grid-react": "^33.2.4",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dgmts-monitoring": "file:",

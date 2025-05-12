@@ -24,6 +24,7 @@ import AmtsRefGraphs from "../pages/AmtsRefGraphs";
 import InstrumentsList from "../pages/InstrumentsList";
 import AddAlarms from "../pages/Add-Alarms";
 import DataSummmary from "../pages/DataSummmary";
+import ReadingTables from "../pages/ReadingTables";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -52,6 +53,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/instruments-list" element={<InstrumentsList />} />
       <Route path="/add-alarms" element={<AddAlarms/>}/>
       <Route path="/data-summary" element={<DataSummmary/>} />
+      <Route path="/reading-tables" element={<ReadingTables />} />
     </Routes>
   );
 };
