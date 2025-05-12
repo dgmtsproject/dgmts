@@ -107,8 +107,6 @@ const ReadingTables: React.FC = () => {
                     newRow.push("");
                 }
             }
-
-            // Process TK-3 data (pairs of columns)
             if (tk3StartIndex > 0) {
                 for (let j = tk3StartIndex; j < (tk3EndIndex > 0 ? tk3EndIndex : headers.length); j += 2) {
                     const val1 = row[j];
@@ -135,7 +133,7 @@ const ReadingTables: React.FC = () => {
             result.push(newRow);
         }
 
-        const newHeader: (string | number)[] = [headers[0]]; 
+        const newHeader: (string | number)[] = [headers[0]];
 
         for (let j = tk2StartIndex; j < (tk2EndIndex > 0 ? tk2EndIndex : headers.length); j += 2) {
             const h1 = headers[j] ?? `Col${j}`;
@@ -529,7 +527,7 @@ const ReadingTables: React.FC = () => {
                                     minWidth: 100,
                                     filter: true,
                                     sortable: true,
-                                    
+
                                 }}
                                 theme={themeQuartz}
                                 animateRows={true}
