@@ -25,6 +25,8 @@ import InstrumentsList from "../pages/InstrumentsList";
 import AddAlarms from "../pages/Add-Alarms";
 import DataSummmary from "../pages/DataSummmary";
 import ReadingTables from "../pages/ReadingTables";
+import AdminSetup from "../pages/AdminSetup";
+import EditInstrument from "../pages/EditInstrument";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -54,6 +56,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/add-alarms" element={<AddAlarms/>}/>
       <Route path="/data-summary" element={<DataSummmary/>} />
       <Route path="/reading-tables" element={<ReadingTables />} />
+      <Route path="/admin-setup" element={<AdminSetup />} />
+      <Route path="/edit-instrument" element={<EditInstrument />} />
     </Routes>
   );
 };

@@ -8,8 +8,16 @@ import {
   FormControl, InputLabel, Select, MenuItem,
   Typography, Box
 } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { useAdminContext } from '../context/AdminContext';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 type Instrument = {
   id: number;
   instrument_id: string;
@@ -36,6 +44,10 @@ const InstrumentsList: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(location.state?.project || null);
   const [loading, setLoading] = useState(false);
 
+ const [openDialogId, setOpenDialogId] = useState<string | null>(null); 
+
+
+
   useEffect(() => {
     if (selectedProject) {
       fetchInstruments(selectedProject.id);
@@ -55,39 +67,38 @@ const InstrumentsList: React.FC = () => {
         query = query.eq('user_email', userEmail); // Only exact matches
       }
       const { data, error } = await query;
-  
+
       if (error) throw error;
-      const filteredData = isAdmin 
-        ? data 
-        : data?.filter(p => p.user_email === userEmail); 
+      const filteredData = isAdmin
+        ? data
+        : data?.filter(p => p.user_email === userEmail);
       setProjects(filteredData || []);
-      
+
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
     }
   };
-  
+
 
   const fetchInstruments = async (projectId: number) => {
     setLoading(true);
     try {
-      // First get the project details
       const { data: projectData } = await supabase
         .from('Projects')
         .select('name, user_email')
         .eq('id', projectId)
         .single();
 
-      // Additional security check - verify user has access to this project
+
       if (!isAdmin && projectData?.user_email !== userEmail && projectData?.user_email !== null) {
         console.warn('User does not have access to this project');
         navigate('/projects');
         return;
       }
 
-      // Then get instruments for this project
+
       const { data: instrumentsData, error } = await supabase
         .from('instruments')
         .select(`
@@ -124,6 +135,23 @@ const InstrumentsList: React.FC = () => {
   const handleEditInstrument = (instrument: Instrument) => {
     navigate('/edit-instrument', { state: { instrument } });
   };
+
+const handleDeleteInstrument = async (instrumentId: string) => {  
+  console.log('Deleting instrument with ID:', instrumentId);
+
+  const { error } = await supabase
+    .from('instruments')
+    .delete()
+    .eq('instrument_id', instrumentId);  
+
+  if (error) {
+    console.error('Error deleting instrument:', error);
+  } else {
+    setInstrumentsData(instrumentsData.filter(instrument => instrument.instrument_id !== instrumentId));
+    toast.success('Instrument deleted successfully');
+  }
+  setOpenDialogId(null);
+}
 
   if (!selectedProject) {
     return (
@@ -169,71 +197,109 @@ const InstrumentsList: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 2 }}>
-        <Button variant="contained" onClick={() => navigate('/projects')}>
-          Back to Projects
-        </Button>
-        {!location.state?.project && (
-          <Button variant="outlined" onClick={() => setSelectedProject(null)}>
-            Change Project
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 2 }}>
+          <Button variant="contained" onClick={() => navigate('/projects')}>
+            Back to Projects
           </Button>
-        )}
-      </Box>
-    
-      <Box sx={{ fontFamily: 'Arial, sans-serif', p: 0 }}>
-        <Typography variant="h5" align="center" sx={{ mt: 3, color: '#333' }}>
-          Instruments for: {selectedProject.name}
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <TableContainer component={Paper} sx={{ maxWidth: '96%', mt: 3, border: '1px solid #000', mb: 2 }}>
-            <Table>
-              <TableHead sx={{ backgroundColor: '#f1f1f1' }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>S.No</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument ID</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument Name</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Alert Value</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Warning Value</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Shutdown Value</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">Loading instruments...</TableCell>
-                  </TableRow>
-                ) : instrumentsData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">No instruments found for this project</TableCell>
-                  </TableRow>
-                ) : (
-                  instrumentsData.map((instrument) => (
-                    <TableRow key={instrument.id} sx={{ backgroundColor: '#fff' }}>
-                      <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id}</TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_name}</TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value}</TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value}</TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value}</TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleEditInstrument(instrument)}
-                          sx={{ py: 1, fontSize: 14 }}
-                        >
-                          Edit
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          {!location.state?.project && (
+            <Button variant="outlined" onClick={() => setSelectedProject(null)}>
+              Change Project
+            </Button>
+          )}
         </Box>
-      </Box>
+
+        <Box sx={{ fontFamily: 'Arial, sans-serif', p: 0 }}>
+          <Typography variant="h5" align="center" sx={{ mt: 3, color: '#333' }}>
+            Instruments for: {selectedProject.name}
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <TableContainer component={Paper} sx={{ maxWidth: '96%', mt: 3, border: '1px solid #000', mb: 2 }}>
+              <Table>
+                <TableHead sx={{ backgroundColor: '#f1f1f1' }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>S.No</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument ID</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument Name</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Alert Value</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Warning Value</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Shutdown Value</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center">Loading instruments...</TableCell>
+                    </TableRow>
+                  ) : instrumentsData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center">No instruments found for this project</TableCell>
+                    </TableRow>
+                  ) : (
+                    instrumentsData.map((instrument) => (
+                      <TableRow key={instrument.id} sx={{ backgroundColor: '#fff' }}>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_name}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleEditInstrument(instrument)}
+                            sx={{ py: 1, fontSize: 14 }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => setOpenDialogId(instrument.instrument_id)}
+                            sx={{ py: 1, fontSize: 14, ml: 1 }}
+                          >
+                            <DeleteIcon />
+                          </Button>
+
+                          <Dialog
+                             open={openDialogId === instrument.instrument_id}
+                            onClose={() => setOpenDialogId(null)}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                          >
+                            <DialogTitle id="alert-dialog-title">
+                              Confirm Deletion
+                            </DialogTitle>
+                            <DialogContent>
+                              <DialogContentText id="alert-dialog-description">
+                                Are you sure you want to delete this instrument? This action cannot be undone.
+                              </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                              <Button onClick={() => setOpenDialogId(null)} color="primary">
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteInstrument(instrument.instrument_id)}
+                                color="error"
+                                autoFocus
+                              >
+                                Delete
+                              </Button>
+                            </DialogActions>
+                          </Dialog>
+
+
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Box>
       </MainContentWrapper>
     </>
   );

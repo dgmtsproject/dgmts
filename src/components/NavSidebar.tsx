@@ -91,7 +91,7 @@ const NavSidebar: React.FC = () => {
     >
       <Box>
         <Box sx={{ p: 2, textAlign: 'center' }}>
-          <Typography variant="h6">DGMTS-ImSITE</Typography>
+          <Typography variant="h6">DGMTS-imSite</Typography>
         </Box>
         <Divider />
         <List>
@@ -223,7 +223,7 @@ const NavSidebar: React.FC = () => {
 
           {isAdmin && (
             <>
-              <ListItemButton component={Link} to="/ProjectForm">
+              <ListItemButton component={Link} to="/admin-setup">
                 <ListItemIcon sx={{ color: 'inherit' }}>
                   <AdminIcon />
                 </ListItemIcon>
