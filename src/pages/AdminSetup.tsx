@@ -16,7 +16,7 @@ const AdminSetup: React.FC = () => {
         navigate('/instruments');
     }
     const handleAddUser = () => {
-        navigate('/add-user');
+        navigate('/add-users');
     }
     const handlePermissions = () => {
         navigate('/permissions');

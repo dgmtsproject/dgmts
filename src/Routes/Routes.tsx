@@ -27,6 +27,8 @@ import DataSummmary from "../pages/DataSummmary";
 import ReadingTables from "../pages/ReadingTables";
 import AdminSetup from "../pages/AdminSetup";
 import EditInstrument from "../pages/EditInstrument";
+import AddUsers from "../pages/AddUsers";
+import Permissions from "../pages/Permissions";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -58,6 +60,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/reading-tables" element={<ReadingTables />} />
       <Route path="/admin-setup" element={<AdminSetup />} />
       <Route path="/edit-instrument" element={<EditInstrument />} />
+      <Route path='/add-users' element={<AddUsers />} />
+      <Route path="/permissions" element={<Permissions />} />
     </Routes>
   );
 };
