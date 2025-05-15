@@ -107,7 +107,7 @@ const AmtsRefGraphs: React.FC = () => {
     const processedData = jsonData.map((row, rowIndex) => {
       if (rowIndex === 0) return reorderedHeaders;
 
-      const newRow: (string | number | null)[] = [row[0]]; 
+      const newRow: (string | number | null)[] = [row[0]];
 
 
       sortedAmts1.forEach(col => {
@@ -154,7 +154,7 @@ const AmtsRefGraphs: React.FC = () => {
     if (processedData.length === 0) return;
 
     const headers = processedData[0];
-    const timeIndex = 0; 
+    const timeIndex = 0;
 
     const amts1Lines: React.SetStateAction<any[]> = [];
     const amts1Data = [];
@@ -279,55 +279,29 @@ const AmtsRefGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <TrackMerger onMergeSave={handleMergeClick} />
+        <TrackMerger onMergeSave={handleMergeClick} />
 
 
-      <div
-        style={{
-          // padding: '2rem',
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.5rem",
-          backgroundColor: "#f4f7fa",
-          minHeight: "100vh",
-          fontFamily: "'Inter', sans-serif",
-          border: "4px solid black",
-          margin: "10px",
-          padding: "10px",
-        }}
-      >
-        <button
-          onClick={handleProcess}
-          ref={processSaveRef}
+        <div
           style={{
-            display: "none",
-            backgroundColor: "#2563eb",
-            color: "#ffffff",
-            padding: "0.75rem 1.5rem",
-            borderRadius: "0.375rem",
-            fontWeight: "500",
-            cursor: "pointer",
-            transition: "background-color 0.2s ease, transform 0.1s ease",
-            border: "none",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            // padding: '2rem',
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+            backgroundColor: "#f4f7fa",
+            minHeight: "100vh",
+            fontFamily: "'Inter', sans-serif",
+            border: "4px solid black",
+            margin: "10px",
+            padding: "10px",
           }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor = "#1d4ed8")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "#2563eb")
-          }
-          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
-          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          Process & Show Graph
-        </button>
-
-        {processedBlob && (
           <button
-            onClick={handleDownload}
+            onClick={handleProcess}
+            ref={processSaveRef}
             style={{
-              backgroundColor: "#16a34a",
+              display: "none",
+              backgroundColor: "#2563eb",
               color: "#ffffff",
               padding: "0.75rem 1.5rem",
               borderRadius: "0.375rem",
@@ -338,411 +312,697 @@ const AmtsRefGraphs: React.FC = () => {
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
             onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor = "#15803d")
+              (e.currentTarget.style.backgroundColor = "#1d4ed8")
             }
             onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor = "#16a34a")
+              (e.currentTarget.style.backgroundColor = "#2563eb")
             }
-            onMouseDown={(e) =>
-              (e.currentTarget.style.transform = "scale(0.98)")
-            }
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            Download Final File
+            Process & Show Graph
           </button>
-        )}
-        {showGraph && (
-          <div
-            style={{
-              padding: "2rem",
-              backgroundColor: "#ffffff",
-              borderRadius: "0.5rem",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              marginTop: "1rem",
-            }}
-          >
-            <div
+
+          {processedBlob && (
+            <button
+              onClick={handleDownload}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
+                backgroundColor: "#16a34a",
+                color: "#ffffff",
+                padding: "0.75rem 1.5rem",
+                borderRadius: "0.375rem",
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease, transform 0.1s ease",
+                border: "none",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               }}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#15803d")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = "#16a34a")
+              }
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.98)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select For AMTS-1 Ref Prisms
-              </label>
-              <select
-                value={selectedColumn1}
-                onChange={(e) => setSelectedColumn1(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select an option
-                </option>
-                {selectoptions.map((option, index) => (
-                  <option key={index} value={option}>
-                    {option}
-                  </option>
-                ))}
-
-
-
-              </select>
-            </div>
-
+              Download Final File
+            </button>
+          )}
+          {showGraph && (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Select for AMTS-2 Ref Prisms:
-              </label>
-              <select
-                value={selectedColumn2}
-                onChange={(e) => setSelectedColumn2(e.target.value)}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                  width: "200px",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              >
-                <option value="placeholder" disabled>
-                  Select an option
-                </option>
-                {selectoptions.map((option, index) => (
-                  <option key={index} value={option}>
-                    {option}
-                  </option>
-                ))}
-
-
-
-              </select>
-            </div>
-
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
+                padding: "2rem",
+                backgroundColor: "#ffffff",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 marginTop: "1rem",
               }}
             >
-              <label
+              <div
                 style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                X Scale:
-              </label>
-              <input
-                type="number"
-                value={xScale}
-                onChange={(e) => setXScale(Number(e.target.value))}
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select For AMTS-1 Ref Prisms
+                </label>
+                <select
+                  value={selectedColumn1}
+                  onChange={(e) => setSelectedColumn1(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select an option
+                  </option>
+                  {selectoptions.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+
+
+
+                </select>
+              </div>
+
+              <div
                 style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.1"
-                max="1.4"
-                step="0.1"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-              <label
-                style={{
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  fontSize: "0.9rem",
-                  marginLeft: "1rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
                 }}
               >
-                Y Scale:
-              </label>
-              <input
-                type="number"
-                value={yScale}
-                onChange={(e) => {
-                  const val = Math.max(0.1, Number(e.target.value));
-                  setYScale(val);
-                }}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  padding: "0.5rem",
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  backgroundColor: "#f9fafb",
-                  outline: "none",
-                  width: "100px",
-                  transition: "border-color 0.2s ease",
-                }}
-                min="0.2"
-                step="0.1"
-                max="5.0"
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-              />
-            </div>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Select for AMTS-2 Ref Prisms:
+                </label>
+                <select
+                  value={selectedColumn2}
+                  onChange={(e) => setSelectedColumn2(e.target.value)}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    transition: "border-color 0.2s ease",
+                    width: "200px",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                >
+                  <option value="placeholder" disabled>
+                    Select an option
+                  </option>
+                  {selectoptions.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
 
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-              <button
-                onClick={handleColumnSelect}
+
+
+                </select>
+              </div>
+
+
+              <div
                 style={{
-                  backgroundColor: "#2563eb",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginTop: "1rem",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#2563eb")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
               >
-                Generate Graphs
-              </button>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  X Scale:
+                </label>
+                <input
+                  type="number"
+                  value={xScale}
+                  onChange={(e) => setXScale(Number(e.target.value))}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    width: "100px",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  min="0.1"
+                  max="1.4"
+                  step="0.1"
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+                <label
+                  style={{
+                    fontWeight: "600",
+                    color: "#1f2937",
+                    fontSize: "0.9rem",
+                    marginLeft: "1rem",
+                  }}
+                >
+                  Y Scale:
+                </label>
+                <input
+                  type="number"
+                  value={yScale}
+                  onChange={(e) => {
+                    const val = Math.max(0.1, Number(e.target.value));
+                    setYScale(val);
+                  }}
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.375rem",
+                    padding: "0.5rem",
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    backgroundColor: "#f9fafb",
+                    outline: "none",
+                    width: "100px",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  min="0.2"
+                  step="0.1"
+                  max="5.0"
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                />
+              </div>
 
-              <button
-                onClick={handleDownloadGraph}
-                style={{
-                  backgroundColor: "#7c3aed",
-                  color: "#ffffff",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.375rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s ease, transform 0.1s ease",
-                  border: "none",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#6d28d9")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#7c3aed")
-                }
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                Download Graphs as Image
-              </button>
-            </div>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                <button
+                  onClick={handleColumnSelect}
+                  style={{
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.375rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease, transform 0.1s ease",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#2563eb")
+                  }
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.98)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  Generate Graphs
+                </button>
 
-            <div id="chartContainer" style={{ marginTop: "2rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                {/* First Chart */}
-{/* First Chart */}
-<div>
-  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-  AMTS 1 - Ref -Prisms-{selectedColumn1}
-  </h3>
+                <button
+                  onClick={handleDownloadGraph}
+                  style={{
+                    backgroundColor: "#7c3aed",
+                    color: "#ffffff",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.375rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease, transform 0.1s ease",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#6d28d9")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#7c3aed")
+                  }
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.98)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  Download Graphs as Image
+                </button>
+              </div>
 
-  <Plot
-    data={allLinesData1}
-    layout={{
-      width: 800 * xScale,
-      height: 500,
-      margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
-      xaxis: {
-        title: { text: 'Time' },
-        type: 'category',
-        tickmode: 'array',
-        tickvals: allLinesData1[0]?.x ? getOptimizedTicks(allLinesData1[0].x) : [],
-        tickangle: 0,
-        gridcolor: 'rgba(240, 240, 240, 0.7)',
-        gridwidth: 1,
-        showgrid: true,
-        automargin: true,
-        tickfont: { size: 11 }
-      },
-      yaxis: {
-        title: { text: selectedColumn1, standoff: 15 },
-        gridcolor: 'rgba(240, 240, 240, 0.7)',
-        gridwidth: 1,
-        zeroline: true,
-        zerolinecolor: 'rgba(240, 240, 240, 0.7)',
-        zerolinewidth: 1,
-        tickfont: { size: 11 }
-      },
-      plot_bgcolor: 'white',
-      paper_bgcolor: 'white',
-      showlegend: true,
-      legend: {
-        orientation: 'h',
-        y: -0.2,
-        x: 0.5,
-        xanchor: 'center',
-        font: { size: 12 }
-      },
-      hovermode: 'x unified',
-      hoverlabel: {
-        bgcolor: 'white',
-        bordercolor: '#ddd',
-        font: { family: 'Arial', size: 12, color: 'black' }
-      }
-    }}
-    config={{ 
-      displayModeBar: true, 
-      responsive: true, 
-      displaylogo: false, 
-      scrollZoom: true, 
-    }}
-    style={{
-      maxHeight: '800px',
-      border: '1px solid #f0f0f0',
-      borderRadius: '4px'
-    }}
-  />
+              <div id="chartContainer" style={{ marginTop: "2rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                  {/* First Chart */}
+                  {/* First Chart */}
+                  <div>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      AMTS 1 - Ref -Prisms-{selectedColumn1}
+                    </h3>
 
-  <div style={{ textAlign: 'center', fontWeight: 'bold', marginTop: '10px' }}>
-    AMTS-1-Ref-Prisms-{selectedColumn1}
-  </div>
-</div>
+                    <Plot
+                      data={allLinesData1}
+                      layout={{
+                        width: 800 * xScale,
+                        height: 500,
+                        margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
+                        shapes: [
+                          // Alert lines (red)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.875,
+                            y1: 0.875,
+                            line: { color: 'red', width: 1, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.875,
+                            y1: -0.875,
+                            line: { color: 'red', width: 1, dash: 'solid' },
+                          },
+                          // Warning lines (orange)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.5,
+                            y1: 0.5,
+                            line: { color: 'orange', width: 1, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.5,
+                            y1: -0.5,
+                            line: { color: 'orange', width: 1, dash: 'solid' },
+                          },
+                          // Internal warning lines (yellow)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.25,
+                            y1: 0.25,
+                            line: { color: 'yellow', width: 1, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.25,
+                            y1: -0.25,
+                            line: { color: 'yellow', width: 1, dash: 'solid' },
+                          }
+                        ],
+                        annotations: [
+                          // Alert line labels (floating at left edge)
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          // Warning line labels
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          // Internal warning line labels
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.26,
+                            yref: 'y',
+                            text: 'Internal',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.26,
+                            yref: 'y',
+                            text: 'Internal',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          }
+                        ],
+                        xaxis: {
+                          title: { text: 'Time' },
+                          type: 'category',
+                          tickmode: 'array',
+                          tickvals: allLinesData1[0]?.x ? getOptimizedTicks(allLinesData1[0].x) : [],
+                          tickangle: 0,
+                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          gridwidth: 1,
+                          showgrid: true,
+                          automargin: true,
+                          tickfont: { size: 11 }
+                        },
+                        yaxis: {
+                          title: { text: selectedColumn1, standoff: 15 },
+                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          gridwidth: 1,
+                          zeroline: true,
+                          zerolinecolor: 'rgba(240, 240, 240, 0.7)',
+                          zerolinewidth: 1,
+                          tickfont: { size: 11 }
+                        },
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: true,
+                        legend: {
+                          orientation: 'h',
+                          y: -0.2,
+                          x: 0.5,
+                          xanchor: 'center',
+                          font: { size: 12 }
+                        },
+                        hovermode: 'x unified',
+                        hoverlabel: {
+                          bgcolor: 'white',
+                          bordercolor: '#ddd',
+                          font: { family: 'Arial', size: 12, color: 'black' }
+                        }
+                      }}
+                      config={{
+                        displayModeBar: true,
+                        responsive: true,
+                        displaylogo: false,
+                        scrollZoom: true,
+                      }}
+                      style={{
+                        maxHeight: '800px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: '4px'
+                      }}
+                    />
 
-{/* Second Chart */}
-<div style={{ marginTop: '3rem' }}>
-  <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-    AMTS 2 - Ref -Prisms-{selectedColumn2}
-  </h3>
+                    <div style={{ textAlign: 'center', fontWeight: 'bold', marginTop: '10px' }}>
+                      AMTS-1-Ref-Prisms-{selectedColumn1}
+                    </div>
+                  </div>
 
-  <Plot
-    data={allLinesData2}
-    layout={{
-      width: 800 * xScale,
-      height: 500,
-      margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
-      xaxis: {
-        title: { text: 'Time' },
-        type: 'category',
-        tickmode: 'array',
-        tickvals: allLinesData2[0]?.x ? getOptimizedTicks(allLinesData2[0].x) : [],
-        tickangle: 0,
-        gridcolor: 'rgba(240, 240, 240, 0.7)',
-        gridwidth: 1,
-        showgrid: true,
-        automargin: true,
-        tickfont: { size: 11 }
-      },
-      yaxis: {
-        title: { text: selectedColumn2, standoff: 15 },
-        range: [-0.5 / yScale, 0.5 / yScale],
-        tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-        tickmode: 'linear',
-        dtick: 0.25,
-        nticks: 6,
-        gridcolor: 'rgba(240, 240, 240, 0.7)',
-        gridwidth: 1,
-        zeroline: true,
-        zerolinecolor: 'rgba(240, 240, 240, 0.7)',
-        zerolinewidth: 1,
-        tickfont: { size: 11 }
-      },
-      plot_bgcolor: 'white',
-      paper_bgcolor: 'white',
-      showlegend: true,
-      legend: {
-        orientation: 'h',
-        y: -0.2,
-        x: 0.5,
-        xanchor: 'center',
-        font: { size: 12 }
-      },
-      hovermode: 'x unified',
-      hoverlabel: {
-        bgcolor: 'white',
-        bordercolor: '#ddd',
-        font: { family: 'Arial', size: 12, color: 'black' }
-      }
-    }}
-    config={{ 
-      displayModeBar: true, 
-      responsive: true, 
-      displaylogo: false,
-      scrollZoom: true
-    }}
-    style={{
-      maxHeight: '800px',
-      border: '1px solid #f0f0f0',
-      borderRadius: '4px'
-    }}
-  />
+                  {/* Second Chart */}
+                  <div style={{ marginTop: '3rem' }}>
+                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                      AMTS 2 - Ref -Prisms-{selectedColumn2}
+                    </h3>
 
-  <div style={{ textAlign: 'center', fontWeight: 'bold', marginTop: '10px' }}>
-    AMTS-2-Ref-Prisms-{selectedColumn2}
-  </div>
-</div>
+                    <Plot
+                      data={allLinesData2}
+                      layout={{
+                        width: 800 * xScale,
+                        height: 500,
+                        margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
+                                                shapes: [
+                          // Alert lines (red)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.875,
+                            y1: 0.875,
+                            line: { color: 'red', width: 1, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.875,
+                            y1: -0.875,
+                            line: { color: 'red', width: 1, dash: 'solid' },
+                          },
+                          // Warning lines (orange)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.5,
+                            y1: 0.5,
+                            line: { color: 'orange', width: 1, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.5,
+                            y1: -0.5,
+                            line: { color: 'orange', width: 1, dash: 'solid' },
+                          },
+                          // Internal warning lines (yellow)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.25,
+                            y1: 0.25,
+                            line: { color: 'yellow', width: 1, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.25,
+                            y1: -0.25,
+                            line: { color: 'yellow', width: 1, dash: 'solid' },
+                          }
+                        ],
+                        annotations: [
+                          // Alert line labels (floating at left edge)
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          // Warning line labels
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          // Internal warning line labels
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.26,
+                            yref: 'y',
+                            text: 'Internal',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.26,
+                            yref: 'y',
+                            text: 'Internal',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          }
+                        ],
+                        xaxis: {
+                          title: { text: 'Time' },
+                          type: 'category',
+                          tickmode: 'array',
+                          tickvals: allLinesData2[0]?.x ? getOptimizedTicks(allLinesData2[0].x) : [],
+                          tickangle: 0,
+                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          gridwidth: 1,
+                          showgrid: true,
+                          automargin: true,
+                          tickfont: { size: 11 }
+                        },
+                        yaxis: {
+                          title: { text: selectedColumn2, standoff: 15 },
+                          range: [-0.5 / yScale, 0.5 / yScale],
+                          tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                          tickmode: 'linear',
+                          dtick: 0.25,
+                          nticks: 6,
+                          gridcolor: 'rgba(240, 240, 240, 0.7)',
+                          gridwidth: 1,
+                          zeroline: true,
+                          zerolinecolor: 'rgba(240, 240, 240, 0.7)',
+                          zerolinewidth: 1,
+                          tickfont: { size: 11 }
+                        },
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white',
+                        showlegend: true,
+                        legend: {
+                          orientation: 'h',
+                          y: -0.2,
+                          x: 0.5,
+                          xanchor: 'center',
+                          font: { size: 12 }
+                        },
+                        hovermode: 'x unified',
+                        hoverlabel: {
+                          bgcolor: 'white',
+                          bordercolor: '#ddd',
+                          font: { family: 'Arial', size: 12, color: 'black' }
+                        }
+                      }}
+                      config={{
+                        displayModeBar: true,
+                        responsive: true,
+                        displaylogo: false,
+                        scrollZoom: true
+                      }}
+                      style={{
+                        maxHeight: '800px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: '4px'
+                      }}
+                    />
+
+                    <div style={{ textAlign: 'center', fontWeight: 'bold', marginTop: '10px' }}>
+                      AMTS-2-Ref-Prisms-{selectedColumn2}
+                    </div>
+                  </div>
 
 
 
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </MainContentWrapper>
     </>
   )

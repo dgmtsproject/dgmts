@@ -1051,31 +1051,37 @@ const TrackGraphs: React.FC = () => {
                           ]}
                           layout={{
                             autosize: true, // Enable automatic sizing
-                            height: 500,
+                            height: 700,
                             margin: {
                               l: 60,
                               r: 30, // Reduced right margin
-                              b: 100,
+                              b: 150,
                               t: 30,
                               pad: 4,
                             },
                             xaxis: {
-                              title: { text: 'Prisms' },
+                              title: {
+                                text: 'Prisms',
+                                // distance of title from x-axis to down
+                                standoff: 10,
+
+                              },
                               type: 'category',
-                              tickmode: 'auto', 
-                              nticks: undefined, 
-                              tickangle: 0,
+                              tickmode: 'auto',
+                              nticks: undefined,
+                              tickangle: -90,
                               gridcolor: '#f0f0f0',
-                              automargin: true, 
+                              automargin: true,
                               showgrid: true,
-                              autorange: true, 
-                              tickformat: '', 
-                              ticklabelstep: 1, 
+                              autorange: true,
+                              tickformat: '',
+                              ticklabelstep: 1,
                               tickfont: {
-                                size: 10 
+                                size: 10
                               }
                             },
                             yaxis: {
+                              title: { text: 'Movement(Inches)' },
                               autorange: true, // Let Plotly determine the best range
                               tickmode: 'auto', // Automatic tick generation
                               dtick: 'auto', // Automatic tick interval
@@ -1100,8 +1106,144 @@ const TrackGraphs: React.FC = () => {
                               xref: 'paper',
                               y0: 0,
                               y1: 0,
-                              line: { color: '#f0f0f0', width: 2 }
-                            }]
+                              line: {
+                                color: '#f0f0f0',
+                                width: 2,
+
+
+                              }
+                            },
+                            // Alert lines (red)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.875,
+                              y1: 0.875,
+                              label: 'Alert' as any,
+                              line: {
+                                color: 'red',
+                                width: 2,
+                                dash: 'solid'
+                              },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.875,
+                              y1: -0.875,
+                              line: { color: 'red', width: 2, dash: 'solid' },
+                            },
+                            // Warning lines (orange)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.5,
+                              y1: 0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.5,
+                              y1: -0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            // Internal warning lines (yellow)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.25,
+                              y1: 0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.25,
+                              y1: -0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            }
+                            ],
+                            annotations: [
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              }
+                            ]
                           }}
                           config={{
                             displayModeBar: true,
@@ -1114,7 +1256,7 @@ const TrackGraphs: React.FC = () => {
                             height: '100%',
                             minWidth: '800px' // Minimum width to prevent squishing
                           }}
-                          useResizeHandler={true} // Important for responsive behavior
+                          useResizeHandler={true}
                         />
                       </div>
                     ) : null}
@@ -1378,7 +1520,7 @@ const TrackGraphs: React.FC = () => {
                             y: data.values,
                             type: 'scatter',
                             mode: 'lines+markers',
-                            showlegend: false,
+                            name: data.fullColumnName, // This will show in the legend
                             line: {
                               color: extendedColors[index % extendedColors.length],
                               shape: 'spline'
@@ -1388,20 +1530,33 @@ const TrackGraphs: React.FC = () => {
                               color: extendedColors[index % extendedColors.length]
                             },
                             hovertemplate: `
-      <b>${data.fullColumnName}</b><br>
-      Time: %{x|%m/%d/%Y %H:%M}<br>
-      Value: %{y:.6f}<extra></extra>
-    `,
+                              <b>${data.fullColumnName}</b><br>
+                              Time: %{x|%m/%d/%Y %H:%M}<br>
+                              Value: %{y:.6f}<extra></extra>
+                             `,
                             connectgaps: true
                           }))}
                           layout={{
                             autosize: true,
                             margin: {
                               l: 60,
-                              r: 150,
+                              r: 200,
                               b: 120,
                               t: 30,
                               pad: 4,
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 1.05, // Position legend outside the plot area
+                              xanchor: 'left',
+                              y: 0.5,
+                              yanchor: 'middle',
+                              font: {
+                                size: 10,
+                              },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1
                             },
                             xaxis: {
                               title: { text: 'Time' },
@@ -1477,7 +1632,69 @@ const TrackGraphs: React.FC = () => {
                                   opacity: 0.7,
                                   name: `Track ${track}`
                                 }))
-                              )
+                              ),
+                              // Alert lines (red)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.875,
+                              y1: 0.875,
+                              label: 'Alert' as any,
+                              line: {
+                                color: 'red',
+                                width: 2,
+                                dash: 'solid'
+                              },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.875,
+                              y1: -0.875,
+                              line: { color: 'red', width: 2, dash: 'solid' },
+                            },
+                            // Warning lines (orange)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.5,
+                              y1: 0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.5,
+                              y1: -0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            // Internal warning lines (yellow)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.25,
+                              y1: 0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.25,
+                              y1: -0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
                             ],
                             annotations: [
                               ...(drillstarttimedata ? [{
@@ -1535,7 +1752,73 @@ const TrackGraphs: React.FC = () => {
                                     bgcolor: 'rgba(255,255,255,0.8)'
                                   }] : [])
                                 ];
-                              })
+                              }),
+                                                            {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              }
                             ],
                             hovermode: 'closest',
                           }}

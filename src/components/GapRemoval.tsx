@@ -935,7 +935,69 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7,
                               name: `Track ${track}`
                             }))
-                          )
+                          ),
+                                                        // Alert lines (red)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.875,
+                              y1: 0.875,
+                              label: 'Alert' as any,
+                              line: {
+                                color: 'red',
+                                width: 2,
+                                dash: 'solid'
+                              },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.875,
+                              y1: -0.875,
+                              line: { color: 'red', width: 2, dash: 'solid' },
+                            },
+                            // Warning lines (orange)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.5,
+                              y1: 0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.5,
+                              y1: -0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            // Internal warning lines (yellow)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.25,
+                              y1: 0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.25,
+                              y1: -0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            }
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [{
@@ -993,7 +1055,73 @@ const GapRemoval: React.FC = () => {
                                 bgcolor: 'rgba(255,255,255,0.8)'
                               }] : [])
                             ];
-                          })
+                          }),
+                                                                                      {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1159,7 +1287,69 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7,
                               name: `Track ${track}`
                             }))
-                          )
+                          ),
+                                                        // Alert lines (red)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.875,
+                              y1: 0.875,
+                              label: 'Alert' as any,
+                              line: {
+                                color: 'red',
+                                width: 2,
+                                dash: 'solid'
+                              },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.875,
+                              y1: -0.875,
+                              line: { color: 'red', width: 2, dash: 'solid' },
+                            },
+                            // Warning lines (orange)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.5,
+                              y1: 0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.5,
+                              y1: -0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            // Internal warning lines (yellow)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.25,
+                              y1: 0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.25,
+                              y1: -0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [{
@@ -1217,7 +1407,73 @@ const GapRemoval: React.FC = () => {
                                 bgcolor: 'rgba(255,255,255,0.8)'
                               }] : [])
                             ];
-                          })
+                          }),
+                                                                                      {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1378,7 +1634,69 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7,
                               name: `Track ${track}`
                             }))
-                          )
+                          ),
+                                                        // Alert lines (red)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.875,
+                              y1: 0.875,
+                              label: 'Alert' as any,
+                              line: {
+                                color: 'red',
+                                width: 2,
+                                dash: 'solid'
+                              },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.875,
+                              y1: -0.875,
+                              line: { color: 'red', width: 2, dash: 'solid' },
+                            },
+                            // Warning lines (orange)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.5,
+                              y1: 0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.5,
+                              y1: -0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            // Internal warning lines (yellow)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.25,
+                              y1: 0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.25,
+                              y1: -0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [{
@@ -1436,7 +1754,73 @@ const GapRemoval: React.FC = () => {
                                 bgcolor: 'rgba(255,255,255,0.8)'
                               }] : [])
                             ];
-                          })
+                          }),
+                                                                                      {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1634,7 +2018,69 @@ const GapRemoval: React.FC = () => {
                               opacity: 0.7,
                               name: `Track ${track}`
                             }))
-                          )
+                          ),
+                                                        // Alert lines (red)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.875,
+                              y1: 0.875,
+                              label: 'Alert' as any,
+                              line: {
+                                color: 'red',
+                                width: 2,
+                                dash: 'solid'
+                              },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.875,
+                              y1: -0.875,
+                              line: { color: 'red', width: 2, dash: 'solid' },
+                            },
+                            // Warning lines (orange)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.5,
+                              y1: 0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.5,
+                              y1: -0.5,
+                              line: { color: 'orange', width: 2, dash: 'solid' },
+                            },
+                            // Internal warning lines (yellow)
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: 0.25,
+                              y1: 0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
+                            {
+                              type: 'line',
+                              x0: 0,
+                              x1: 1,
+                              xref: 'paper',
+                              y0: -0.25,
+                              y1: -0.25,
+                              line: { color: 'yellow', width: 2, dash: 'solid' },
+                            },
                         ],
                         annotations: [
                           ...(drillstarttimedata ? [{
@@ -1692,7 +2138,73 @@ const GapRemoval: React.FC = () => {
                                 bgcolor: 'rgba(255,255,255,0.8)'
                               }] : [])
                             ];
-                          })
+                          }),
+                                                                                      {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.88,
+                                yref: 'y',
+                                text: 'Alert',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.51,
+                                yref: 'y',
+                                text: 'Warning',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: 0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              },
+                              {
+                                x: 0.001,
+                                xref: 'paper',
+                                y: -0.26,
+                                yref: 'y',
+                                text: 'Warning (Internal)',
+                                showarrow: false,
+                                font: { color: 'black', size: 10 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                xanchor: 'left'
+                              }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',

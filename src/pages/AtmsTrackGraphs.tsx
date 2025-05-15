@@ -276,7 +276,67 @@ const AtmsTrackGraphs: React.FC = () => {
                 color: 'red',
                 width: 2
             }
+        },
+
+        // Alert lines (red)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: 0.875,
+            y1: 0.875,
+            line: { color: 'red', width: 1, dash: 'solid' },
+        },
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: -0.875,
+            y1: -0.875,
+            line: { color: 'red', width: 1, dash: 'solid' },
+        },
+        // Warning lines (orange)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: 0.5,
+            y1: 0.5,
+            line: { color: 'orange', width: 1, dash: 'solid' },
+        },
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: -0.5,
+            y1: -0.5,
+            line: { color: 'orange', width: 1, dash: 'solid' },
+        },
+        // Internal warning lines (yellow)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: 0.25,
+            y1: 0.25,
+            line: { color: 'yellow', width: 1, dash: 'solid' },
+        },
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: -0.25,
+            y1: -0.25,
+            line: { color: 'yellow', width: 1, dash: 'solid' },
         }
+
+
     ].filter(Boolean) as Partial<Shape>[];
 
     const annotations = [
@@ -308,7 +368,78 @@ const AtmsTrackGraphs: React.FC = () => {
                 yshift: 10,
                 xanchor: 'left'
             }]
-            : [])
+            : []),
+
+        // Alert line labels (floating at left edge)
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: 0.88,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: -0.88,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        // Warning line labels
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: 0.51,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: -0.51,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        // Internal warning line labels
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: 0.26,
+            yref: 'y',
+            text: 'Internal',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: -0.26,
+            yref: 'y',
+            text: 'Internal',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        }
+
     ].filter(Boolean) as Partial<Annotations>[];
 
     const shapesForAmts2 = [
@@ -377,7 +508,67 @@ const AtmsTrackGraphs: React.FC = () => {
                 color: 'red',
                 width: 2
             }
+        },
+
+        // Alert lines (red)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: 0.875,
+            y1: 0.875,
+            line: { color: 'red', width: 1, dash: 'solid' },
+        },
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: -0.875,
+            y1: -0.875,
+            line: { color: 'red', width: 1, dash: 'solid' },
+        },
+        // Warning lines (orange)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: 0.5,
+            y1: 0.5,
+            line: { color: 'orange', width: 1, dash: 'solid' },
+        },
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: -0.5,
+            y1: -0.5,
+            line: { color: 'orange', width: 1, dash: 'solid' },
+        },
+        // Internal warning lines (yellow)
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: 0.25,
+            y1: 0.25,
+            line: { color: 'yellow', width: 1, dash: 'solid' },
+        },
+        {
+            type: 'line',
+            x0: 0,
+            x1: 1,
+            xref: 'paper',
+            y0: -0.25,
+            y1: -0.25,
+            line: { color: 'yellow', width: 1, dash: 'solid' },
         }
+
+
     ].filter(Boolean) as Partial<Shape>[];
     const annotationsForAmts2 = [
         // Ohio Bridge label for Track 3
@@ -443,7 +634,79 @@ const AtmsTrackGraphs: React.FC = () => {
                 yshift: 10,
                 xanchor: 'left'
             }]
-            : [])
+            : []),
+
+
+    // Alert line labels (floating at left edge)
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: 0.88,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: -0.88,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        // Warning line labels
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: 0.51,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: -0.51,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        // Internal warning line labels
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: 0.26,
+            yref: 'y',
+            text: 'Internal',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        },
+        {
+            x: 0.001,
+            xref: 'paper',
+            y: -0.26,
+            yref: 'y',
+            text: 'Internal',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            xanchor: 'left'
+        }
+
     ].filter(Boolean) as Partial<Annotations>[];
     // filter the time values only get the time that the header which starts with "LBN-AMTS1-" has the value
     useEffect(() => {
@@ -696,53 +959,27 @@ const AtmsTrackGraphs: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-            <TrackMerger onMergeSave={handleMergeClick} />
-            <div
-                style={{
-                    // padding: '2rem',
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1.5rem",
-                    backgroundColor: "#f4f7fa",
-                    minHeight: "100vh",
-                    fontFamily: "'Inter', sans-serif",
-                    border: "4px solid black",
-                    margin: "10px",
-                    padding: "10px",
-                }}
-            >
-                <button
-                    onClick={handleProcess}
-                    ref={processSaveRef}
+                <TrackMerger onMergeSave={handleMergeClick} />
+                <div
                     style={{
-                        display: "none",
-                        backgroundColor: "#2563eb",
-                        color: "#ffffff",
-                        padding: "0.75rem 1.5rem",
-                        borderRadius: "0.375rem",
-                        fontWeight: "500",
-                        cursor: "pointer",
-                        transition: "background-color 0.2s ease, transform 0.1s ease",
-                        border: "none",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        // padding: '2rem',
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1.5rem",
+                        backgroundColor: "#f4f7fa",
+                        minHeight: "100vh",
+                        fontFamily: "'Inter', sans-serif",
+                        border: "4px solid black",
+                        margin: "10px",
+                        padding: "10px",
                     }}
-                    onMouseOver={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                    }
-                    onMouseOut={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#2563eb")
-                    }
-                    onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
-                    onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
-                    Process & Show Graph
-                </button>
-
-                {processedBlob && (
                     <button
-                        onClick={handleDownload}
+                        onClick={handleProcess}
+                        ref={processSaveRef}
                         style={{
-                            backgroundColor: "#16a34a",
+                            display: "none",
+                            backgroundColor: "#2563eb",
                             color: "#ffffff",
                             padding: "0.75rem 1.5rem",
                             borderRadius: "0.375rem",
@@ -753,292 +990,318 @@ const AtmsTrackGraphs: React.FC = () => {
                             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                         }}
                         onMouseOver={(e) =>
-                            (e.currentTarget.style.backgroundColor = "#15803d")
+                            (e.currentTarget.style.backgroundColor = "#1d4ed8")
                         }
                         onMouseOut={(e) =>
-                            (e.currentTarget.style.backgroundColor = "#16a34a")
+                            (e.currentTarget.style.backgroundColor = "#2563eb")
                         }
-                        onMouseDown={(e) =>
-                            (e.currentTarget.style.transform = "scale(0.98)")
-                        }
+                        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
                         onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
                     >
-                        Download Final File
+                        Process & Show Graph
                     </button>
-                )}
-                {showGraph && (
-                    <div
-                        style={{
-                            padding: "2rem",
-                            backgroundColor: "#ffffff",
-                            borderRadius: "0.5rem",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                            marginTop: "1rem",
-                        }}
-                    >
-                        <div
+
+                    {processedBlob && (
+                        <button
+                            onClick={handleDownload}
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1rem",
-                                marginBottom: "1rem",
+                                backgroundColor: "#16a34a",
+                                color: "#ffffff",
+                                padding: "0.75rem 1.5rem",
+                                borderRadius: "0.375rem",
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                transition: "background-color 0.2s ease, transform 0.1s ease",
+                                border: "none",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                             }}
+                            onMouseOver={(e) =>
+                                (e.currentTarget.style.backgroundColor = "#15803d")
+                            }
+                            onMouseOut={(e) =>
+                                (e.currentTarget.style.backgroundColor = "#16a34a")
+                            }
+                            onMouseDown={(e) =>
+                                (e.currentTarget.style.transform = "scale(0.98)")
+                            }
+                            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
                         >
-                            <label
-                                style={{
-                                    fontWeight: "600",
-                                    color: "#1f2937",
-                                    fontSize: "0.9rem",
-                                }}
-                            >
-                                Select Track 2/3:
-                            </label>
-                            <select
-                                value={selectedTrk}
-                                onChange={(e) => setSelectedTrk(e.target.value)}
-                                style={{
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "0.375rem",
-                                    padding: "0.5rem",
-                                    fontSize: "0.875rem",
-                                    color: "#374151",
-                                    backgroundColor: "#f9fafb",
-                                    outline: "none",
-                                    transition: "border-color 0.2s ease",
-                                    width: "200px",
-                                }}
-                                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                            >
-                                <option value="placeholder" disabled>
-                                    Select a track
-                                </option>
-                                <option value="LBN-TP-TK-2">LBN-TP-TK-2</option>
-                                <option value="LBN-TP-TK-3">LBN-TP-TK-3</option>
-
-                            </select>
-                            <label
-                                style={{
-                                    fontWeight: "600",
-                                    color: "#1f2937",
-                                    fontSize: "0.9rem",
-                                }}
-                            >
-                                Select Time for AMTS:
-                            </label>
-                            <select
-                                value={selectedRowTime1}
-                                onChange={(e) => setSelectedRowTime1(e.target.value)}
-                                style={{
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "0.375rem",
-                                    padding: "0.5rem",
-                                    fontSize: "0.875rem",
-                                    color: "#374151",
-                                    backgroundColor: "#f9fafb",
-                                    outline: "none",
-                                    transition: "border-color 0.2s ease",
-                                    width: "200px",
-                                }}
-                                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                            >
-                                <option value="placeholder" disabled>
-                                    Select a timestamp
-                                </option>
-                                {timeColumn.map((header, index) => (
-                                    <option key={index} value={header}>
-                                        {header}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={selectedTrkColOption}
-                                onChange={(e) => setSelectedTrkColOption(e.target.value)}
-                                style={{
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "0.375rem",
-                                    padding: "0.5rem",
-                                    fontSize: "0.875rem",
-                                    color: "#374151",
-                                    backgroundColor: "#f9fafb",
-                                    outline: "none",
-                                    transition: "border-color 0.2s ease",
-                                    width: "200px",
-                                }}
-                                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                            >
-                                <option value="placeholder" disabled>
-                                    Select Easting/Northing/Height
-                                </option>
-                                {selectedTrkColOptions.map((header, index) => (
-                                    <option key={index} value={header}>
-                                        {header}
-                                    </option>
-                                ))}
-
-                            </select>
-
-                        </div>
+                            Download Final File
+                        </button>
+                    )}
+                    {showGraph && (
                         <div
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1rem",
+                                padding: "2rem",
+                                backgroundColor: "#ffffff",
+                                borderRadius: "0.5rem",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                                 marginTop: "1rem",
                             }}
                         >
-                            <label
+                            <div
                                 style={{
-                                    fontWeight: "600",
-                                    color: "#1f2937",
-                                    fontSize: "0.9rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "1rem",
+                                    marginBottom: "1rem",
                                 }}
                             >
-                                X Scale:
-                            </label>
-                            <input
-                                type="number"
-                                value={xScale}
-                                onChange={(e) => setXScale(Number(e.target.value))}
-                                style={{
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "0.375rem",
-                                    padding: "0.5rem",
-                                    fontSize: "0.875rem",
-                                    color: "#374151",
-                                    backgroundColor: "#f9fafb",
-                                    outline: "none",
-                                    width: "100px",
-                                    transition: "border-color 0.2s ease",
-                                }}
-                                min="0.1"
-                                max="1.4"
-                                step="0.1"
-                                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                            />
-                            <label
-                                style={{
-                                    fontWeight: "600",
-                                    color: "#1f2937",
-                                    fontSize: "0.9rem",
-                                    marginLeft: "1rem",
-                                }}
-                            >
-                                Y Scale:
-                            </label>
-                            <input
-                                type="number"
-                                value={yScale}
-                                onChange={(e) => {
-                                    const val = Math.max(0.1, Number(e.target.value));
-                                    setYScale(val);
-                                }}
-                                style={{
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "0.375rem",
-                                    padding: "0.5rem",
-                                    fontSize: "0.875rem",
-                                    color: "#374151",
-                                    backgroundColor: "#f9fafb",
-                                    outline: "none",
-                                    width: "100px",
-                                    transition: "border-color 0.2s ease",
-                                }}
-                                min="0.2"
-                                step="0.1"
-                                max="5.0"
-                                onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                                onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                            />
-                        </div>
-                        <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                            <button
-                                onClick={handleColumnSelect}
-                                style={{
-                                    backgroundColor: "#2563eb",
-                                    color: "#ffffff",
-                                    padding: "0.75rem 1.5rem",
-                                    borderRadius: "0.375rem",
-                                    fontWeight: "500",
-                                    cursor: "pointer",
-                                    transition: "background-color 0.2s ease, transform 0.1s ease",
-                                    border: "none",
-                                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                                }}
-                                onMouseOver={(e) =>
-                                    (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                                }
-                                onMouseOut={(e) =>
-                                    (e.currentTarget.style.backgroundColor = "#2563eb")
-                                }
-                                onMouseDown={(e) =>
-                                    (e.currentTarget.style.transform = "scale(0.98)")
-                                }
-                                onMouseUp={(e) =>
-                                    (e.currentTarget.style.transform = "scale(1)")
-                                }
-                            >
-                                Generate Graphs
-                            </button>
+                                <label
+                                    style={{
+                                        fontWeight: "600",
+                                        color: "#1f2937",
+                                        fontSize: "0.9rem",
+                                    }}
+                                >
+                                    Select Track 2/3:
+                                </label>
+                                <select
+                                    value={selectedTrk}
+                                    onChange={(e) => setSelectedTrk(e.target.value)}
+                                    style={{
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "0.375rem",
+                                        padding: "0.5rem",
+                                        fontSize: "0.875rem",
+                                        color: "#374151",
+                                        backgroundColor: "#f9fafb",
+                                        outline: "none",
+                                        transition: "border-color 0.2s ease",
+                                        width: "200px",
+                                    }}
+                                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                >
+                                    <option value="placeholder" disabled>
+                                        Select a track
+                                    </option>
+                                    <option value="LBN-TP-TK-2">LBN-TP-TK-2</option>
+                                    <option value="LBN-TP-TK-3">LBN-TP-TK-3</option>
 
-                            <button
-                                onClick={handleDownloadGraph}
-                                style={{
-                                    backgroundColor: "#7c3aed",
-                                    color: "#ffffff",
-                                    padding: "0.75rem 1.5rem",
-                                    borderRadius: "0.375rem",
-                                    fontWeight: "500",
-                                    cursor: "pointer",
-                                    transition: "background-color 0.2s ease, transform 0.1s ease",
-                                    border: "none",
-                                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                                }}
-                                onMouseOver={(e) =>
-                                    (e.currentTarget.style.backgroundColor = "#6d28d9")
-                                }
-                                onMouseOut={(e) =>
-                                    (e.currentTarget.style.backgroundColor = "#7c3aed")
-                                }
-                                onMouseDown={(e) =>
-                                    (e.currentTarget.style.transform = "scale(0.98)")
-                                }
-                                onMouseUp={(e) =>
-                                    (e.currentTarget.style.transform = "scale(1)")
-                                }
-                            >
-                                Download Graphs as Image
-                            </button>
-                        </div>
-                        <div id="chartContainer" style={{ marginTop: "2rem" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                                <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                                    AMTS-1 GRAPH
+                                </select>
+                                <label
+                                    style={{
+                                        fontWeight: "600",
+                                        color: "#1f2937",
+                                        fontSize: "0.9rem",
+                                    }}
+                                >
+                                    Select Time for AMTS:
+                                </label>
+                                <select
+                                    value={selectedRowTime1}
+                                    onChange={(e) => setSelectedRowTime1(e.target.value)}
+                                    style={{
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "0.375rem",
+                                        padding: "0.5rem",
+                                        fontSize: "0.875rem",
+                                        color: "#374151",
+                                        backgroundColor: "#f9fafb",
+                                        outline: "none",
+                                        transition: "border-color 0.2s ease",
+                                        width: "200px",
+                                    }}
+                                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                >
+                                    <option value="placeholder" disabled>
+                                        Select a timestamp
+                                    </option>
+                                    {timeColumn.map((header, index) => (
+                                        <option key={index} value={header}>
+                                            {header}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={selectedTrkColOption}
+                                    onChange={(e) => setSelectedTrkColOption(e.target.value)}
+                                    style={{
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "0.375rem",
+                                        padding: "0.5rem",
+                                        fontSize: "0.875rem",
+                                        color: "#374151",
+                                        backgroundColor: "#f9fafb",
+                                        outline: "none",
+                                        transition: "border-color 0.2s ease",
+                                        width: "200px",
+                                    }}
+                                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                >
+                                    <option value="placeholder" disabled>
+                                        Select Easting/Northing/Height
+                                    </option>
+                                    {selectedTrkColOptions.map((header, index) => (
+                                        <option key={index} value={header}>
+                                            {header}
+                                        </option>
+                                    ))}
 
-                                </h3>
-                                <Plot
-                                    data={[
-                                        // AMTS-1 line
-                                        {
-                                            x: combinedGraphData.map(item => item.x),
-                                            y: combinedGraphData.map(item => item.amtsValue),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: 'AMTS-1',
-                                            line: {
-                                                color: '#ff0000',
-                                                width: 2,
-                                                shape: 'spline'
-                                            },
-                                            marker: {
-                                                size: 6,
-                                                color: '#ff0000',
-                                                line: { width: 0 }
-                                            },
-                                            hovertemplate: `
+                                </select>
+
+                            </div>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "1rem",
+                                    marginTop: "1rem",
+                                }}
+                            >
+                                <label
+                                    style={{
+                                        fontWeight: "600",
+                                        color: "#1f2937",
+                                        fontSize: "0.9rem",
+                                    }}
+                                >
+                                    X Scale:
+                                </label>
+                                <input
+                                    type="number"
+                                    value={xScale}
+                                    onChange={(e) => setXScale(Number(e.target.value))}
+                                    style={{
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "0.375rem",
+                                        padding: "0.5rem",
+                                        fontSize: "0.875rem",
+                                        color: "#374151",
+                                        backgroundColor: "#f9fafb",
+                                        outline: "none",
+                                        width: "100px",
+                                        transition: "border-color 0.2s ease",
+                                    }}
+                                    min="0.1"
+                                    max="1.4"
+                                    step="0.1"
+                                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                />
+                                <label
+                                    style={{
+                                        fontWeight: "600",
+                                        color: "#1f2937",
+                                        fontSize: "0.9rem",
+                                        marginLeft: "1rem",
+                                    }}
+                                >
+                                    Y Scale:
+                                </label>
+                                <input
+                                    type="number"
+                                    value={yScale}
+                                    onChange={(e) => {
+                                        const val = Math.max(0.1, Number(e.target.value));
+                                        setYScale(val);
+                                    }}
+                                    style={{
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "0.375rem",
+                                        padding: "0.5rem",
+                                        fontSize: "0.875rem",
+                                        color: "#374151",
+                                        backgroundColor: "#f9fafb",
+                                        outline: "none",
+                                        width: "100px",
+                                        transition: "border-color 0.2s ease",
+                                    }}
+                                    min="0.2"
+                                    step="0.1"
+                                    max="5.0"
+                                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
+                                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                />
+                            </div>
+                            <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                                <button
+                                    onClick={handleColumnSelect}
+                                    style={{
+                                        backgroundColor: "#2563eb",
+                                        color: "#ffffff",
+                                        padding: "0.75rem 1.5rem",
+                                        borderRadius: "0.375rem",
+                                        fontWeight: "500",
+                                        cursor: "pointer",
+                                        transition: "background-color 0.2s ease, transform 0.1s ease",
+                                        border: "none",
+                                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                    }}
+                                    onMouseOver={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#1d4ed8")
+                                    }
+                                    onMouseOut={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#2563eb")
+                                    }
+                                    onMouseDown={(e) =>
+                                        (e.currentTarget.style.transform = "scale(0.98)")
+                                    }
+                                    onMouseUp={(e) =>
+                                        (e.currentTarget.style.transform = "scale(1)")
+                                    }
+                                >
+                                    Generate Graphs
+                                </button>
+
+                                <button
+                                    onClick={handleDownloadGraph}
+                                    style={{
+                                        backgroundColor: "#7c3aed",
+                                        color: "#ffffff",
+                                        padding: "0.75rem 1.5rem",
+                                        borderRadius: "0.375rem",
+                                        fontWeight: "500",
+                                        cursor: "pointer",
+                                        transition: "background-color 0.2s ease, transform 0.1s ease",
+                                        border: "none",
+                                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                    }}
+                                    onMouseOver={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#6d28d9")
+                                    }
+                                    onMouseOut={(e) =>
+                                        (e.currentTarget.style.backgroundColor = "#7c3aed")
+                                    }
+                                    onMouseDown={(e) =>
+                                        (e.currentTarget.style.transform = "scale(0.98)")
+                                    }
+                                    onMouseUp={(e) =>
+                                        (e.currentTarget.style.transform = "scale(1)")
+                                    }
+                                >
+                                    Download Graphs as Image
+                                </button>
+                            </div>
+                            <div id="chartContainer" style={{ marginTop: "2rem" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                                        AMTS-1 GRAPH
+
+                                    </h3>
+                                    <Plot
+                                        data={[
+                                            // AMTS-1 line
+                                            {
+                                                x: combinedGraphData.map(item => item.x),
+                                                y: combinedGraphData.map(item => item.amtsValue),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: 'AMTS-1',
+                                                line: {
+                                                    color: '#ff0000',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#ff0000',
+                                                    line: { width: 0 }
+                                                },
+                                                hovertemplate: `
                 <b>AMTS-1</b><br>
                 Distance: %{x}<br>
                 Value: %{y:.6f}<br>
@@ -1046,269 +1309,270 @@ const AtmsTrackGraphs: React.FC = () => {
                 Time: ${combinedGraphData[0]?.time || ''}
                 <extra></extra>
             `,
-                                            connectgaps: true
-                                        },
-                                        // Prism A line
-                                        {
-                                            x: combinedGraphData.map(item => item.x),
-                                            y: combinedGraphData.map(item => item.prismA),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: `${selectedTrk}-A-${selectedTrkColOption}`,
-                                            line: {
-                                                color: '#8884d8',
-                                                width: 2,
-                                                shape: 'spline'
+                                                connectgaps: true
                                             },
-                                            marker: {
-                                                size: 6,
-                                                color: '#8884d8',
-                                                line: { width: 0 }
-                                            },
-                                            hovertemplate: combinedGraphData.map(item => `
+                                            // Prism A line
+                                            {
+                                                x: combinedGraphData.map(item => item.x),
+                                                y: combinedGraphData.map(item => item.prismA),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: `${selectedTrk}-A-${selectedTrkColOption}`,
+                                                line: {
+                                                    color: '#8884d8',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#8884d8',
+                                                    line: { width: 0 }
+                                                },
+                                                hovertemplate: combinedGraphData.map(item => `
                 Distance: ${item.x}<br>
                 Value: ${item.prismA?.toFixed(6) || 'N/A'}<br>
                 ${item.prismAColName ? `Column: ${item.prismAColName}<br>` : ''}
                 Time: ${item.time || ''}
                 <extra></extra>
             `),
-                                            connectgaps: true
-                                        },
-                                        // Prism B line
-                                        {
-                                            x: combinedGraphData.map(item => item.x),
-                                            y: combinedGraphData.map(item => item.prismB),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: `${selectedTrk}-B-${selectedTrkColOption}`,
-                                            line: {
-                                                color: '#82ca9d',
-                                                width: 2,
-                                                shape: 'spline'
+                                                connectgaps: true
                                             },
-                                            marker: {
-                                                size: 6,
-                                                color: '#82ca9d',
-                                                line: { width: 0 }
-                                            },
-                                            hovertemplate: combinedGraphData.map(item => `
+                                            // Prism B line
+                                            {
+                                                x: combinedGraphData.map(item => item.x),
+                                                y: combinedGraphData.map(item => item.prismB),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: `${selectedTrk}-B-${selectedTrkColOption}`,
+                                                line: {
+                                                    color: '#82ca9d',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#82ca9d',
+                                                    line: { width: 0 }
+                                                },
+                                                hovertemplate: combinedGraphData.map(item => `
                 Distance: ${item.x}<br>
                 Value: ${item.prismB?.toFixed(6) || 'N/A'}<br>
                 ${item.prismBColName ? `Column: ${item.prismBColName}<br>` : ''}
                 Time: ${item.time || ''}
                 <extra></extra>
             `),
-                                            connectgaps: true
-                                        }
-                                    ]}
-                                    layout={{
-                                        width: 800 * xScale,
-                                        height: 500,
-                                        margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 },
-                                        xaxis: {
-                                            title: {text: 'Distance'},
-                                            type: 'linear',
-                                            tickmode: 'auto',
-                                            nticks: 10,
-                                            gridcolor: '#f0f0f0',
-                                            automargin: true,
-                                            showgrid: true,
-                                            range: xDomain
-                                        },
-                                        yaxis: {
-                                            title: {
-                                                text: 'Movement (inches)',
-                                                standoff: 20,
-                                                font: {
-                                                    size: 12,
-                                                    color: '#333'
-                                                }
-                                            },
-                                            range: [-0.5 / yScale, 0.5 / yScale],
-                                            tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                                            gridcolor: '#f0f0f0',
-                                            zeroline: true,
-                                            zerolinecolor: '#f0f0f0',
-                                            // title_standoff: 30,
-                                            automargin: true
-                                        },
-                                        legend: {
-                                            orientation: 'h',
-                                            y: -0.3,
-                                            x: 0.5,
-                                            xanchor: 'center'
-                                        },
-                                        plot_bgcolor: 'white',
-                                        paper_bgcolor: 'white',
-                                        hovermode: 'x unified',
-                                        shapes,
-                                        annotations,
-                                    }}
-                                    config={{
-                                        displayModeBar: true,
-                                        responsive: true,
-                                        displaylogo: false,
-                                        scrollZoom: true,
-                                    }}
-                                    style={{ maxHeight: '800px', width: '100%' }}
-                                />
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                                <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                                    AMTS-2 GRAPH
+                                                connectgaps: true
+                                            }
+                                        ]}
+                                        layout={{
+                                            width: 800 * xScale,
+                                            height: 500,
+                                            margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 },
 
-                                </h3>
-                                <Plot
-                                    data={[
-                                        // AMTS-1 line
-                                        {
-                                            x: Amts2combinedGraphData.map(item => item.x),
-                                            y: Amts2combinedGraphData.map(item => item.amtsValue),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: 'AMTS-1',
-                                            line: {
-                                                color: '#ff0000',
-                                                width: 2,
-                                                shape: 'spline'
+                                            xaxis: {
+                                                title: { text: 'Distance' },
+                                                type: 'linear',
+                                                tickmode: 'auto',
+                                                nticks: 10,
+                                                gridcolor: '#f0f0f0',
+                                                automargin: true,
+                                                showgrid: true,
+                                                range: xDomain
                                             },
-                                            marker: {
-                                                size: 6,
-                                                color: '#ff0000'
+                                            yaxis: {
+                                                title: {
+                                                    text: 'Movement (inches)',
+                                                    standoff: 20,
+                                                    font: {
+                                                        size: 12,
+                                                        color: '#333'
+                                                    }
+                                                },
+                                                range: [-0.5 / yScale, 0.5 / yScale],
+                                                tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                                                gridcolor: '#f0f0f0',
+                                                zeroline: true,
+                                                zerolinecolor: '#f0f0f0',
+                                                // title_standoff: 30,
+                                                automargin: true
                                             },
-                                            hovertemplate: `
+                                            legend: {
+                                                orientation: 'h',
+                                                y: -0.3,
+                                                x: 0.5,
+                                                xanchor: 'center'
+                                            },
+                                            plot_bgcolor: 'white',
+                                            paper_bgcolor: 'white',
+                                            hovermode: 'x unified',
+                                            shapes,
+                                            annotations,
+                                        }}
+                                        config={{
+                                            displayModeBar: true,
+                                            responsive: true,
+                                            displaylogo: false,
+                                            scrollZoom: true,
+                                        }}
+                                        style={{ maxHeight: '800px', width: '100%' }}
+                                    />
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                                    <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
+                                        AMTS-2 GRAPH
+
+                                    </h3>
+                                    <Plot
+                                        data={[
+                                            // AMTS-1 line
+                                            {
+                                                x: Amts2combinedGraphData.map(item => item.x),
+                                                y: Amts2combinedGraphData.map(item => item.amtsValue),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: 'AMTS-1',
+                                                line: {
+                                                    color: '#ff0000',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#ff0000'
+                                                },
+                                                hovertemplate: `
         <b>AMTS-1</b><br>
         Distance: %{x}<br>
         Value: %{y:.6f}<extra></extra>
       `,
-                                            connectgaps: true
-                                        },
-                                        // AMTS-2 line
-                                        {
-                                            x: Amts2combinedGraphData.map(item => item.x),
-                                            y: Amts2combinedGraphData.map(item => item.amts2Value),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: 'AMTS-2',
-                                            line: {
-                                                color: '#ff6600',
-                                                width: 2,
-                                                shape: 'spline'
+                                                connectgaps: true
                                             },
-                                            marker: {
-                                                size: 6,
-                                                color: '#ff6600'
-                                            },
-                                            hovertemplate: `
+                                            // AMTS-2 line
+                                            {
+                                                x: Amts2combinedGraphData.map(item => item.x),
+                                                y: Amts2combinedGraphData.map(item => item.amts2Value),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: 'AMTS-2',
+                                                line: {
+                                                    color: '#ff6600',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#ff6600'
+                                                },
+                                                hovertemplate: `
         <b>AMTS-2</b><br>
         Distance: %{x}<br>
         Value: %{y:.6f}<extra></extra>
       `,
-                                            connectgaps: true
-                                        },
-                                        // Prism A line
-                                        {
-                                            x: Amts2combinedGraphData.map(item => item.x),
-                                            y: Amts2combinedGraphData.map(item => item.prismA),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: 'Prism A',
-                                            line: {
-                                                color: '#8884d8',
-                                                width: 2,
-                                                shape: 'spline'
+                                                connectgaps: true
                                             },
-                                            marker: {
-                                                size: 6,
-                                                color: '#8884d8'
-                                            },
-                                            hovertemplate: `
+                                            // Prism A line
+                                            {
+                                                x: Amts2combinedGraphData.map(item => item.x),
+                                                y: Amts2combinedGraphData.map(item => item.prismA),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: 'Prism A',
+                                                line: {
+                                                    color: '#8884d8',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#8884d8'
+                                                },
+                                                hovertemplate: `
         <b>Prism A</b><br>
         Distance: %{x}<br>
         Value: %{y:.6f}<extra></extra>
       `,
-                                            connectgaps: true
-                                        },
-                                        // Prism B line
-                                        {
-                                            x: Amts2combinedGraphData.map(item => item.x),
-                                            y: Amts2combinedGraphData.map(item => item.prismB),
-                                            type: 'scatter',
-                                            mode: 'lines+markers',
-                                            name: 'Prism B',
-                                            line: {
-                                                color: '#82ca9d',
-                                                width: 2,
-                                                shape: 'spline'
+                                                connectgaps: true
                                             },
-                                            marker: {
-                                                size: 6,
-                                                color: '#82ca9d'
-                                            },
-                                            hovertemplate: `
+                                            // Prism B line
+                                            {
+                                                x: Amts2combinedGraphData.map(item => item.x),
+                                                y: Amts2combinedGraphData.map(item => item.prismB),
+                                                type: 'scatter',
+                                                mode: 'lines+markers',
+                                                name: 'Prism B',
+                                                line: {
+                                                    color: '#82ca9d',
+                                                    width: 2,
+                                                    shape: 'spline'
+                                                },
+                                                marker: {
+                                                    size: 6,
+                                                    color: '#82ca9d'
+                                                },
+                                                hovertemplate: `
         <b>Prism B</b><br>
         Distance: %{x}<br>
         Value: %{y:.6f}<extra></extra>
       `,
-                                            connectgaps: true
-                                        }
-                                    ]}
-                                    layout={{
-                                        width: 800 * xScale,
-                                        height: 500,
-                                        margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 }, // Increased left margin for y-axis label
-                                        xaxis: {
-                                            title: {text: 'Distance'},
-                                            type: 'linear',
-                                            tickmode: 'auto',
-                                            nticks: 10,
-                                            gridcolor: '#f0f0f0',
-                                            automargin: true,
-                                            showgrid: true,
-                                            range: AmtsxDomain
-                                        },
-                                        yaxis: {
-                                            title: {
-                                                text: 'Movement (inches)',
-                                                standoff: 20,
-                                                font: {
-                                                    size: 12,
-                                                    color: '#333'
-                                                }
+                                                connectgaps: true
+                                            }
+                                        ]}
+                                        layout={{
+                                            width: 800 * xScale,
+                                            height: 500,
+                                            margin: { l: 80, r: 30, b: 100, t: 30, pad: 4 }, // Increased left margin for y-axis label
+                                            xaxis: {
+                                                title: { text: 'Distance' },
+                                                type: 'linear',
+                                                tickmode: 'auto',
+                                                nticks: 10,
+                                                gridcolor: '#f0f0f0',
+                                                automargin: true,
+                                                showgrid: true,
+                                                range: AmtsxDomain
                                             },
-                                            range: [-0.5 / yScale, 0.5 / yScale],
-                                            tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
-                                            gridcolor: '#f0f0f0',
-                                            zeroline: true,
-                                            zerolinecolor: '#f0f0f0',
-                                            //   title_standoff: 30,
-                                            automargin: true
-                                        },
-                                        legend: {
-                                            orientation: 'h',
-                                            y: -0.3,
-                                            x: 0.5,
-                                            xanchor: 'center'
-                                        },
-                                        plot_bgcolor: 'white',
-                                        paper_bgcolor: 'white',
-                                        hovermode: 'x unified',
-                                        shapes: shapesForAmts2,
-                                        annotations: annotationsForAmts2
-                                    }}
-                                    config={{
-                                        displayModeBar: true,
-                                        responsive: true,
-                                        displaylogo: false,
-                                        scrollZoom: true
-                                    }}
-                                    style={{ maxHeight: '800px', width: '100%' }}
-                                />
+                                            yaxis: {
+                                                title: {
+                                                    text: 'Movement (inches)',
+                                                    standoff: 20,
+                                                    font: {
+                                                        size: 12,
+                                                        color: '#333'
+                                                    }
+                                                },
+                                                range: [-0.5 / yScale, 0.5 / yScale],
+                                                tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
+                                                gridcolor: '#f0f0f0',
+                                                zeroline: true,
+                                                zerolinecolor: '#f0f0f0',
+                                                //   title_standoff: 30,
+                                                automargin: true
+                                            },
+                                            legend: {
+                                                orientation: 'h',
+                                                y: -0.3,
+                                                x: 0.5,
+                                                xanchor: 'center'
+                                            },
+                                            plot_bgcolor: 'white',
+                                            paper_bgcolor: 'white',
+                                            hovermode: 'x unified',
+                                            shapes: shapesForAmts2,
+                                            annotations: annotationsForAmts2
+                                        }}
+                                        config={{
+                                            displayModeBar: true,
+                                            responsive: true,
+                                            displaylogo: false,
+                                            scrollZoom: true
+                                        }}
+                                        style={{ maxHeight: '800px', width: '100%' }}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
             </MainContentWrapper>
 
 
