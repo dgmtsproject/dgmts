@@ -637,7 +637,7 @@ const AtmsTrackGraphs: React.FC = () => {
             : []),
 
 
-    // Alert line labels (floating at left edge)
+        // Alert line labels (floating at left edge)
         {
             x: 0.001,
             xref: 'paper',
