@@ -372,6 +372,130 @@ const DataSummary: React.FC = () => {
         
     }
 
+const generateTimeBasedCompletenessTable = () => {
+  if (!processedData.length || !headers.length) return [];
+
+  const times = processedData
+    .slice(1)
+    .map(row => row[0])
+    .filter((time, index, self) => time && self.indexOf(time) === index);
+  const measurementTypes = ['Easting', 'Northing', 'Height'];
+
+  const trackPrismCombinations = [
+    { track: 'TK2', prism: 'A' },
+    { track: 'TK2', prism: 'B' },
+    { track: 'TK3', prism: 'A' },
+    { track: 'TK3', prism: 'B' }
+  ];
+
+  return times.map(time => {
+    const rowData: any = { time };
+
+    const rowIndex = processedData.findIndex(row => row[0] === time);
+    if (rowIndex === -1) return rowData;
+    trackPrismCombinations.forEach(({ track, prism }) => {
+      let totalPoints = 0;
+      let missingPoints = 0;
+
+      measurementTypes.forEach(type => {
+        for (let i = 1; i <= 33; i++) {
+          const prismCol = `LBN-TP-${track}-${i.toString().padStart(2, '0')}${prism} - ${type}`;
+          const colIndex = headers.indexOf(prismCol);
+          
+          if (colIndex !== -1) {
+            totalPoints++;
+            const value = processedData[rowIndex][colIndex];
+            if (value === undefined || value === null || value === '' || value === 0) {
+              missingPoints++;
+            }
+          }
+        }
+      });
+
+      rowData[`${track}-${prism}`] = {
+        totalPoints,
+        missingPoints,
+        missingPercent: totalPoints > 0 
+          ? `${(missingPoints / totalPoints * 100).toFixed(2)}%` 
+          : 'N/A'
+      };
+    });
+
+    return rowData;
+  });
+};
+
+const TimeBasedCompletenessTable = ({ data }: { data: any[] }) => {
+  if (!data.length) return null;
+
+  const trackPrismCombinations = ['TK2-A', 'TK2-B', 'TK3-A', 'TK3-B'];
+
+  return (
+    <div style={{ marginTop: '30px', overflowX: 'auto' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '15px' }}>
+        Data Completeness by Time
+      </h2>
+      <table style={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+        marginBottom: '30px'
+      }}>
+        <thead>
+          <tr style={{ backgroundColor: '#2563eb', color: 'white' }}>
+            <th style={{ padding: '12px', textAlign: 'left' }}>Time</th>
+            {trackPrismCombinations.map(comb => (
+              <th key={comb} colSpan={3} style={{ padding: '12px', textAlign: 'center' }}>
+                {comb}
+              </th>
+            ))}
+          </tr>
+          <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+            <th></th>
+            {trackPrismCombinations.map(comb => (
+              <React.Fragment key={comb}>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Total</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Missing</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>Missing %</th>
+              </React.Fragment>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, index) => (
+            <tr
+              key={index}
+              style={{
+                borderBottom: '1px solid #ddd',
+                backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white'
+              }}
+            >
+              <td style={{ padding: '12px' }}>{row.time}</td>
+              {trackPrismCombinations.map(comb => (
+                <React.Fragment key={comb}>
+                  <td style={{ padding: '12px' }}>{row[comb]?.totalPoints || 0}</td>
+                  <td style={{ padding: '12px' }}>{row[comb]?.missingPoints || 0}</td>
+                  <td style={{ padding: '12px' }}>
+                    {row[comb]?.missingPercent || 'N/A'}
+                  </td>
+                </React.Fragment>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+const TimeBasedCompletenessSummary = () => {
+  const completenessData = useMemo(() => generateTimeBasedCompletenessTable(), 
+    [processedData, headers]);
+
+  return <TimeBasedCompletenessTable data={completenessData} />;
+};
+
+
+
     const DataTable = ({ title, data }: { title: string, data: any[] }) => {
         if (!data.length) return null;
 
@@ -622,6 +746,9 @@ const DataSummary: React.FC = () => {
                             <div className="pdf-page">
                                 <DataTable title="Track 3 Prisms (12 to 22)" data={track3Prisms12to22Data} />
                                 <DataTable title="Track 3 Prisms over Washington Channel Bridge (23 to 28)" data={washingtonChannelDataTK3} />
+                            </div>
+                            <div className="pdf-page">
+                                <TimeBasedCompletenessSummary />
                             </div>
                         </div>
                     </>

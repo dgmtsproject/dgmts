@@ -907,7 +907,7 @@ const GapRemoval: React.FC = () => {
                             },
                             opacity: 0.5,
                             name: 'Train Time'
-                          })), 
+                          })),
                           // Alert lines (red)
                           {
                             type: 'line',
@@ -1680,38 +1680,32 @@ const GapRemoval: React.FC = () => {
                             align: 'right' as 'right',
                             bgcolor: 'rgba(255,255,255,0.8)'
                           }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
-                            if (times.length === 0) return [];
-                            const firstTime = times[0];
-                            const lastTime = times[times.length - 1];
-                            const yPos = -0.25;
-                            return [
-                              {
-                                x: 0,
-                                y: yPos,
-                                xref: 'paper' as 'paper',
-                                yref: 'paper' as 'paper',
-                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
-                                showarrow: false,
-                                font: { size: 10 },
-                                xanchor: 'left' as 'left',
-                                align: 'left' as 'left',
-                                bgcolor: 'rgba(255,255,255,0.8)'
-                              },
-                              ...(firstTime !== lastTime ? [{
-                                x: 1,
-                                y: yPos,
-                                xref: 'paper' as 'paper',
-                                yref: 'paper' as 'paper',
-                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
-                                showarrow: false,
-                                font: { size: 10 },
-                                xanchor: 'right' as 'right',
-                                align: 'right' as 'right',
-                                bgcolor: 'rgba(255,255,255,0.8)'
-                              }] : [])
-                            ];
-                          }),
+                          ...(trackTrainTimes["all"] && trackTrainTimes["all"].length > 0 ? [
+                            {
+                              x: 0,
+                              y: -0.25,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `<span style='color:#2196F3'>First Train: ${formatTime(trackTrainTimes["all"][0])}</span>`,
+                              showarrow: false,
+                              font: { size: 10 },
+                              xanchor: 'left' as 'left',
+                              align: 'left' as 'left',
+                              bgcolor: 'rgba(255,255,255,0.8)'
+                            },
+                            ...(trackTrainTimes["all"].length > 1 ? [{
+                              x: 1,
+                              y: -0.25,
+                              xref: 'paper' as 'paper',
+                              yref: 'paper' as 'paper',
+                              text: `<span style='color:#2196F3'>Last Train: ${formatTime(trackTrainTimes["all"][trackTrainTimes["all"].length - 1])}</span>`,
+                              showarrow: false,
+                              font: { size: 10 },
+                              xanchor: 'right' as 'right',
+                              align: 'right' as 'right',
+                              bgcolor: 'rgba(255,255,255,0.8)'
+                            }] : [])
+                          ] : []), 
                           {
                             x: 0.001,
                             xref: 'paper',
