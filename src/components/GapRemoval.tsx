@@ -23,8 +23,8 @@ const GapRemoval: React.FC = () => {
   const [selectedColumn2, setSelectedColumn2] = useState<string>("placeholder");
   const [selectedColumn3, setSelectedColumn3] = useState<string>("placeholder");
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
-  const [drillstarttimedata, setDrillStartTimeData] = useState<string>("");
-  const [drillendtimedata, setDrillEndTimeData] = useState<string>("");
+  const [drillStartTimes, setDrillStartTimes] = useState<string[]>([]);
+  const [drillEndTimes, setDrillEndTimes] = useState<string[]>([]);
   const [trackTrainTimes, setTrackTrainTimes] = useState<Record<string, string[]>>({});
 
   const [headers, setHeaders] = useState<string[]>([]);
@@ -140,34 +140,33 @@ const GapRemoval: React.FC = () => {
       const drillWorksheet = drillWorkbook.Sheets[drillWorkbook.SheetNames[0]];
       const drillJsonData = XLSX.utils.sheet_to_json(drillWorksheet, { header: 1 });
 
-      console.log("Drill File Data:", drillJsonData);
-
-      let drillStartTime: string | null = null;
-      let drillEndTime: string | null = null;
+      const startTimes: string[] = [];
+      const endTimes: string[] = [];
 
       for (const row of drillJsonData) {
         if (Array.isArray(row) && row.length >= 2) {
           const activity = String(row[0]).trim().toUpperCase();
           const time = String(row[1]).trim();
 
-          if (activity === 'DRILL START' && !drillStartTime) {
-            drillStartTime = time;
-          } else if (activity === 'COMPLETED' && !drillEndTime) {
-            drillEndTime = time;
+          if (activity === 'DRILL START') {
+            startTimes.push(time);
+          } else if (activity === 'DRILL COMPLETED') {
+            endTimes.push(time);
           }
-          if (drillStartTime && drillEndTime) break;
         }
       }
-      setDrillStartTimeData(drillStartTime || "");
-      setDrillEndTimeData(drillEndTime || "");
 
-      console.log("Drill Start Time:", drillStartTime);
-      console.log("Drill End Time:", drillEndTime);
+      setDrillStartTimes(startTimes);
+      setDrillEndTimes(endTimes);
+
+      console.log("Drill Start Times:", startTimes);
+      console.log("Drill End Times:", endTimes);
     } else {
       console.log("No drill file data found");
     }
 
     const trainFileData = localStorage.getItem("trainExcelFile");
+
     if (trainFileData) {
       const trainByteCharacters = atob(trainFileData);
       const trainByteArray = new Uint8Array(trainByteCharacters.length);
@@ -178,38 +177,31 @@ const GapRemoval: React.FC = () => {
       const trainWorkbook = XLSX.read(trainByteArray, { type: "array" });
       const trainWorksheet = trainWorkbook.Sheets[trainWorkbook.SheetNames[0]];
       const trainJsonData = XLSX.utils.sheet_to_json(trainWorksheet, { header: 1 });
+      console.log("Train JSON Data:", trainJsonData);
 
-      const newTrackTrainTimes: Record<string, string[]> = {};
+      const allTrainTimes: string[] = [];
 
-      // Initialize with tracks found in our data
-      tracksInData.forEach(track => {
-        newTrackTrainTimes[track] = [];
-      });
-
-      // Collect ALL train times for relevant tracks
+      // Process each row of train data (skip header row)
       for (let i = 1; i < trainJsonData.length; i++) {
         const row = trainJsonData[i];
-        if (Array.isArray(row) && row.length >= 4) {
-          const track = String(row[2]).trim().replace(/\D/g, '');
-          const timeStr = String(row[3]).trim();
-
-          if (tracksInData.has(track)) {
-            if (!newTrackTrainTimes[track]) {
-              newTrackTrainTimes[track] = [];
-            }
-            newTrackTrainTimes[track].push(timeStr);
+        if (Array.isArray(row) && row.length >= 2) {
+          const timeStr = String(row[1]).trim();
+          if (timeStr) {  // Only add if time exists
+            allTrainTimes.push(timeStr);
           }
         }
       }
 
-      // Sort times chronologically for each track
-      Object.keys(newTrackTrainTimes).forEach(track => {
-        newTrackTrainTimes[track].sort((a, b) =>
-          new Date(a).getTime() - new Date(b).getTime()
-        );
-      });
+      // Sort all times chronologically
+      allTrainTimes.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-      setTrackTrainTimes(newTrackTrainTimes);
+      // Convert to trackTrainTimes format (using a dummy track key if needed)
+      const trackTrainTimes = {
+        "all": allTrainTimes  // Using "all" as the track key
+      };
+
+      console.log("All Train Times:", trackTrainTimes);
+      setTrackTrainTimes(trackTrainTimes);
     } else {
       console.log("No train file data found");
     }
@@ -309,25 +301,6 @@ const GapRemoval: React.FC = () => {
       saveAs(processedBlob, "difference_output.xlsx");
     }
   };
-  // const getOptimizedTicks = (timeData: string | any[]) => {
-  //   if (!timeData || timeData.length === 0) return [];
-
-  //   const tickCount = Math.min(6, timeData.length);
-  //   const step = Math.max(1, Math.floor(timeData.length / (tickCount - 1)));
-
-  //   const ticks = [];
-  //   ticks.push(timeData[0]);
-
-  //   for (let i = 1; i < tickCount - 1; i++) {
-  //     const index = Math.min(i * step, timeData.length - 1);
-  //     ticks.push(timeData[index]);
-  //   }
-  //   if (timeData.length > 1 && timeData[timeData.length - 1] !== timeData[0]) {
-  //     ticks.push(timeData[timeData.length - 1]);
-  //   }
-
-  //   return ticks;
-  // };
 
 
   function formatTime(timeString: string): string {
@@ -896,128 +869,128 @@ const GapRemoval: React.FC = () => {
                           fixedrange: false
                         },
                         shapes: [
-                          ...(drillstarttimedata ? [{
+                          ...drillStartTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillstarttimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillstarttimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...(drillendtimedata ? [{
+                          })),
+                          // Drill end lines (green)
+                          ...drillEndTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillendtimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillendtimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map(time => ({
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(time),
-                              y0: 0,
-                              x1: new Date(time),
-                              y1: 1,
-                              line: {
-                                color: '#2196F3',
-                                width: 3,
-                                dash: 'solid' as 'solid'
-                              },
-                              opacity: 0.7,
-                              name: `Track ${track}`
-                            }))
-                          ),
-                                                        // Alert lines (red)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.875,
-                              y1: 0.875,
-                              label: 'Alert' as any,
-                              line: {
-                                color: 'red',
-                                width: 2,
-                                dash: 'solid'
-                              },
+                          })),
+                          ...(trackTrainTimes["all"] || []).map(time => ({
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(time),
+                            y0: 0,
+                            x1: new Date(time),
+                            y1: 1,
+                            line: {
+                              color: '#2196F3',
+                              width: 2,
+                              dash: 'solid' as 'solid'
                             },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.875,
-                              y1: -0.875,
-                              line: { color: 'red', width: 2, dash: 'solid' },
+                            opacity: 0.5,
+                            name: 'Train Time'
+                          })), 
+                          // Alert lines (red)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.875,
+                            y1: 0.875,
+                            label: 'Alert' as any,
+                            line: {
+                              color: 'red',
+                              width: 2,
+                              dash: 'solid'
                             },
-                            // Warning lines (orange)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.5,
-                              y1: 0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.5,
-                              y1: -0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            // Internal warning lines (yellow)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.25,
-                              y1: 0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.25,
-                              y1: -0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            }
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.875,
+                            y1: -0.875,
+                            line: { color: 'red', width: 2, dash: 'solid' },
+                          },
+                          // Warning lines (orange)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.5,
+                            y1: 0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.5,
+                            y1: -0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          // Internal warning lines (yellow)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.25,
+                            y1: 0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.25,
+                            y1: -0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          }
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [{
+                          ...(drillStartTimes.length > 0 ? [{
                             x: 0,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillStartTimes[0])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'left' as 'left',
                             align: 'left' as 'left',
                             bgcolor: 'rgba(255,255,255,0.8)'
                           }] : []),
-                          ...(drillendtimedata ? [{
+                          // Only show last drill end annotation
+                          ...(drillEndTimes.length > 0 ? [{
                             x: 1,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            text: `<span style='color:red'> Drill End: ${formatTime(drillEndTimes[drillEndTimes.length - 1])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'right' as 'right',
@@ -1056,72 +1029,72 @@ const GapRemoval: React.FC = () => {
                               }] : [])
                             ];
                           }),
-                                                                                      {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              }
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1248,232 +1221,216 @@ const GapRemoval: React.FC = () => {
                           fixedrange: false
                         },
                         shapes: [
-                          ...(drillstarttimedata ? [{
+                          ...drillStartTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillstarttimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillstarttimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...(drillendtimedata ? [{
+                          })),
+                          // Drill end lines (green)
+                          ...drillEndTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillendtimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillendtimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map(time => ({
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(time),
-                              y0: 0,
-                              x1: new Date(time),
-                              y1: 1,
-                              line: {
-                                color: '#2196F3',
-                                width: 3,
-                                dash: 'solid' as 'solid'
-                              },
-                              opacity: 0.7,
-                              name: `Track ${track}`
-                            }))
-                          ),
-                                                        // Alert lines (red)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.875,
-                              y1: 0.875,
-                              label: 'Alert' as any,
-                              line: {
-                                color: 'red',
-                                width: 2,
-                                dash: 'solid'
-                              },
+                          })),
+                          ...(trackTrainTimes["all"] || []).map(time => ({
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(time),
+                            y0: 0,
+                            x1: new Date(time),
+                            y1: 1,
+                            line: {
+                              color: '#2196F3',
+                              width: 2,
+                              dash: 'solid' as 'solid'
                             },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.875,
-                              y1: -0.875,
-                              line: { color: 'red', width: 2, dash: 'solid' },
+                            opacity: 0.5,
+                            name: 'Train Time'
+                          })),
+                          // Alert lines (red)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.875,
+                            y1: 0.875,
+                            label: 'Alert' as any,
+                            line: {
+                              color: 'red',
+                              width: 2,
+                              dash: 'solid'
                             },
-                            // Warning lines (orange)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.5,
-                              y1: 0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.5,
-                              y1: -0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            // Internal warning lines (yellow)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.25,
-                              y1: 0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.25,
-                              y1: -0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.875,
+                            y1: -0.875,
+                            line: { color: 'red', width: 2, dash: 'solid' },
+                          },
+                          // Warning lines (orange)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.5,
+                            y1: 0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.5,
+                            y1: -0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          // Internal warning lines (yellow)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.25,
+                            y1: 0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.25,
+                            y1: -0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [{
+                          ...(drillStartTimes.length > 0 ? [{
                             x: 0,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillStartTimes[0])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'left' as 'left',
                             align: 'left' as 'left',
                             bgcolor: 'rgba(255,255,255,0.8)'
                           }] : []),
-                          ...(drillendtimedata ? [{
+                          // Only show last drill end annotation
+                          ...(drillEndTimes.length > 0 ? [{
                             x: 1,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillEndTimes[drillEndTimes.length - 1])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'right' as 'right',
                             align: 'right' as 'right',
                             bgcolor: 'rgba(255,255,255,0.8)'
                           }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) => {
-                            if (times.length === 0) return [];
-                            const firstTime = times[0];
-                            const lastTime = times[times.length - 1];
-                            const yPos = -0.25;
-                            return [
-                              {
-                                x: 0,
-                                y: yPos,
-                                xref: 'paper' as 'paper',
-                                yref: 'paper' as 'paper',
-                                text: `<span style='color:#2196F3'>Trains TK-${track} Start Time: ${formatTime(firstTime)}</span>`,
-                                showarrow: false,
-                                font: { size: 10 },
-                                xanchor: 'left' as 'left',
-                                align: 'left' as 'left',
-                                bgcolor: 'rgba(255,255,255,0.8)'
-                              },
-                              ...(firstTime !== lastTime ? [{
-                                x: 1,
-                                y: yPos,
-                                xref: 'paper' as 'paper',
-                                yref: 'paper' as 'paper',
-                                text: `<span style='color:#2196F3'>Trains TK-${track} End Time: ${formatTime(lastTime)}</span>`,
-                                showarrow: false,
-                                font: { size: 10 },
-                                xanchor: 'right' as 'right',
-                                align: 'right' as 'right',
-                                bgcolor: 'rgba(255,255,255,0.8)'
-                              }] : [])
-                            ];
-                          }),
-                                                                                      {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              }
+                          ...(trackTrainTimes["all"] || []).map(time => ({
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(time),
+                            y0: 0,
+                            x1: new Date(time),
+                            y1: 1,
+                            line: {
+                              color: '#2196F3',
+                              width: 2,
+                              dash: 'solid' as 'solid'
+                            },
+                            opacity: 0.5,
+                            name: 'Train Time'
+                          })),
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1579,7 +1536,7 @@ const GapRemoval: React.FC = () => {
                             ]
                             : [0, 0]
                         },
-                         yaxis: {
+                        yaxis: {
                           title: {
                             text: 'Movement Inches',
                             standoff: 15
@@ -1595,128 +1552,128 @@ const GapRemoval: React.FC = () => {
                           fixedrange: false
                         },
                         shapes: [
-                          ...(drillstarttimedata ? [{
+                          ...drillStartTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillstarttimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillstarttimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...(drillendtimedata ? [{
+                          })),
+                          // Drill end lines (green)
+                          ...drillEndTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillendtimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillendtimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map(time => ({
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(time),
-                              y0: 0,
-                              x1: new Date(time),
-                              y1: 1,
-                              line: {
-                                color: '#2196F3',
-                                width: 3,
-                                dash: 'solid' as 'solid'
-                              },
-                              opacity: 0.7,
-                              name: `Track ${track}`
-                            }))
-                          ),
-                                                        // Alert lines (red)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.875,
-                              y1: 0.875,
-                              label: 'Alert' as any,
-                              line: {
-                                color: 'red',
-                                width: 2,
-                                dash: 'solid'
-                              },
+                          })),
+                          ...(trackTrainTimes["all"] || []).map(time => ({
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(time),
+                            y0: 0,
+                            x1: new Date(time),
+                            y1: 1,
+                            line: {
+                              color: '#2196F3',
+                              width: 2,
+                              dash: 'solid' as 'solid'
                             },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.875,
-                              y1: -0.875,
-                              line: { color: 'red', width: 2, dash: 'solid' },
+                            opacity: 0.5,
+                            name: 'Train Time'
+                          })),
+                          // Alert lines (red)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.875,
+                            y1: 0.875,
+                            label: 'Alert' as any,
+                            line: {
+                              color: 'red',
+                              width: 2,
+                              dash: 'solid'
                             },
-                            // Warning lines (orange)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.5,
-                              y1: 0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.5,
-                              y1: -0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            // Internal warning lines (yellow)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.25,
-                              y1: 0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.25,
-                              y1: -0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.875,
+                            y1: -0.875,
+                            line: { color: 'red', width: 2, dash: 'solid' },
+                          },
+                          // Warning lines (orange)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.5,
+                            y1: 0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.5,
+                            y1: -0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          // Internal warning lines (yellow)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.25,
+                            y1: 0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.25,
+                            y1: -0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [{
+                          ...(drillStartTimes.length > 0 ? [{
                             x: 0,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillStartTimes[0])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'left' as 'left',
                             align: 'left' as 'left',
                             bgcolor: 'rgba(255,255,255,0.8)'
                           }] : []),
-                          ...(drillendtimedata ? [{
+                          // Only show last drill end annotation
+                          ...(drillEndTimes.length > 0 ? [{
                             x: 1,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillEndTimes[drillEndTimes.length - 1])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'right' as 'right',
@@ -1755,72 +1712,72 @@ const GapRemoval: React.FC = () => {
                               }] : [])
                             ];
                           }),
-                                                                                      {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              }
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
@@ -1979,128 +1936,128 @@ const GapRemoval: React.FC = () => {
                           fixedrange: false
                         },
                         shapes: [
-                          ...(drillstarttimedata ? [{
+                          ...drillStartTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillstarttimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillstarttimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...(drillendtimedata ? [{
+                          })),
+                          // Drill end lines (green)
+                          ...drillEndTimes.map(time => ({
                             type: 'line' as 'line',
                             xref: 'x' as 'x',
                             yref: 'paper' as 'paper',
-                            x0: new Date(drillendtimedata),
+                            x0: new Date(time),
                             y0: 0,
-                            x1: new Date(drillendtimedata),
+                            x1: new Date(time),
                             y1: 1,
-                            line: { color: 'red', width: 3 },
+                            line: { color: 'red', width: 2, dash: 'solid' as 'solid' },
                             opacity: 0.7
-                          }] : []),
-                          ...Object.entries(trackTrainTimes).flatMap(([track, times]) =>
-                            times.map(time => ({
-                              type: 'line' as 'line',
-                              xref: 'x' as 'x',
-                              yref: 'paper' as 'paper',
-                              x0: new Date(time),
-                              y0: 0,
-                              x1: new Date(time),
-                              y1: 1,
-                              line: {
-                                color: '#2196F3',
-                                width: 3,
-                                dash: 'solid' as 'solid'
-                              },
-                              opacity: 0.7,
-                              name: `Track ${track}`
-                            }))
-                          ),
-                                                        // Alert lines (red)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.875,
-                              y1: 0.875,
-                              label: 'Alert' as any,
-                              line: {
-                                color: 'red',
-                                width: 2,
-                                dash: 'solid'
-                              },
+                          })),
+                          ...(trackTrainTimes["all"] || []).map(time => ({
+                            type: 'line' as 'line',
+                            xref: 'x' as 'x',
+                            yref: 'paper' as 'paper',
+                            x0: new Date(time),
+                            y0: 0,
+                            x1: new Date(time),
+                            y1: 1,
+                            line: {
+                              color: '#2196F3',
+                              width: 2,
+                              dash: 'solid' as 'solid'
                             },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.875,
-                              y1: -0.875,
-                              line: { color: 'red', width: 2, dash: 'solid' },
+                            opacity: 0.5,
+                            name: 'Train Time'
+                          })),
+                          // Alert lines (red)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.875,
+                            y1: 0.875,
+                            label: 'Alert' as any,
+                            line: {
+                              color: 'red',
+                              width: 2,
+                              dash: 'solid'
                             },
-                            // Warning lines (orange)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.5,
-                              y1: 0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.5,
-                              y1: -0.5,
-                              line: { color: 'orange', width: 2, dash: 'solid' },
-                            },
-                            // Internal warning lines (yellow)
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: 0.25,
-                              y1: 0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
-                            {
-                              type: 'line',
-                              x0: 0,
-                              x1: 1,
-                              xref: 'paper',
-                              y0: -0.25,
-                              y1: -0.25,
-                              line: { color: 'yellow', width: 2, dash: 'solid' },
-                            },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.875,
+                            y1: -0.875,
+                            line: { color: 'red', width: 2, dash: 'solid' },
+                          },
+                          // Warning lines (orange)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.5,
+                            y1: 0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.5,
+                            y1: -0.5,
+                            line: { color: 'orange', width: 2, dash: 'solid' },
+                          },
+                          // Internal warning lines (yellow)
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: 0.25,
+                            y1: 0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
+                          {
+                            type: 'line',
+                            x0: 0,
+                            x1: 1,
+                            xref: 'paper',
+                            y0: -0.25,
+                            y1: -0.25,
+                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                          },
                         ],
                         annotations: [
-                          ...(drillstarttimedata ? [{
+                          ...(drillStartTimes.length > 0 ? [{
                             x: 0,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill Start: ${formatTime(drillstarttimedata)}</span>`,
+                            text: `<span style='color:red'>Drill Start: ${formatTime(drillStartTimes[0])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'left' as 'left',
                             align: 'left' as 'left',
                             bgcolor: 'rgba(255,255,255,0.8)'
                           }] : []),
-                          ...(drillendtimedata ? [{
+                          // Only show last drill end annotation
+                          ...(drillEndTimes.length > 0 ? [{
                             x: 1,
                             y: -0.15,
                             xref: 'paper' as 'paper',
                             yref: 'paper' as 'paper',
-                            text: `<span style='color:red'>Drill End: ${formatTime(drillendtimedata)}</span>`,
+                            text: `<span style='color:red'>Drill End: ${formatTime(drillEndTimes[drillEndTimes.length - 1])}</span>`,
                             showarrow: false,
                             font: { size: 10 },
                             xanchor: 'right' as 'right',
@@ -2139,72 +2096,72 @@ const GapRemoval: React.FC = () => {
                               }] : [])
                             ];
                           }),
-                                                                                      {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.88,
-                                yref: 'y',
-                                text: 'Alert',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.51,
-                                yref: 'y',
-                                text: 'Warning',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: 0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              },
-                              {
-                                x: 0.001,
-                                xref: 'paper',
-                                y: -0.26,
-                                yref: 'y',
-                                text: 'Warning (Internal)',
-                                showarrow: false,
-                                font: { color: 'black', size: 10 },
-                                bgcolor: 'rgba(255,255,255,0.8)',
-                                xanchor: 'left'
-                              }
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.88,
+                            yref: 'y',
+                            text: 'Alert',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.51,
+                            yref: 'y',
+                            text: 'Warning',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: 0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          },
+                          {
+                            x: 0.001,
+                            xref: 'paper',
+                            y: -0.26,
+                            yref: 'y',
+                            text: 'Warning (Internal)',
+                            showarrow: false,
+                            font: { color: 'black', size: 10 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            xanchor: 'left'
+                          }
                         ],
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white',
