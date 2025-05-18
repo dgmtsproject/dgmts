@@ -216,7 +216,7 @@ const ReadingTables: React.FC = () => {
             if (!header || header === 'Time') return;
 
             let type = '';
-            let description = 'Calibration';
+            let description = 'Calibrated';
 
             if (header.includes('LBN-TP-TK2') && !header.includes('Difference') && header.includes('A')) {
                 type = 'LBN-TP-TK2A ';
