@@ -40,24 +40,26 @@ const NavSidebar: React.FC = () => {
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const { isAdmin, setIsAdmin, userEmail } = useAdminContext();
 
-  useEffect(() => {
-    const checkProjectAccess = async () => {
-      if (!userEmail) return;
+useEffect(() => {
+  const checkProjectAccess = async () => {
+    if (!userEmail) return;
 
-      const { data, error } = await supabase
-        .from('Projects')
-        .select('name')
-        .eq('name', 'Long Bridge North')
-        .eq('user_email', userEmail)
-        .single();
-      setHasLongBridgeAccess(isAdmin || !!data);
-      if (error) {
-        console.error('Error fetching project access:', error);
-      }
-    };
+    const { data, error } = await supabase
+      .from('ProjectUsers')
+      .select('project_id, Projects(name)')
+      .eq('user_email', userEmail)
+      .eq('Projects.name', 'Long Bridge North')
+      .single();
 
-    checkProjectAccess();
-  }, [userEmail, isAdmin]);
+    setHasLongBridgeAccess(isAdmin || !!data);
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching project access:', error);
+    }
+  };
+
+  checkProjectAccess();
+}, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
     setOpenGraphs(!openGraphs);
