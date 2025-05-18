@@ -421,7 +421,6 @@ const downloadSelectedColumns = () => {
                                         </TableCell>
                                         <TableCell>Column Name</TableCell>
                                         <TableCell>Description</TableCell>
-                                        <TableCell>Column Count</TableCell>
                                         <TableCell>Action</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -442,7 +441,6 @@ const downloadSelectedColumns = () => {
                                                 </TableCell>
                                                 <TableCell>{row.columnName}</TableCell>
                                                 <TableCell>{row.description}</TableCell>
-                                                <TableCell>{row.columnCount}</TableCell>
                                                 <TableCell>
                                                     <div style={{ display: 'flex', gap: '8px' }}>
                                                         <Button
