@@ -271,51 +271,47 @@ const ReadingTables: React.FC = () => {
 const downloadSelectedColumns = () => {
     if (selected.length !== 1) return;
 
-    const selectedType = selected[0];
+    const selectedType = selected[0].trim(); 
     const processedHeaders = JSON.parse(localStorage.getItem("processedHeaders") || "[]");
     const processedData = JSON.parse(localStorage.getItem("processedData") || "[]");
 
     if (processedData.length < 2 || processedHeaders.length === 0) return;
 
-    // Get all headers that match the selected type
     const selectedHeaders = processedHeaders.filter((header: string) => {
         if (!header || header === 'Time') return false;
 
-        // More precise matching using regex
-        const headerMatch = header.match(/LBN-TP-(TK[23])(-\d+)([AB])/);
-        if (!headerMatch) return false;
-        
-        const [_, track,prismType] = headerMatch;
+        const match = header.match(/LBN-TP-(TK[23])(-\d+)?([AB])(?= -|$)/);
+        if (!match) {
 
-        if (selectedType === 'LBN-TP-TK2A ' && track === 'TK2' && prismType === 'A') {
-            return true;
-        } else if (selectedType === 'LBN-TP-TK2B ' && track === 'TK2' && prismType === 'B') {
-            return true;
-        } else if (selectedType === 'LBN-TP-TK3A ' && track === 'TK3' && prismType === 'A') {
-            return true;
-        } else if (selectedType === 'LBN-TP-TK3B ' && track === 'TK3' && prismType === 'B') {
-            return true;
-        } else if (selectedType === 'Track 2 Difference' && header.includes('LBN-TP-TK2') && header.includes('Difference')) {
-            return true;
-        } else if (selectedType === 'Track 3 Difference' && header.includes('LBN-TP-TK3') && header.includes('Difference')) {
-            return true;
-        } else if (selectedType === 'AMTS 1' && header.includes('LBN-AMTS-1')) {
-            return true;
-        } else if (selectedType === 'AMTS 2' && header.includes('LBN-AMTS-2')) {
-            return true;
+            if (selectedType === 'Track 2 Difference' && header.includes('LBN-TP-TK2') && header.includes('Difference')) return true;
+            if (selectedType === 'Track 3 Difference' && header.includes('LBN-TP-TK3') && header.includes('Difference')) return true;
+            if (selectedType === 'AMTS 1' && header.includes('LBN-AMTS-1')) return true;
+            if (selectedType === 'AMTS 2' && header.includes('LBN-AMTS-2')) return true;
+            return false;
         }
+
+        const [_, track, , suffix] = match;
+        
+        if (selectedType === 'LBN-TP-TK2A' && track === 'TK2' && suffix === 'A') return true;
+        if (selectedType === 'LBN-TP-TK2B' && track === 'TK2' && suffix === 'B') return true;
+        if (selectedType === 'LBN-TP-TK3A' && track === 'TK3' && suffix === 'A') return true;
+        if (selectedType === 'LBN-TP-TK3B' && track === 'TK3' && suffix === 'B') return true;
+        
         return false;
     });
 
     const allHeaders = ['Time', ...selectedHeaders];
+    
+
     const headerIndices = allHeaders.map(header => processedHeaders.indexOf(header));
-    const newData = processedData.slice(1).map((row: any[]) => {
+
+    const newData = processedData.map((row: any[]) => {
         return headerIndices.map(index => row[index]);
     });
-    newData.unshift(allHeaders);
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(newData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Selected Data");
+
     const fileName = selectedType.replace(/\s+/g, '_') + '_data.xlsx';
     XLSX.writeFile(wb, fileName);
 };
