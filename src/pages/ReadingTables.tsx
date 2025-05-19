@@ -376,7 +376,7 @@ const downloadSelectedColumns = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-                <h1>Reading Tables</h1>
+                <h1>File Manager</h1>
                 <TrackMerger onMergeSave={handleMergeClick} />
 
                 <div style={{ display: "flex", gap: "1rem", marginTop: "0" }}>

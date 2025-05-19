@@ -27,7 +27,6 @@ import {
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
   AccountTree as ProjectIcon,
-  TableChart as TableChartIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -192,7 +191,7 @@ useEffect(() => {
                       >
                         <ListItemText primary="Data Summary" />
                       </ListItemButton>
-                      <ListItemButton
+                      {/* <ListItemButton
                         component={Link}
                         to="/reading-tables"
                         sx={{ pl: 4 }}
@@ -201,7 +200,7 @@ useEffect(() => {
                       <TableChartIcon fontSize="small" />
                     </ListItemIcon>
                         <ListItemText primary="Reading Tables" />
-                      </ListItemButton>
+                      </ListItemButton> */}
                     </List>
                   </Collapse>
                 </>

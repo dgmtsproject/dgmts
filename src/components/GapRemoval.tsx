@@ -919,8 +919,9 @@ const GapRemoval: React.FC = () => {
                             label: 'Alert' as any,
                             line: {
                               color: 'red',
-                              width: 2,
-                              dash: 'solid'
+                              width: 1,
+                              dash: 'dash' as 'dash',
+                              
                             },
                           },
                           {
@@ -930,7 +931,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.875,
                             y1: -0.875,
-                            line: { color: 'red', width: 2, dash: 'solid' },
+                            line: { color: 'red', width: 2, dash: 'dash' as 'dash' },
                           },
                           // Warning lines (orange)
                           {
@@ -940,7 +941,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.5,
                             y1: 0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash' },
                           },
                           {
                             type: 'line',
@@ -949,7 +950,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.5,
                             y1: -0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash' },
                           },
                           // Internal warning lines (yellow)
                           {
@@ -959,7 +960,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.25,
                             y1: 0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash' },
                           },
                           {
                             type: 'line',
@@ -968,7 +969,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.25,
                             y1: -0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash' },
                           }
                         ],
                         annotations: [
@@ -1272,7 +1273,7 @@ const GapRemoval: React.FC = () => {
                             line: {
                               color: 'red',
                               width: 2,
-                              dash: 'solid'
+                              dash: 'dash' as 'dash',
                             },
                           },
                           {
@@ -1282,7 +1283,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.875,
                             y1: -0.875,
-                            line: { color: 'red', width: 2, dash: 'solid' },
+                            line: { color: 'red', width: 2, dash: 'dash' as 'dash' },
                           },
                           // Warning lines (orange)
                           {
@@ -1292,7 +1293,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.5,
                             y1: 0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash', },
                           },
                           {
                             type: 'line',
@@ -1301,7 +1302,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.5,
                             y1: -0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash', },
                           },
                           // Internal warning lines (yellow)
                           {
@@ -1311,7 +1312,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.25,
                             y1: 0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash' },
                           },
                           {
                             type: 'line',
@@ -1320,7 +1321,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.25,
                             y1: -0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash' },
                           },
                         ],
                         annotations: [
@@ -1603,7 +1604,7 @@ const GapRemoval: React.FC = () => {
                             line: {
                               color: 'red',
                               width: 2,
-                              dash: 'solid'
+                              dash: 'dash' as 'dash',
                             },
                           },
                           {
@@ -1613,7 +1614,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.875,
                             y1: -0.875,
-                            line: { color: 'red', width: 2, dash: 'solid' },
+                            line: { color: 'red', width: 2, dash: 'dash' as 'dash' },
                           },
                           // Warning lines (orange)
                           {
@@ -1623,7 +1624,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.5,
                             y1: 0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash' },
                           },
                           {
                             type: 'line',
@@ -1632,7 +1633,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.5,
                             y1: -0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash', },
                           },
                           // Internal warning lines (yellow)
                           {
@@ -1642,7 +1643,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.25,
                             y1: 0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash', },
                           },
                           {
                             type: 'line',
@@ -1651,7 +1652,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.25,
                             y1: -0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash',},
                           },
                         ],
                         annotations: [
@@ -1981,7 +1982,7 @@ const GapRemoval: React.FC = () => {
                             line: {
                               color: 'red',
                               width: 2,
-                              dash: 'solid'
+                              dash: 'dash' as 'dash',
                             },
                           },
                           {
@@ -1991,7 +1992,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.875,
                             y1: -0.875,
-                            line: { color: 'red', width: 2, dash: 'solid' },
+                            line: { color: 'red', width: 2, dash: 'dash' as 'dash', },
                           },
                           // Warning lines (orange)
                           {
@@ -2001,7 +2002,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.5,
                             y1: 0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash', },
                           },
                           {
                             type: 'line',
@@ -2010,7 +2011,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.5,
                             y1: -0.5,
-                            line: { color: 'orange', width: 2, dash: 'solid' },
+                            line: { color: 'orange', width: 2, dash: 'dash' as 'dash', },
                           },
                           // Internal warning lines (yellow)
                           {
@@ -2020,7 +2021,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: 0.25,
                             y1: 0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash', },
                           },
                           {
                             type: 'line',
@@ -2029,7 +2030,7 @@ const GapRemoval: React.FC = () => {
                             xref: 'paper',
                             y0: -0.25,
                             y1: -0.25,
-                            line: { color: 'yellow', width: 2, dash: 'solid' },
+                            line: { color: 'yellow', width: 2, dash: 'dash' as 'dash', },
                           },
                         ],
                         annotations: [

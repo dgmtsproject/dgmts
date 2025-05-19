@@ -145,87 +145,98 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
     return result;
   };
 
-  const handleMerge = async () => {
-    if (!fileA || !fileB || !drillfile || !trainfile) {
-      toast.error("Please select all files!");
-      return;
-    }
-    try {
-      const [dataA, dataB, drilldata, traintimedata] = await Promise.all([
-        readFile(fileA),
-        readFile(fileB),
-        readFile(drillfile),
-        readFile(trainfile),
-      ]);
-      const headerA = dataA[0];
-      const headerB = dataB[0];
-      const groupedA = groupByDateHour(dataA);
-      const groupedB = groupByDateHour(dataB);
-      const allKeys = Array.from(
-        new Set([...groupedA.keys(), ...groupedB.keys()])
-      ).sort();
+const handleMerge = async () => {
+  if (!fileA || !fileB) {
+    toast.error("Please upload both tracks A and B Files!");
+    return;
+  }
   
-      const finalData: (string | number | null)[][] = [];
-  
-      const headerRow = ["Time"];
-      const maxColumns = Math.max(headerA.length, headerB.length);
-      for (let i = 1; i < maxColumns; i++) {
-        if (i < headerA.length) headerRow.push(`${headerA[i]}`);
-        if (i < headerB.length) headerRow.push(`${headerB[i]}`);
-      }
-      finalData.push(headerRow);
-  
-      for (const key of allKeys) {
-        const row: (string | number | null)[] = [key];
-        const firstA = groupedA.get(key)
-          ? pickFirstValue(groupedA.get(key)!)
-          : Array(headerA.length).fill(null);
-        const firstB = groupedB.get(key)
-          ? pickFirstValue(groupedB.get(key)!)
-          : Array(headerB.length).fill(null);
-        
-        // Ensure numeric strings are converted to numbers
-        for (let i = 1; i < maxColumns; i++) {
-          if (i < firstA.length) {
-            const val = firstA[i];
-            row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-          }
-          if (i < firstB.length) {
-            const val = firstB[i];
-            row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
-          }
-        }
-        finalData.push(row);
-      }
-  
-      const ws = XLSX.utils.aoa_to_sheet(finalData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Merged");
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-      localStorage.setItem("mergedExcelFile", wbout);
-      toast.success("Saved after successful merge!");
+  try {
+    // Read required files
+    const [dataA, dataB] = await Promise.all([
+      readFile(fileA),
+      readFile(fileB),
+    ]);
 
-      // just add the drill and train time data to seperate files as drill-data and train-data
+    // Read optional files if they exist
+    const [drilldata, traintimedata] = await Promise.all([
+      drillfile ? readFile(drillfile).catch(() => null) : Promise.resolve(null),
+      trainfile ? readFile(trainfile).catch(() => null) : Promise.resolve(null),
+    ]);
+
+    const headerA = dataA[0];
+    const headerB = dataB[0];
+    const groupedA = groupByDateHour(dataA);
+    const groupedB = groupByDateHour(dataB);
+    const allKeys = Array.from(
+      new Set([...groupedA.keys(), ...groupedB.keys()])
+    ).sort();
+
+    const finalData: (string | number | null)[][] = [];
+
+    const headerRow = ["Time"];
+    const maxColumns = Math.max(headerA.length, headerB.length);
+    for (let i = 1; i < maxColumns; i++) {
+      if (i < headerA.length) headerRow.push(`${headerA[i]}`);
+      if (i < headerB.length) headerRow.push(`${headerB[i]}`);
+    }
+    finalData.push(headerRow);
+
+    for (const key of allKeys) {
+      const row: (string | number | null)[] = [key];
+      const firstA = groupedA.get(key)
+        ? pickFirstValue(groupedA.get(key)!)
+        : Array(headerA.length).fill(null);
+      const firstB = groupedB.get(key)
+        ? pickFirstValue(groupedB.get(key)!)
+        : Array(headerB.length).fill(null);
+
+      for (let i = 1; i < maxColumns; i++) {
+        if (i < firstA.length) {
+          const val = firstA[i];
+          row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+        }
+        if (i < firstB.length) {
+          const val = firstB[i];
+          row.push(typeof val === 'string' && !isNaN(Number(val)) ? Number(val) : val);
+        }
+      }
+      finalData.push(row);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(finalData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Merged");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+    localStorage.setItem("mergedExcelFile", wbout);
+    toast.success("Saved after successful merge!");
+
+    // Save drill data only if it exists
+    if (drilldata) {
       const drillws = XLSX.utils.aoa_to_sheet(drilldata);
       const drillwb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(drillwb, drillws, "Drill Data");
       const drillwbout = XLSX.write(drillwb, { bookType: "xlsx", type: "base64" });
       localStorage.setItem("drillExcelFile", drillwbout);
       toast.success("Saved drill data!");
+    }
 
+    // Save train data only if it exists
+    if (traintimedata) {
       const trainws = XLSX.utils.aoa_to_sheet(traintimedata);
       const trainwb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(trainwb, trainws, "Train Data");
       const trainwbout = XLSX.write(trainwb, { bookType: "xlsx", type: "base64" });
       localStorage.setItem("trainExcelFile", trainwbout);
       toast.success("Saved train data!");
-    } catch (err) {
-      toast.error("Error merging files");
-      console.error(err);
     }
-  
-    onMergeSave();
-  };
+  } catch (err) {
+    toast.error("Error merging files");
+    console.error(err);
+  }
+
+  onMergeSave();
+};
 
   return (
     <>
@@ -326,7 +337,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
               fontSize: "0.9rem",
             }}
           >
-            Upload Drill Time File:
+            Upload Drill Time File <span style={{color:"blue"}}>(Optional)</span>:
           </label>
           <input
             type="file"
@@ -357,7 +368,7 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
               fontSize: "0.9rem",
             }}
           >
-            Upload Train Time File:
+            Upload Train Time File <span style={{color:"blue"}}>(Optional)</span>:
           </label>
           <input
             type="file"
