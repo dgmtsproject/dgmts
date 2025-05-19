@@ -6,6 +6,7 @@ import TrackMerger from "../components/MergeTracks";
 import html2canvas from "html2canvas"
 import Plot from "react-plotly.js";
 import MainContentWrapper from "../components/MainContentWrapper";
+import PrismsMultiSelect from "../components/PrismMultiSelect";
 
 interface MovementData {
   prism: string;
@@ -26,12 +27,13 @@ const TrackGraphs: React.FC = () => {
 
   const [selectedTrack, setSelectedTrack] = useState<string>("placeholder");
   const [selectedTrkColOption, setSelectedTrkColOption] = useState<string>("placeholder");
-  const [tracksizeoptions, setTrackSizeOptions] = useState<string>("placeholder");
+  // const [tracksizeoptions, setTrackSizeOptions] = useState<string>("placeholder");
 
   const [movementSelectedTrack, setmovementSelectedTrack] = useState<string>("placeholder");
   const [movementSelectedTrkColOption, setmovementSelectedTrkColOption] = useState<string>("placeholder");
-  const [movementTrackSizeoptions, setmovementTrackSizeOptions] = useState<string>("placeholder");
-
+  // const [movementTrackSizeoptions, setmovementTrackSizeOptions] = useState<string>("placeholder");
+  const [movementSelectedPrisms, setMovementSelectedPrisms] = useState<string[]>([]);
+  const [selectedPrisms, setSelectedPrisms] = useState<string[]>([]);
   const [movementData, setMovementData] = useState<MovementData[]>([]);
 
   const [combinedData, setCombinedData] = useState<
@@ -315,35 +317,48 @@ const TrackGraphs: React.FC = () => {
   const handleTimeSelects = () => {
     if (!processedData.length || !headers.length) return;
 
-    const track = selectedTrack; // like "LBN-TP-TK3-A"
-    const columnType = selectedTrkColOption; // like "Easting" or "Easting Difference"
-    const trackLimit = parseInt(tracksizeoptions, 10); // like 14
+    const track = selectedTrack; // like "LBN-TP-TK2-A"
+    const columnType = selectedTrkColOption; // like "Easting"
 
-    if (!track || !columnType || isNaN(trackLimit)) {
-      console.error("Missing track/column/track size options.");
+    if (!track || !columnType || selectedPrisms.length === 0) {
+      console.error("Missing track/column/prism options.");
       return;
     }
 
-    const trackBase = track.slice(0, track.lastIndexOf("-")); // "LBN-TP-TK3"
-    const trackSuffix = track.slice(-1); // "A" or "B"
+    const trackBase = track.slice(0, track.lastIndexOf("-")); // "LBN-TP-TK2"
+    const trackSuffix = track.slice(-1); // "A"
 
     const isDifferenceType = columnType.includes("Difference");
 
-    const expectedPrismPatterns = Array.from({ length: trackLimit }, (_, idx) => {
-      const prismNumber = (idx + 1).toString().padStart(2, "0"); // "01", "02", etc.
-
+    // Debug: Log the expected patterns
+    const expectedPrismPatterns = selectedPrisms.map((prismNumber) => {
+      const paddedPrism = prismNumber.padStart(2, '0'); // Convert "1" to "01"
       if (isDifferenceType) {
-        // For "Easting Difference", "Northing Difference", "Height Difference"
-        return `${trackBase}-${prismNumber}A,${trackBase}-${prismNumber}B - ${columnType}`;
+        return `${trackBase}-${paddedPrism}A,${trackBase}-${paddedPrism}B - ${columnType}`;
       } else {
-        // For normal "Easting", "Northing", "Height"
-        return `${trackBase}-${prismNumber}${trackSuffix} - ${columnType}`;
+        return `${trackBase}-${paddedPrism}${trackSuffix} - ${columnType}`;
       }
     });
 
+    console.log("Expected patterns to match:", expectedPrismPatterns);
+
+    // Get matching headers with their indices
     const matchingIndexes = headers
       .map((h, i) => ({ header: h, index: i }))
-      .filter(({ header }) => expectedPrismPatterns.includes(header));
+      .filter(({ header }) => {
+        // More flexible matching that handles different header formats
+        const prismPattern = isDifferenceType
+          ? new RegExp(`${trackBase}-\\d+[AB],${trackBase}-\\d+[AB] - ${columnType}`)
+          : new RegExp(`${trackBase}-\\d+${trackSuffix} - ${columnType}`);
+
+        return prismPattern.test(header) &&
+          selectedPrisms.some(prism => {
+            const paddedPrism = prism.padStart(2, '0');
+            return header.includes(`${trackBase}-${paddedPrism}${trackSuffix}`);
+          });
+      });
+
+    console.log("Matching headers found:", matchingIndexes.map(x => x.header));
 
     const findRow = (timestamp: string) =>
       processedData.find(row => row[0]?.toString().trim() === timestamp);
@@ -368,16 +383,17 @@ const TrackGraphs: React.FC = () => {
 
     let combinedData = matchingIndexes.map(({ header }, idx) => ({
       header,
-      value1: data1[idx]?.value,
-      value2: data2[idx]?.value,
-      value3: data3[idx]?.value,
+      value1: data1[idx]?.value !== undefined ? data1[idx].value : 0,
+      value2: data2[idx]?.value !== undefined ? data2[idx].value : 0,
+      value3: data3[idx]?.value !== undefined ? data3[idx].value : 0,
     }));
 
     combinedData = combinedData.filter(item => {
-      return !(item.value1 === undefined && item.value2 === undefined && item.value3 === undefined);
+      return !(item.value1 === 0 && item.value2 === 0 && item.value3 === 0);
     });
 
-    setCombinedData(combinedData as { header: string; value1: number; value2: number; value3: number }[]);
+    setCombinedData(combinedData);
+    console.log("Final combined data:", combinedData);
   };
 
   // const movementColors = [
@@ -389,9 +405,11 @@ const TrackGraphs: React.FC = () => {
 
     const track = movementSelectedTrack;
     const columnType = movementSelectedTrkColOption;
-    const trackLimit = parseInt(movementTrackSizeoptions, 10);
 
-    if (!track || !columnType || isNaN(trackLimit)) return;
+    if (!track || !columnType || movementSelectedPrisms.length === 0) {
+      console.error("Missing track/column/prism options.");
+      return;
+    }
 
     const trackBase = track.slice(0, track.lastIndexOf("-"));
     const trackSuffix = track.slice(-1);
@@ -403,16 +421,16 @@ const TrackGraphs: React.FC = () => {
 
     const newMovementData: MovementData[] = [];
 
-    for (let prismNum = 1; prismNum <= trackLimit; prismNum++) {
-      const prism = prismNum.toString().padStart(2, '0') + trackSuffix;
+    movementSelectedPrisms.forEach(prismNum => {
+      const prism = prismNum.padStart(2, '0') + trackSuffix;
       const searchPattern = columnType.includes("Difference")
-        ? `${trackBase}-${prismNum.toString().padStart(2, '0')}A,${trackBase}-${prismNum.toString().padStart(2, '0')}B - ${columnType}`
-        : `${trackBase}-${prismNum.toString().padStart(2, '0')}${trackSuffix} - ${columnType}`;
+        ? `${trackBase}-${prismNum.padStart(2, '0')}A,${trackBase}-${prismNum.padStart(2, '0')}B - ${columnType}`
+        : `${trackBase}-${prismNum.padStart(2, '0')}${trackSuffix} - ${columnType}`;
 
       const columnIndex = headers.findIndex(h => h === searchPattern);
-      if (columnIndex === -1) continue;
+      if (columnIndex === -1) return;
 
-      const fullColumnName = searchPattern; // This is the full column name like "LBN-TK3-01A - Height"
+      const fullColumnName = searchPattern;
 
       const timeValueMap = new Map<string, number>();
       for (let i = 1; i < processedData.length; i++) {
@@ -425,13 +443,19 @@ const TrackGraphs: React.FC = () => {
 
       newMovementData.push({
         prism,
-        fullColumnName, // Add the full column name to the data
+        fullColumnName,
         values: allTimes.map(time => timeValueMap.get(time)?.toString() ?? "No value"),
         times: [...allTimes]
       });
-    }
+    });
 
-    newMovementData.sort((a, b) => a.prism.localeCompare(b.prism));
+    // Sort by prism number
+    newMovementData.sort((a, b) => {
+      const aNum = parseInt(a.prism);
+      const bNum = parseInt(b.prism);
+      return aNum - bNum;
+    });
+
     setMovementData(newMovementData);
     console.log("Movement Data:", newMovementData);
   };
@@ -809,8 +833,8 @@ const TrackGraphs: React.FC = () => {
                         {header}
                       </option>
                     ))}
-
                   </select>
+
                   <select
                     value={selectedTrkColOption}
                     onChange={(e) => setSelectedTrkColOption(e.target.value)}
@@ -836,35 +860,14 @@ const TrackGraphs: React.FC = () => {
                         {header}
                       </option>
                     ))}
-
                   </select>
-                  <select
-                    value={tracksizeoptions}
-                    onChange={(e) => setTrackSizeOptions(e.target.value)}
-                    style={{
-                      border: "1px solid #d1d5db",
-                      borderRadius: "0.375rem",
-                      padding: "0.5rem",
-                      fontSize: "0.875rem",
-                      color: "#374151",
-                      backgroundColor: "#f9fafb",
-                      outline: "none",
-                      transition: "border-color 0.2s ease",
-                      width: "200px",
-                    }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                  >
-                    <option value="placeholder" disabled>
-                      Select No. of Prisms
-                    </option>
-                    {trackSizeOptions.map((header, index) => (
-                      <option key={index} value={header}>
-                        {header}
-                      </option>
-                    ))}
+                  <PrismsMultiSelect
+                    options={trackSizeOptions}
+                    selected={selectedPrisms}
+                    onChange={setSelectedPrisms}
+                  />
 
-                  </select>
+
                 </div>
                 <div
                   style={{
@@ -1329,33 +1332,11 @@ const TrackGraphs: React.FC = () => {
                     ))}
 
                   </select>
-                  <select
-                    value={movementTrackSizeoptions}
-                    onChange={(e) => setmovementTrackSizeOptions(e.target.value)}
-                    style={{
-                      border: "1px solid #d1d5db",
-                      borderRadius: "0.375rem",
-                      padding: "0.5rem",
-                      fontSize: "0.875rem",
-                      color: "#374151",
-                      backgroundColor: "#f9fafb",
-                      outline: "none",
-                      transition: "border-color 0.2s ease",
-                      width: "200px",
-                    }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                  >
-                    <option value="placeholder" disabled>
-                      Select No. of Prisms
-                    </option>
-                    {trackSizeOptions.map((header, index) => (
-                      <option key={index} value={header}>
-                        {header}
-                      </option>
-                    ))}
-
-                  </select>
+                  <PrismsMultiSelect
+                    options={trackSizeOptions}
+                    selected={movementSelectedPrisms}
+                    onChange={setMovementSelectedPrisms}
+                  />
                 </div>
               </div>
               <div
@@ -1685,7 +1666,7 @@ const TrackGraphs: React.FC = () => {
                                 xref: 'paper',
                                 y0: -0.25,
                                 y1: -0.25,
-                                line: { color: 'yellow', width: 2, dash: 'dash' as 'dash'},
+                                line: { color: 'yellow', width: 2, dash: 'dash' as 'dash' },
                               },
                             ],
                             annotations: [
