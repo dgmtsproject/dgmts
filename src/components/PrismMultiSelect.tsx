@@ -28,6 +28,16 @@ const PrismsMultiSelect: React.FC<PrismMultiSelectProps> = ({ options, selected,
     onChange(newSelected);
   };
 
+  const toggleSelectAll = () => {
+    if (selected.length === options.length) {
+      // If all are selected, deselect all
+      onChange([]);
+    } else {
+      // Otherwise select all options
+      onChange([...options]);
+    }
+  };
+
   return (
     <div 
       ref={dropdownRef}
@@ -91,6 +101,34 @@ const PrismsMultiSelect: React.FC<PrismMultiSelectProps> = ({ options, selected,
             marginTop: '4px',
           }}
         >
+          {/* Select All option */}
+          <div
+            style={{
+              padding: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              backgroundColor: selected.length === options.length ? '#f0f7ff' : 'transparent',
+              borderBottom: '1px solid #eee',
+              fontWeight: 'bold',
+            }}
+            onClick={toggleSelectAll}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f0f7ff')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = selected.length === options.length ? '#f0f7ff' : 'transparent')}
+          >
+            <input
+              type="checkbox"
+              checked={selected.length === options.length}
+              readOnly
+              style={{
+                marginRight: '0.5rem',
+                cursor: 'pointer',
+              }}
+            />
+            <span>Select All</span>
+          </div>
+
+          {/* Individual options */}
           {options.map((option) => (
             <div
               key={option}
@@ -122,4 +160,5 @@ const PrismsMultiSelect: React.FC<PrismMultiSelectProps> = ({ options, selected,
     </div>
   );
 };
+
 export default PrismsMultiSelect;
