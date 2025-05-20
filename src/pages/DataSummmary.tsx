@@ -72,7 +72,7 @@ const DataSummary: React.FC = () => {
         const timeData: string[] = [];
 
 
-        const tk2StartIndex = 1; 
+        const tk2StartIndex = 1;
         const tk2EndIndex = headers.findIndex(h =>
             typeof h === 'string' && h.includes('LBN-TP-TK3')
         );
@@ -369,130 +369,180 @@ const DataSummary: React.FC = () => {
             window.html2pdf().set(opt).from(element).save();
         }, 300);
 
-        
+
     }
+    const exportCompletenessToPDF = () => {
+        toast.info('Downloading Completeness PDF...');
+        const element = document.getElementById('completeness-pdf-content');
 
-const generateTimeBasedCompletenessTable = () => {
-  if (!processedData.length || !headers.length) return [];
-
-  const times = processedData
-    .slice(1)
-    .map(row => row[0])
-    .filter((time, index, self) => time && self.indexOf(time) === index);
-  const measurementTypes = ['Easting', 'Northing', 'Height'];
-
-  const trackPrismCombinations = [
-    { track: 'TK2', prism: 'A' },
-    { track: 'TK2', prism: 'B' },
-    { track: 'TK3', prism: 'A' },
-    { track: 'TK3', prism: 'B' }
-  ];
-
-  return times.map(time => {
-    const rowData: any = { time };
-
-    const rowIndex = processedData.findIndex(row => row[0] === time);
-    if (rowIndex === -1) return rowData;
-    trackPrismCombinations.forEach(({ track, prism }) => {
-      let totalPoints = 0;
-      let missingPoints = 0;
-
-      measurementTypes.forEach(type => {
-        for (let i = 1; i <= 33; i++) {
-          const prismCol = `LBN-TP-${track}-${i.toString().padStart(2, '0')}${prism} - ${type}`;
-          const colIndex = headers.indexOf(prismCol);
-          
-          if (colIndex !== -1) {
-            totalPoints++;
-            const value = processedData[rowIndex][colIndex];
-            if (value === undefined || value === null || value === '' || value === 0) {
-              missingPoints++;
-            }
-          }
+        if (!element) {
+            alert('Completeness content not found');
+            return;
         }
-      });
 
-      rowData[`${track}-${prism}`] = {
-        totalPoints,
-        missingPoints,
-        missingPercent: totalPoints > 0 
-          ? `${(missingPoints / totalPoints * 100).toFixed(2)}%` 
-          : 'N/A'
-      };
-    });
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+            const opt = {
+                margin: 0.3,
+                filename: 'Data_Completeness_Summary.pdf',
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: {
+                    scale: 2,
+                    scrollY: 0,
+                },
+                jsPDF: {
+                    unit: 'in',
+                    format: 'letter',
+                    orientation: 'landscape', // Use landscape for better table fit
+                },
+            };
+            // @ts-ignore
+            window.html2pdf().set(opt).from(element).save();
+        }, 300);
+    };
 
-    return rowData;
-  });
-};
+    const generateTimeBasedCompletenessTable = () => {
+        if (!processedData.length || !headers.length) return [];
 
-const TimeBasedCompletenessTable = ({ data }: { data: any[] }) => {
-  if (!data.length) return null;
+        const times = processedData
+            .map(row => row[0])
+            .filter((time, index, self) => time && self.indexOf(time) === index);
+        const measurementTypes = ['Easting', 'Northing', 'Height'];
 
-  const trackPrismCombinations = ['TK2-A', 'TK2-B', 'TK3-A', 'TK3-B'];
+        const trackPrismCombinations = [
+            { track: 'TK2', prism: 'A' },
+            { track: 'TK2', prism: 'B' },
+            { track: 'TK3', prism: 'A' },
+            { track: 'TK3', prism: 'B' }
+        ];
 
-  return (
-    <div style={{ marginTop: '30px', overflowX: 'auto' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '15px' }}>
-        Data Completeness by Time
-      </h2>
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-        marginBottom: '30px'
-      }}>
-        <thead>
-          <tr style={{ backgroundColor: '#2563eb', color: 'white' }}>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Time</th>
-            {trackPrismCombinations.map(comb => (
-              <th key={comb} colSpan={3} style={{ padding: '12px', textAlign: 'center' }}>
-                {comb}
-              </th>
-            ))}
-          </tr>
-          <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
-            <th></th>
-            {trackPrismCombinations.map(comb => (
-              <React.Fragment key={comb}>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Total</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Missing</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Missing %</th>
-              </React.Fragment>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr
-              key={index}
-              style={{
-                borderBottom: '1px solid #ddd',
-                backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white'
-              }}
-            >
-              <td style={{ padding: '12px' }}>{row.time}</td>
-              {trackPrismCombinations.map(comb => (
-                <React.Fragment key={comb}>
-                  <td style={{ padding: '12px' }}>{row[comb]?.totalPoints || 0}</td>
-                  <td style={{ padding: '12px' }}>{row[comb]?.missingPoints || 0}</td>
-                  <td style={{ padding: '12px' }}>
-                    {row[comb]?.missingPercent || 'N/A'}
-                  </td>
-                </React.Fragment>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-const TimeBasedCompletenessSummary = () => {
-  const completenessData = useMemo(() => generateTimeBasedCompletenessTable(), 
-    [processedData, headers]);
+        return times.map(time => {
+            const rowData: any = { time };
 
-  return <TimeBasedCompletenessTable data={completenessData} />;
-};
+            const rowIndex = processedData.findIndex(row => row[0] === time);
+            if (rowIndex === -1) return rowData;
+
+            trackPrismCombinations.forEach(({ track, prism }) => {
+                let totalPoints = 0;
+                let missingPoints = 0;
+                const missingPrisms: number[] = [];
+
+                measurementTypes.forEach(type => {
+                    for (let i = 1; i <= 33; i++) {
+                        const prismCol = `LBN-TP-${track}-${i.toString().padStart(2, '0')}${prism} - ${type}`;
+                        const colIndex = headers.indexOf(prismCol);
+
+                        if (colIndex !== -1) {
+                            totalPoints++;
+                            const value = processedData[rowIndex][colIndex];
+                            if (value === undefined || value === null || value === '' || value === 0) {
+                                missingPoints++;
+                                if (!missingPrisms.includes(i)) {
+                                    missingPrisms.push(i);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Sort missing prisms numerically
+                missingPrisms.sort((a, b) => a - b);
+
+                rowData[`${track}-${prism}`] = {
+                    totalPoints,
+                    missingPoints,
+                    missingPrisms: missingPrisms.length > 0
+                        ? missingPrisms.join(', ')
+                        : 'None'
+                };
+            });
+
+            return rowData;
+        });
+    };
+
+    const TimeBasedCompletenessTable = ({ data }: { data: any[] }) => {
+        if (!data.length) return null;
+
+        const trackPrismCombinations = ['TK2-A', 'TK2-B', 'TK3-A', 'TK3-B'];
+
+        return (
+            <div style={{
+                marginTop: '30px',
+                overflowX: 'auto',
+                pageBreakInside: 'avoid' // Prevent page breaks inside the table
+            }}>
+                <h2 style={{
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    marginBottom: '15px',
+                    pageBreakAfter: 'avoid' // Keep header with table
+                }}>
+                    Data Completeness by Time
+                </h2>
+                <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                    marginBottom: '30px',
+                    pageBreakInside: 'avoid',
+                    fontSize: '12px' // Smaller font for better fit
+                }}>
+                    <thead>
+                        <tr style={{ backgroundColor: '#2563eb', color: 'white' }}>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Time</th>
+                            {trackPrismCombinations.map(comb => (
+                                <th key={comb} colSpan={3} style={{ padding: '12px', textAlign: 'center' }}>
+                                    {comb}
+                                </th>
+                            ))}
+                        </tr>
+                        <tr style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+                            <th></th>
+                            {trackPrismCombinations.map(comb => (
+                                <React.Fragment key={comb}>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>Total</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>Missing</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>Missing Prisms</th>
+                                </React.Fragment>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.map((row, index) => (
+                            <tr
+                                key={index}
+                                style={{
+                                    borderBottom: '1px solid #ddd',
+                                    backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white'
+                                }}
+                            >
+                                <td style={{ padding: '12px' }}>{row.time}</td>
+                                {trackPrismCombinations.map(comb => (
+                                    <React.Fragment key={comb}>
+                                        <td style={{ padding: '12px' }}>{row[comb]?.totalPoints || 0}</td>
+                                        <td style={{ padding: '12px' }}>{row[comb]?.missingPoints || 0}</td>
+                                        <td style={{
+                                            padding: '12px',
+                                            color: row[comb]?.missingPrisms !== 'None' ? 'red' : 'green'
+                                        }}>
+                                            {row[comb]?.missingPrisms || 'None'}
+                                        </td>
+                                    </React.Fragment>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+    const TimeBasedCompletenessSummary = () => {
+        const completenessData = useMemo(() => generateTimeBasedCompletenessTable(),
+            [processedData, headers]);
+
+        return <TimeBasedCompletenessTable data={completenessData} />;
+    };
 
 
 
@@ -697,6 +747,7 @@ const TimeBasedCompletenessSummary = () => {
 
                 {showSummary && (
                     <>
+                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                         <button
                             onClick={exportToPDF}
                             style={{
@@ -730,6 +781,32 @@ const TimeBasedCompletenessSummary = () => {
                             <PictureAsPdfIcon style={{ fontSize: '20px' }} />
                             Export to PDF
                         </button>
+                        <button
+                            onClick={exportCompletenessToPDF}
+                            style={{
+                                backgroundColor: "#3b82f6", // Blue color
+                                color: "#ffffff",
+                                padding: "0.75rem 1.5rem",
+                                borderRadius: "0.375rem",
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                transition: "background-color 0.2s ease, transform 0.1s ease",
+                                border: "none",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "0.5rem"
+                            }}
+                            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
+                            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3b82f6")}
+                            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+                            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                        >
+                            <PictureAsPdfIcon style={{ fontSize: '20px' }} />
+                            Export Completeness to PDF
+                        </button>
+                        </div>
                         <div id="pdf-content">
                             <div className="pdf-page">
                                 <DataTable title="Track 2 All Prisms" data={allPrismsDataTK2} />
@@ -747,9 +824,9 @@ const TimeBasedCompletenessSummary = () => {
                                 <DataTable title="Track 3 Prisms (12 to 22)" data={track3Prisms12to22Data} />
                                 <DataTable title="Track 3 Prisms over Washington Channel Bridge (23 to 28)" data={washingtonChannelDataTK3} />
                             </div>
-                            <div className="pdf-page">
-                                <TimeBasedCompletenessSummary />
-                            </div>
+                        </div>
+                        <div id="completeness-pdf-content" style={{ marginTop: '2rem' }}>
+                            <TimeBasedCompletenessSummary />
                         </div>
                     </>
                 )}

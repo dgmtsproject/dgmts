@@ -23,6 +23,7 @@ import {
   CloudDownload as ExportIcon,
   ExpandLess,
   ExpandMore,
+  Summarize as SummaryIcon,
   ExitToApp as LogoutIcon,
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
@@ -39,26 +40,26 @@ const NavSidebar: React.FC = () => {
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const { isAdmin, setIsAdmin, userEmail } = useAdminContext();
 
-useEffect(() => {
-  const checkProjectAccess = async () => {
-    if (!userEmail) return;
+  useEffect(() => {
+    const checkProjectAccess = async () => {
+      if (!userEmail) return;
 
-    const { data, error } = await supabase
-      .from('ProjectUsers')
-      .select('project_id, Projects(name)')
-      .eq('user_email', userEmail)
-      .eq('Projects.name', 'Long Bridge North')
-      .single();
+      const { data, error } = await supabase
+        .from('ProjectUsers')
+        .select('project_id, Projects(name)')
+        .eq('user_email', userEmail)
+        .eq('Projects.name', 'Long Bridge North')
+        .single();
 
-    setHasLongBridgeAccess(isAdmin || !!data);
+      setHasLongBridgeAccess(isAdmin || !!data);
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching project access:', error);
-    }
-  };
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching project access:', error);
+      }
+    };
 
-  checkProjectAccess();
-}, [userEmail, isAdmin]);
+    checkProjectAccess();
+  }, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
     setOpenGraphs(!openGraphs);
@@ -184,13 +185,7 @@ useEffect(() => {
                       >
                         <ListItemText primary="AMTS Ref" />
                       </ListItemButton>
-                      <ListItemButton
-                        component={Link}
-                        to="/data-summary"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="Data Summary" />
-                      </ListItemButton>
+
                       {/* <ListItemButton
                         component={Link}
                         to="/reading-tables"
@@ -213,6 +208,15 @@ useEffect(() => {
               <FileManagerIcon />
             </ListItemIcon>
             <ListItemText primary="File Manager" />
+          </ListItemButton>
+          <ListItemButton
+            component={Link}
+            to="/data-summary"
+          >
+            <ListItemIcon sx={{ color: 'inherit' }}>
+              <SummaryIcon />
+            </ListItemIcon>
+            <ListItemText primary="Data Summary" />
           </ListItemButton>
 
           {isAdmin && (

@@ -218,3 +218,23 @@ html {
 .pdf-page:last-child {
   page-break-after: auto;
 }
+
+@media print {
+  .pdf-page {
+    page-break-after: always;
+  }
+  .pdf-page:last-child {
+    page-break-after: avoid;
+  }
+  table {
+    page-break-inside: avoid;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  td {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
