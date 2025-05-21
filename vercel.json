@@ -6,9 +6,20 @@
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "x-scs-api-key, Content-Type, Authorization",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Max-Age": "86400"
+        "Access-Control-Allow-Headers": "x-scs-api-key, Content-Type, Authorization"
+      }
+    },
+    {
+      "src": "/_next/static/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
+    {
+      "src": "/assets/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
       },
       "continue": true
     },
@@ -16,7 +27,7 @@
       "src": "/(.*)",
       "dest": "/index.html",
       "headers": {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html; charset=utf-8"
       }
     }
   ]
