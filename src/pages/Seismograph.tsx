@@ -28,32 +28,47 @@ const Seismograph: React.FC = () => {
         localStorage.removeItem('fileProcessingStatus');
     }, []);
 
-  const handleEvents = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/public-api/v1/records/events', {
-        method: 'GET',
-        headers: {
-          'x-scs-api-key': syscomapikey,
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+const handleEvents = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await fetch('/api/public-api/v1/records/events', {
+      method: 'GET',
+      headers: {
+        'x-scs-api-key': syscomapikey,
+        'Accept': 'application/json' // Explicitly request JSON
       }
-      
-      const data = await response.json();
-      setEvents(data);
-      // Store events in localStorage for the next page
-      localStorage.setItem('seismicEvents', JSON.stringify(data));
-    } catch (err) {
-      console.error('Error fetching events:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setLoading(false);
+    });
+    
+    // First check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`Expected JSON but got: ${text.substring(0, 100)}...`);
     }
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    setEvents(data);
+    localStorage.setItem('seismicEvents', JSON.stringify(data));
+  } catch (err) {
+    console.error('Error fetching events:', err);
+    setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    
+    // Additional error logging
+    if (err instanceof Error && err.message.includes('<!doctype')) {
+      console.error('Server returned HTML instead of JSON. Possible issues:');
+      console.error('1. Incorrect API endpoint');
+      console.error('2. Server-side error');
+      console.error('3. CORS/authentication problem');
+    }
+  } finally {
+    setLoading(false);
   }
+}
 
   const processEventFiles = () => {
     if (events.length === 0) {
