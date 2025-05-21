@@ -1,31 +1,23 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://scs.syscom-instruments.com/public-api/v1/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "x-scs-api-key, Content-Type, Authorization" },
-        { "key": "Access-Control-Allow-Credentials", "value": "true" },
-        { "key": "Access-Control-Max-Age", "value": "86400" }
-      ]
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "methods": ["OPTIONS"],
+      "dest": "https://scs.syscom-instruments.com/public-api/v1/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "x-scs-api-key, Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "86400"
+      },
       "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "headers": {
+        "Content-Type": "text/html"
+      }
     }
   ]
 }
