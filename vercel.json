@@ -1,1 +1,22 @@
-{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://scs.syscom-instruments.com/public-api/v1/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "x-scs-api-key, Content-Type" }
+      ]
+    }
+  ]
+}
