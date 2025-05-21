@@ -32,42 +32,50 @@ const handleEvents = async () => {
   setLoading(true);
   setError(null);
   try {
-    const response = await fetch('/api/public-api/v1/records/events', {
+    // First try with proxy
+    let response = await fetch('/api/public-api/v1/records/events', {
       method: 'GET',
       headers: {
         'x-scs-api-key': syscomapikey,
-        'Accept': 'application/json' // Explicitly request JSON
+        'Accept': 'application/json'
       }
     });
-    
-    // First check if the response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      throw new Error(`Expected JSON but got: ${text.substring(0, 100)}...`);
-    }
-    
+    console.log('Proxy response:', response);
+
+    // If proxy fails, try direct connection (for debugging)
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.warn('Proxy failed, trying direct connection');
+      response = await fetch('https://scs.syscom-instruments.com/public-api/v1/records/events', {
+        method: 'GET',
+        headers: {
+          'x-scs-api-key': syscomapikey,
+          'Accept': 'application/json'
+        }
+      });
     }
-    
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`Invalid content-type. Received: ${contentType}. Response start: ${text.substring(0, 100)}`);
+    }
+
     const data = await response.json();
     setEvents(data);
     localStorage.setItem('seismicEvents', JSON.stringify(data));
   } catch (err) {
-    console.error('Error fetching events:', err);
-    setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    console.error('API Error:', errorMessage);
+    setError(`Failed to load data: ${errorMessage}`);
     
-    if (err instanceof Error && err.message.includes('<!doctype')) {
-      console.error('Server returned HTML instead of JSON. Possible issues:');
-      console.error('1. Incorrect API endpoint');
-      console.error('2. Server-side error');
-      console.error('3. CORS/authentication problem');
+    // Suggest CORS-specific troubleshooting
+    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('blocked by CORS')) {
+      setError(prev => `${prev} (CORS issue detected)`);
     }
   } finally {
     setLoading(false);
   }
-}
+};
 
   const processEventFiles = () => {
     if (events.length === 0) {
