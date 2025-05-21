@@ -29,6 +29,8 @@ import AdminSetup from "../pages/AdminSetup";
 import EditInstrument from "../pages/EditInstrument";
 import AddUsers from "../pages/AddUsers";
 import Permissions from "../pages/Permissions";
+import Seismograph from "../pages/Seismograph";
+import FileProcessor from "../pages/FileProcessor";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -62,6 +64,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/edit-instrument" element={<EditInstrument />} />
       <Route path='/add-users' element={<AddUsers />} />
       <Route path="/permissions" element={<Permissions />} />
+      <Route path="/seismograph" element={<Seismograph />} />
+      <Route path='/process-files' element={<FileProcessor/>} />
     </Routes>
   );
 };

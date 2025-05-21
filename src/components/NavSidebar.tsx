@@ -233,6 +233,11 @@ const NavSidebar: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText primary="Export Data" />
               </ListItemButton>
+              <ListItemButton component={Link} to="/seismograph">
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                </ListItemIcon>
+                <ListItemText primary="Seismograph" />
+                </ListItemButton>
             </>
           )}
         </List>

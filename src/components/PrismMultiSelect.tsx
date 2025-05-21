@@ -30,10 +30,9 @@ const PrismsMultiSelect: React.FC<PrismMultiSelectProps> = ({ options, selected,
 
   const toggleSelectAll = () => {
     if (selected.length === options.length) {
-      // If all are selected, deselect all
+
       onChange([]);
     } else {
-      // Otherwise select all options
       onChange([...options]);
     }
   };
