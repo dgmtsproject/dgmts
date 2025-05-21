@@ -40,6 +40,7 @@ const handleEvents = async () => {
         'Accept': 'application/json'
       }
     });
+    
     console.log('Proxy response:', response);
 
     // If proxy fails, try direct connection (for debugging)
