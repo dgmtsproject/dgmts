@@ -18,6 +18,7 @@
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
     "@mui/x-date-pickers": "^8.3.0",
+    "@open-xchange/vite-plugin-proxy": "^0.9.3",
     "@supabase/supabase-js": "^2.49.4",
     "@types/babel-traverse": "^6.25.10",
     "@types/react-router-dom": "^5.3.3",
