@@ -33,7 +33,7 @@ const handleEvents = async () => {
   setError(null);
   try {
     // First try with proxy
-    let response = await fetch('/api/public-api/v1/records/events', {
+    let response = await fetch('https://scs.syscom-instruments.com/public-api/v1/records/events', {
       method: 'GET',
       headers: {
         'x-scs-api-key': syscomapikey,
