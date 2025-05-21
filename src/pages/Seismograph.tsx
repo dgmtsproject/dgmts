@@ -20,9 +20,9 @@ const Seismograph: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+    console.log(syscomapikey);
 
 
-//   clear the localStorage when the component mounts
     useEffect(() => {
         localStorage.removeItem('seismicEvents');
         localStorage.removeItem('fileProcessingStatus');
@@ -58,7 +58,6 @@ const handleEvents = async () => {
     console.error('Error fetching events:', err);
     setError(err instanceof Error ? err.message : 'Unknown error occurred');
     
-    // Additional error logging
     if (err instanceof Error && err.message.includes('<!doctype')) {
       console.error('Server returned HTML instead of JSON. Possible issues:');
       console.error('1. Incorrect API endpoint');
