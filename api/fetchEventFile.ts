@@ -31,7 +31,6 @@ export default async function handler(
     const requestOptions = {
       headers: {
         'x-scs-api-key': API_KEY || '',
-        'Accept': format === 'ascii' ? 'text/plain' : 'application/json'
       }
     };
     console.log('Request options:', {
