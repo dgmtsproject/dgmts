@@ -18,5 +18,10 @@
         { "key": "Access-Control-Allow-Headers", "value": "x-scs-api-key, Content-Type" }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/fetchEvents.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
