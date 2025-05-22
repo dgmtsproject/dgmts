@@ -20,7 +20,7 @@ const Seismograph: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-    console.log(syscomapikey);
+    // console.log(syscomapikey);
 
 
     useEffect(() => {
@@ -32,47 +32,27 @@ const handleEvents = async () => {
   setLoading(true);
   setError(null);
   try {
-    // First try with proxy
-    let response = await fetch('/api/public-api/v1/records/events', {
-      method: 'GET',
+    // Use proxy in development, direct API in production (if CORS allows)
+    const apiUrl = import.meta.env.DEV
+      ? '/api/public-api/v1/records/events' // Proxy in dev
+      : 'https://scs.syscom-instruments.com/public-api/v1/records/events'; // Direct in prod (if CORS allows)
+
+    const response = await fetch(apiUrl, {
       headers: {
         'x-scs-api-key': syscomapikey,
-        'Accept': 'application/json'
-      }
+        'Accept': 'application/json',
+      },
     });
+    console.log(response);
+
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
     
-    console.log('Proxy response:', response);
-
-    // If proxy fails, try direct connection (for debugging)
-    if (!response.ok) {
-      console.warn('Proxy failed, trying direct connection');
-      response = await fetch('https://scs.syscom-instruments.com/public-api/v1/records/events', {
-        method: 'GET',
-        headers: {
-          'x-scs-api-key': syscomapikey,
-          'Accept': 'application/json'
-        }
-      });
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      const text = await response.text();
-      throw new Error(`Invalid content-type. Received: ${contentType}. Response start: ${text.substring(0, 100)}`);
-    }
-
     const data = await response.json();
+    console.log(data);
     setEvents(data);
     localStorage.setItem('seismicEvents', JSON.stringify(data));
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.error('API Error:', errorMessage);
-    setError(`Failed to load data: ${errorMessage}`);
-    
-    // Suggest CORS-specific troubleshooting
-    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('blocked by CORS')) {
-      setError(prev => `${prev} (CORS issue detected)`);
-    }
+    setError(`Failed to fetch: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     setLoading(false);
   }
