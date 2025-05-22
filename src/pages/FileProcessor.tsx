@@ -36,43 +36,43 @@ useEffect(() => {
     setError(null);
     
     try {
-      // Use the same dual-path approach as Seismograph.tsx
-      const apiBase = import.meta.env.DEV
-        ? "/api/public-api/v1/records/events"  // Vite proxy in dev
-        : "/api/fetchEvents";   // Serverless function in prod
-
-      // Fetch events
-      const eventsResponse = await fetch(apiBase, {
-        headers: {
-          ...(import.meta.env.DEV && { 
-            'x-scs-api-key': syscomapikey 
-          }),
-          'Accept': 'application/json'
+      // Fetch events through existing endpoint
+      const eventsResponse = await fetch(
+        import.meta.env.DEV 
+          ? '/api/public-api/v1/records/events'
+          : '/api/fetchEvents',
+        {
+          headers: {
+            ...(import.meta.env.DEV && { 
+              'x-scs-api-key': syscomapikey 
+            }),
+            'Accept': 'application/json'
+          }
         }
-      });
+      );
       
-      if (!eventsResponse.ok) {
-        throw new Error(`HTTP error! Status: ${eventsResponse.status}`);
-      }
+      if (!eventsResponse.ok) throw new Error('Failed to fetch events');
       
-      const responseData = await eventsResponse.json();
+      const events = await eventsResponse.json();
+      const randomEvents = Array.isArray(events) 
+        ? events.length <= 5 
+          ? events 
+          : [...events].sort(() => 0.5 - Math.random()).slice(0, 5)
+        : [];
       
-      // Ensure the response is an array
-      const events = Array.isArray(responseData) ? responseData : [];
-      
-      // Get random events (max 5)
-      const randomEvents = events.length <= 5 
-        ? [...events] 
-        : [...events].sort(() => 0.5 - Math.random()).slice(0, 5);
-      
-      // Fetch files - always use proxy path
-      const fileBase = "/api/public-api/v1";
+      // Fetch files through new serverless function
       const fetchedFiles = await Promise.all(
         randomEvents.map(async (event) => {
           try {
             const fileResponse = await fetch(
-              `${fileBase}/records/events/${event.id}/file?format=ascii`,
-              { headers: { 'x-scs-api-key': syscomapikey } }
+              import.meta.env.DEV
+                ? `/api/public-api/v1/records/events/${event.id}/file?format=ascii`
+                : `/api/fetchEventFile?eventId=${event.id}&format=ascii`,
+              {
+                headers: import.meta.env.DEV ? { 
+                  'x-scs-api-key': syscomapikey 
+                } : undefined
+              }
             );
             
             return {
@@ -84,7 +84,7 @@ useEffect(() => {
               peakZ: event.peakZ
             };
           } catch (e) {
-            console.error('Error fetching file:', e);
+            console.error(`Error fetching file for event ${event.id}:`, e);
             return null;
           }
         })
@@ -93,7 +93,6 @@ useEffect(() => {
       setFiles(fetchedFiles.filter((file): file is FileData => file !== null));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
