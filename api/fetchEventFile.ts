@@ -11,12 +11,6 @@ export default async function handler(
   const eventId = req.query.eventId;
   const format = req.query.format || 'ascii';
 
-  // Log environment variables (excluding sensitive data in production)
-  console.log('Environment:', {
-    NODE_ENV: process.env.NODE_ENV,
-    API_KEY_PRESENT: !!API_KEY,
-    VERCEL_ENV: process.env.VERCEL_ENV
-  });
 
   if (!eventId) {
     const errorMsg = 'eventId is required';
@@ -42,7 +36,6 @@ export default async function handler(
     });
 
     const response = await fetch(apiUrl, requestOptions);
-    console.log('Response status:', response.status);
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => 'Unable to read error body');

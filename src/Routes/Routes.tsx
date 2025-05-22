@@ -6,7 +6,6 @@ import Instruments from "../pages/Instruments";
 import Alarms from "../pages/Alarms";
 import ProjectGraphs from "../pages/ProjectGraphs";
 import ViewCustomGraphs from "../pages/ViewCustomGraphs";
-// import FileManager from "../pages/FileManager";
 import ExportData from "../pages/ExportData";
 import Help from "../pages/Help";
 // import SignUp from './pages/SignUp'; // Uncomment if using SignUp
@@ -31,6 +30,7 @@ import AddUsers from "../pages/AddUsers";
 import Permissions from "../pages/Permissions";
 import Seismograph from "../pages/Seismograph";
 import FileProcessor from "../pages/FileProcessor";
+import FileManager from "../pages/FileManager";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -44,7 +44,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/alarms" element={<Alarms />} />
       <Route path="/project-graphs" element={<ProjectGraphs />} />
       <Route path="/view-custom-graphs" element={<ViewCustomGraphs />} />
-      <Route path="/file-manager" element={<ReadingTables />} />
+      <Route path="/file-manager" element={<FileManager />} />
+      <Route path="/reading-tables" element={<ReadingTables />} />
       <Route path="/export-data" element={<ExportData />} />
       <Route path="/help" element={<Help />} />
       <Route path="/DashBoard" element={<DashBoard />} />

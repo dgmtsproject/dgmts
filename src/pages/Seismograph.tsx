@@ -97,7 +97,7 @@ const handleEvents = async () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-        <Typography variant="h4" gutterBottom>Seismograph Events</Typography>
+        <Typography variant="h4" gutterBottom>Seismograph Events- DGMTS Testing</Typography>
         
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <Button 

@@ -40,26 +40,41 @@ const NavSidebar: React.FC = () => {
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const { isAdmin, setIsAdmin, userEmail } = useAdminContext();
 
-  useEffect(() => {
-    const checkProjectAccess = async () => {
-      if (!userEmail) return;
+useEffect(() => {
+  const checkProjectAccess = async () => {
+    if (!userEmail) return;
 
-      const { data, error } = await supabase
-        .from('ProjectUsers')
-        .select('project_id, Projects(name)')
-        .eq('user_email', userEmail)
-        .eq('Projects.name', 'Long Bridge North')
+    try {
+      const { data: projectData, error: projectError } = await supabase
+        .from('Projects')
+        .select('id')
+        .eq('name', 'Long Bridge North')
         .single();
 
-      setHasLongBridgeAccess(isAdmin || !!data);
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching project access:', error);
+      if (projectError || !projectData) {
+        console.error('Error fetching project:', projectError);
+        setHasLongBridgeAccess(false);
+        return;
       }
-    };
+      const { data, error } = await supabase
+        .from('ProjectUsers')
+        .select('*')
+        .eq('user_email', userEmail)
+        .eq('project_id', projectData.id);
 
-    checkProjectAccess();
-  }, [userEmail, isAdmin]);
+      setHasLongBridgeAccess(Boolean(isAdmin || (data && data.length > 0)));
+
+      if (error) {
+        console.error('Error checking access:', error);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setHasLongBridgeAccess(false);
+    }
+  };
+
+  checkProjectAccess();
+}, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
     setOpenGraphs(!openGraphs);
@@ -104,14 +119,14 @@ const NavSidebar: React.FC = () => {
             <ListItemText primary="Projects" />
           </ListItemButton>
 
-          {isAdmin && (
+          
             <ListItemButton component={Link} to="/instruments-list">
               <ListItemIcon sx={{ color: 'inherit' }}>
                 <InstrumentsIcon />
               </ListItemIcon>
               <ListItemText primary="Instruments" />
             </ListItemButton>
-          )}
+
 
           <ListItemButton component={Link} to="/alarms">
             <ListItemIcon sx={{ color: 'inherit' }}>
@@ -233,11 +248,11 @@ const NavSidebar: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText primary="Export Data" />
               </ListItemButton>
-              <ListItemButton component={Link} to="/seismograph">
+              {/* <ListItemButton component={Link} to="/seismograph">
                 <ListItemIcon sx={{ color: 'inherit' }}>
                 </ListItemIcon>
                 <ListItemText primary="Seismograph" />
-                </ListItemButton>
+                </ListItemButton> */}
             </>
           )}
         </List>
