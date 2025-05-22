@@ -24,6 +24,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/react-toastify": "^4.0.2",
     "@types/recharts": "^1.8.29",
+    "@vercel/node": "^5.1.16",
     "ag-grid-community": "^33.2.4",
     "ag-grid-react": "^33.2.4",
     "date-fns": "^4.1.0",

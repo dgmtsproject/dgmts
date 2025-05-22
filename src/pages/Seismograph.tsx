@@ -32,27 +32,32 @@ const handleEvents = async () => {
   setLoading(true);
   setError(null);
   try {
-    // Use proxy in development, direct API in production (if CORS allows)
     const apiUrl = import.meta.env.DEV
-      ? '/api/public-api/v1/records/events' // Proxy in dev
-      : 'https://scs.syscom-instruments.com/public-api/v1/records/events'; // Direct in prod (if CORS allows)
+      ? "/api/public-api/v1/records/events" // Vite proxy
+      : "/api/fetchEvents"; // Vercel function
 
     const response = await fetch(apiUrl, {
       headers: {
-        'x-scs-api-key': syscomapikey,
-        'Accept': 'application/json',
+        ...(import.meta.env.DEV && { 
+          "x-scs-api-key": syscomapikey 
+        }), // Only send in dev
+        "Accept": "application/json",
       },
     });
-    console.log(response);
 
-    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-    
-    const data = await response.json();
-    console.log(data);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data: SeismicEvent[] = await response.json();
     setEvents(data);
-    localStorage.setItem('seismicEvents', JSON.stringify(data));
-  } catch (err) {
-    setError(`Failed to fetch: ${err instanceof Error ? err.message : String(err)}`);
+    localStorage.setItem("seismicEvents", JSON.stringify(data));
+  } catch (err: unknown) {
+    setError(
+      err instanceof Error 
+        ? `Failed to fetch: ${err.message}`
+        : "An unknown error occurred"
+    );
   } finally {
     setLoading(false);
   }
