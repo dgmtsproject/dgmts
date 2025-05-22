@@ -30,64 +30,77 @@ const FileProcessor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchRandomFiles = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const response = await fetch('/api/public-api/v1/records/events', {
-          method: 'GET',
-          headers: {
-            'x-scs-api-key': syscomapikey,
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching events: ${response.statusText}`);
-        }
-        
-        const events = await response.json();
-        const randomEvents = events.length <= 5 
-          ? events 
-          : [...events].sort(() => 0.5 - Math.random()).slice(0, 5);
-        
-        const fetchedFiles: FileData[] = [];
-        for (const event of randomEvents) {
-          const fileResponse = await fetch(
-            `/api/public-api/v1/records/events/${event.id}/file?format=ascii`,
-            {
-              method: 'GET',
-              headers: {
-                'x-scs-api-key': syscomapikey,
-              }
-            }
-          );
-          
-          if (!fileResponse.ok) continue;
-          
-          const content = await fileResponse.text();
-          fetchedFiles.push({
-            eventId: event.id,
-            content,
-            startTime: event.startTime,
-            peakX: event.peakX,
-            peakY: event.peakY,
-            peakZ: event.peakZ
-          });
-        }
-        
-        setFiles(fetchedFiles);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchRandomFiles = async () => {
+    setLoading(true);
+    setError(null);
     
-    fetchRandomFiles();
-  }, [syscomapikey]);
+    try {
+      // Use the same dual-path approach as Seismograph.tsx
+      const apiBase = import.meta.env.DEV
+        ? "/api/public-api/v1/records/events"  // Vite proxy in dev
+        : "/api/fetchEvents";   // Serverless function in prod
 
+      // Fetch events
+      const eventsResponse = await fetch(apiBase, {
+        headers: {
+          ...(import.meta.env.DEV && { 
+            'x-scs-api-key': syscomapikey 
+          }),
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!eventsResponse.ok) {
+        throw new Error(`HTTP error! Status: ${eventsResponse.status}`);
+      }
+      
+      const responseData = await eventsResponse.json();
+      
+      // Ensure the response is an array
+      const events = Array.isArray(responseData) ? responseData : [];
+      
+      // Get random events (max 5)
+      const randomEvents = events.length <= 5 
+        ? [...events] 
+        : [...events].sort(() => 0.5 - Math.random()).slice(0, 5);
+      
+      // Fetch files - always use proxy path
+      const fileBase = "/api/public-api/v1";
+      const fetchedFiles = await Promise.all(
+        randomEvents.map(async (event) => {
+          try {
+            const fileResponse = await fetch(
+              `${fileBase}/records/events/${event.id}/file?format=ascii`,
+              { headers: { 'x-scs-api-key': syscomapikey } }
+            );
+            
+            return {
+              eventId: event.id,
+              content: fileResponse.ok ? await fileResponse.text() : 'No content',
+              startTime: event.startTime,
+              peakX: event.peakX,
+              peakY: event.peakY,
+              peakZ: event.peakZ
+            };
+          } catch (e) {
+            console.error('Error fetching file:', e);
+            return null;
+          }
+        })
+      );
+      
+      setFiles(fetchedFiles.filter((file): file is FileData => file !== null));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  fetchRandomFiles();
+}, [syscomapikey]);
   const handleBack = () => {
     navigate('/seismograph');
   };
