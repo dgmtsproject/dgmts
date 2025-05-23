@@ -185,7 +185,7 @@ const EventGraph: React.FC = () => {
             <MainContentWrapper>
                 <Box p={3}>
                     <Typography variant="h4" gutterBottom>
-                        Event #{id} - Seismic Data
+                        Event #{id} - Axis Graphs
                     </Typography>
 
                     <Box mb={4} sx={{ width: '100%' }}>
