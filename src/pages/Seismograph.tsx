@@ -20,48 +20,48 @@ const Seismograph: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-    // console.log(syscomapikey);
+  // console.log(syscomapikey);
 
 
-    useEffect(() => {
-        localStorage.removeItem('seismicEvents');
-        localStorage.removeItem('fileProcessingStatus');
-    }, []);
+  useEffect(() => {
+    localStorage.removeItem('seismicEvents');
+    localStorage.removeItem('fileProcessingStatus');
+  }, []);
 
-const handleEvents = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const apiUrl = import.meta.env.DEV
-      ? "/api/public-api/v1/records/events" // Vite proxy
-      : "/api/fetchEvents"; // Vercel function
+  const handleEvents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = import.meta.env.DEV
+        ? "/api/public-api/v1/records/events" // Vite proxy
+        : "/api/fetchEvents"; // Vercel function
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        ...(import.meta.env.DEV && { 
-          "x-scs-api-key": syscomapikey 
-        }), // Only send in dev
-        "Accept": "application/json",
-      },
-    });
+      const response = await fetch(apiUrl, {
+        headers: {
+          ...(import.meta.env.DEV && {
+            "x-scs-api-key": syscomapikey
+          }), // Only send in dev
+          "Accept": "application/json",
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data: SeismicEvent[] = await response.json();
+      setEvents(data);
+      localStorage.setItem("seismicEvents", JSON.stringify(data));
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? `Failed to fetch: ${err.message}`
+          : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    const data: SeismicEvent[] = await response.json();
-    setEvents(data);
-    localStorage.setItem("seismicEvents", JSON.stringify(data));
-  } catch (err: unknown) {
-    setError(
-      err instanceof Error 
-        ? `Failed to fetch: ${err.message}`
-        : "An unknown error occurred"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const processEventFiles = () => {
     if (events.length === 0) {
@@ -87,7 +87,7 @@ const handleEvents = async () => {
         'Start Time': event.startTime
       }))
     );
-    
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Events");
     XLSX.writeFile(workbook, "Seismograph-Events.xlsx");
@@ -98,29 +98,29 @@ const handleEvents = async () => {
       <HeaNavLogo />
       <MainContentWrapper>
         <Typography variant="h4" gutterBottom>Seismograph Events- DGMTS Testing</Typography>
-        
+
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={handleEvents}
             disabled={loading}
           >
             {loading ? 'Loading...' : 'Fetch Events'}
           </Button>
-          
+
           {events.length > 0 && (
             <>
-              <Button 
-                variant="contained" 
-                color="secondary" 
+              <Button
+                variant="contained"
+                color="secondary"
                 onClick={processEventFiles}
               >
                 Process Event Files
               </Button>
-              <Button 
-                variant="contained" 
-                color="success" 
+              <Button
+                variant="contained"
+                color="success"
                 onClick={exportToExcel}
               >
                 Export to Excel
@@ -145,6 +145,7 @@ const handleEvents = async () => {
                   <TableCell>Peak Y</TableCell>
                   <TableCell>Peak Z</TableCell>
                   <TableCell>Start Time</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -155,6 +156,14 @@ const handleEvents = async () => {
                     <TableCell>{event.peakY}</TableCell>
                     <TableCell>{event.peakZ}</TableCell>
                     <TableCell>{new Date(event.startTime).toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        onClick={() => navigate(`/event/${event.id}/graph`)}
+                      >
+                        View Graph
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
