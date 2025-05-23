@@ -43,7 +43,7 @@ const SignIn: React.FC = () => {
       setUserEmail(email); // Store the email in context
 
       toast.success(`${isAdmin ? "Admin" : "User"} login successful!`);
-      setTimeout(() => navigate("/projects"), 2000);
+      setTimeout(() => navigate("/dashboard"), 2000);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Login failed";

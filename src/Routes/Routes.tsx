@@ -48,7 +48,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/reading-tables" element={<ReadingTables />} />
       <Route path="/export-data" element={<ExportData />} />
       <Route path="/help" element={<Help />} />
-      <Route path="/DashBoard" element={<DashBoard />} />
       {/* <Route path="/MergeTracks" element={<MergeTracks />} /> */}
       <Route path="/single-prism-with-time" element={<GapRemoval />} />
       <Route path="/projects-list" element={<ProjectsList />} />
@@ -67,6 +66,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/permissions" element={<Permissions />} />
       <Route path="/seismograph" element={<Seismograph />} />
       <Route path='/process-files' element={<FileProcessor/>} />
+      <Route path="/dashboard" element={<DashBoard />} />
     </Routes>
   );
 };
