@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
-import Plotly from 'plotly.js-basic-dist';
-import createPlotlyComponent from 'react-plotly.js/factory';
+import Plot, { PlotParams } from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
-
-const Plot = createPlotlyComponent(Plotly);
 
 interface ChartData {
     time: string[];
@@ -80,39 +77,60 @@ const EventGraph: React.FC = () => {
         fetchEventData();
     }, [id]);
 
-    const createChart = (data: number[], unit: string, title: string) => {
+    // Calculate the common y-axis range for all charts
+    const getYAxisRange = () => {
+        if (!chartData) return [-1, 1];
+        
+        const allValues = [...chartData.x, ...chartData.y, ...chartData.z];
+        const min = Math.min(...allValues);
+        const max = Math.max(...allValues);
+        const padding = (max - min) * 0.1; // 10% padding
+        
+        return [min - padding, max + padding];
+    };
+
+    const yAxisRange = getYAxisRange();
+
+    const createChart = (data: number[], unit: string, title: string): PlotParams => {
         return {
-            data: [
-                {
-                    x: chartData?.time,
-                    y: data,
-                    type: 'scatter' as const,
-                    mode: 'lines' as const,
-                    line: { color: title === 'X' ? '#3f51b5' : title === 'Y' ? '#f50057' : '#4caf50' },
-                    hovertemplate: `
-            <b>${title}</b><br>
-            Time: %{x|%H:%M:%S.%L}<br>
-            Value: %{y:.4f} ${unit}<extra></extra>
-          `,
-                } as Partial<Plotly.ScatterData>
-            ] as Plotly.Data[],
+            data: [{
+                x: chartData?.time,
+                y: data,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#3f51b5', width: 2 },
+                hoverinfo: 'x+y',
+                hovertemplate: `<b>${title}</b><br>Time: %{x|%H:%M:%S.%L}<br>Value: %{y:.4f} ${unit}<extra></extra>`,
+            }],
             layout: {
-                title: { text: `${title}-Axis (${unit})` },
+                title: undefined,
                 xaxis: {
-                    title: { text: 'Time' },
+                    title: undefined,
                     tickformat: '%H:%M:%S.%L',
                     hoverformat: '%H:%M:%S.%L',
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    showline: true,
                 },
                 yaxis: {
-                    title: { text: `Amplitude (${unit})` },
+                    title: { text: title },
+                    side: 'left',
+                    range: yAxisRange,
+                    showgrid: true,
+                    gridcolor: '#f0f0f0',
+                    showline: true,
                 },
-                margin: { l: 60, r: 30, t: 60, b: 60 },
-                height: 300,
+                margin: { l: 40, r: 20, t: 20, b: 40 },
+                height: 250,
+                showlegend: false,
+                hovermode: 'x unified',
             },
             config: {
                 responsive: true,
                 displayModeBar: true,
-            }
+                displaylogo: false,
+            },
+            style: { width: '100%', height: '250px' }
         };
     };
 
@@ -124,31 +142,40 @@ const EventGraph: React.FC = () => {
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
                         <CircularProgress />
                     </Box>
-                </MainContentWrapper >
-
+                </MainContentWrapper>
             </>
         );
     }
 
     if (error) {
         return (
-            <Box p={3}>
-                <Typography color="error">{error}</Typography>
-                <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
-                    Back to Events
-                </Button>
-            </Box>
+            <>
+                <HeaNavLogo />
+                <MainContentWrapper>
+                    <Box p={3}>
+                        <Typography color="error">{error}</Typography>
+                        <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+                            Back to Events
+                        </Button>
+                    </Box>
+                </MainContentWrapper>
+            </>
         );
     }
 
     if (!chartData) {
         return (
-            <Box p={3}>
-                <Typography>No chart data available</Typography>
-                <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
-                    Back to Events
-                </Button>
-            </Box>
+            <>
+                <HeaNavLogo />
+                <MainContentWrapper>
+                    <Box p={3}>
+                        <Typography>No chart data available</Typography>
+                        <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+                            Back to Events
+                        </Button>
+                    </Box>
+                </MainContentWrapper>
+            </>
         );
     }
 
@@ -161,22 +188,16 @@ const EventGraph: React.FC = () => {
                         Event #{id} - Seismic Data
                     </Typography>
 
-                    <Box mb={4}>
-                        <Plot
-                            {...createChart(chartData.x, chartData.units.x, 'X')}
-                        />
+                    <Box mb={4} sx={{ width: '100%' }}>
+                        <Plot {...createChart(chartData.x, chartData.units.x, 'X')} />
                     </Box>
 
-                    <Box mb={4}>
-                        <Plot
-                            {...createChart(chartData.y, chartData.units.y, 'Y')}
-                        />
+                    <Box mb={4} sx={{ width: '100%' }}>
+                        <Plot {...createChart(chartData.y, chartData.units.y, 'Y')} />
                     </Box>
 
-                    <Box mb={4}>
-                        <Plot
-                            {...createChart(chartData.z, chartData.units.z, 'Z')}
-                        />
+                    <Box mb={4} sx={{ width: '100%' }}>
+                        <Plot {...createChart(chartData.z, chartData.units.z, 'Z')} />
                     </Box>
 
                     <Button variant="contained" onClick={() => navigate(-1)}>
