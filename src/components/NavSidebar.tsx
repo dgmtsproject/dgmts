@@ -37,7 +37,9 @@ const NavSidebar: React.FC = () => {
   const navigate = useNavigate();
   const [openGraphs, setOpenGraphs] = useState(false);
   const [openProject, setOpenProject] = useState(false);
+  const [opensecondProject, setOpenSecondProject] = useState(false);
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
+  const [hasDgmtsTestingAccess, setHasDgmtsTestingAccess] = useState(false);
   const { isAdmin, setIsAdmin, userEmail } = useAdminContext();
 
 useEffect(() => {
@@ -72,8 +74,38 @@ useEffect(() => {
       setHasLongBridgeAccess(false);
     }
   };
+  const checkDgmtsTestingAccess = async () => {
+    if (!userEmail) return;
+    try{
+      const { data: projectData, error: projectError} = await supabase
+        .from('Projects')
+        .select('id')
+        .eq('name', 'DGMTS Testing')
+        .single();
+      if (projectError || !projectData) {
+        console.error('Error fetching DGMTS Testing project:', projectError);
+        setHasDgmtsTestingAccess(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('ProjectUsers')
+        .select('*')
+        .eq('user_email', userEmail)
+        .eq('project_id', projectData.id);
+      setHasDgmtsTestingAccess(Boolean(isAdmin || (data && data.length > 0)));
+      if (error) {
+        console.error('Error checking DGMTS Testing access:', error);
+      }
+    
+    }
+    catch (err) {
+      console.error('Unexpected error checking DGMTS Testing access:', err);
+      setHasDgmtsTestingAccess(false);
+    }
+  }
 
   checkProjectAccess();
+  checkDgmtsTestingAccess();
 }, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
@@ -82,6 +114,9 @@ useEffect(() => {
 
   const handleProjectClick = () => {
     setOpenProject(!openProject);
+  };
+  const handleSecondProjectClick = () => {
+    setOpenSecondProject(!opensecondProject);
   };
 
   const handleLogout = () => {
@@ -200,17 +235,42 @@ useEffect(() => {
                       >
                         <ListItemText primary="AMTS Ref" />
                       </ListItemButton>
-
-                      {/* <ListItemButton
+                    </List>
+                  </Collapse>
+                </>
+              )}
+              {(isAdmin || hasDgmtsTestingAccess) && (
+                <>
+                  <ListItemButton onClick={handleSecondProjectClick} sx={{ pl: 4 }}>
+                    <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                      <ProjectIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="DGMTS Testing" />
+                    {opensecondProject ? <ExpandLess /> : <ExpandMore />}
+                  </ListItemButton>
+                  <Collapse in={opensecondProject} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                      <ListItemButton
                         component={Link}
-                        to="/reading-tables"
+                        to="/seismograph"
                         sx={{ pl: 4 }}
                       >
-                    <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
-                      <TableChartIcon fontSize="small" />
-                    </ListItemIcon>
-                        <ListItemText primary="Reading Tables" />
-                      </ListItemButton> */}
+                        <ListItemText primary="Seismograph" />
+                      </ListItemButton>
+                      <ListItemButton
+                        component={Link}
+                        to="/background"
+                        sx={{ pl: 4 }}
+                      >
+                        <ListItemText primary="Background" />
+                      </ListItemButton>
+                      <ListItemButton
+                        component={Link}
+                        to="/seismograph-map"
+                        sx={{ pl: 4 }}
+                      >
+                        <ListItemText primary="Map" />
+                      </ListItemButton>
                     </List>
                   </Collapse>
                 </>

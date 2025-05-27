@@ -238,3 +238,37 @@ html {
     page-break-after: auto;
   }
 }
+
+.marker {
+  position: relative;
+  display: inline-block;
+}
+
+.marker-text {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.bullet {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.bullet.active {
+  background-color: #4CAF50;
+}
+
+.leaflet-marker-icon, .leaflet-marker-shadow {
+  display: none; /* Hide default markers */
+}

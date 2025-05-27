@@ -32,6 +32,8 @@ import Seismograph from "../pages/Seismograph";
 import FileProcessor from "../pages/FileProcessor";
 import FileManager from "../pages/FileManager";
 import EventGraph from "../pages/EventGraph";
+import Background from "../pages/Background";
+import DeviceMap from "../pages/DeviceMap";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -68,7 +70,9 @@ const AppRoutes: React.FC = () => {
       <Route path="/seismograph" element={<Seismograph />} />
       <Route path='/process-files' element={<FileProcessor/>} />
       <Route path="/dashboard" element={<DashBoard />} />
-      <Route path="/event/:id/graph" element={<EventGraph />} />
+      <Route path="/event/:id/graph" element={<EventGraph />} /> 
+      <Route path="/background" element={<Background />} />
+      <Route path="/seismograph-map" element={<DeviceMap/>} />
     </Routes>
   );
 };
