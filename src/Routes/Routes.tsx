@@ -22,7 +22,7 @@ import AtmsTrackGraphs from "../pages/AtmsTrackGraphs";
 import AmtsRefGraphs from "../pages/AmtsRefGraphs";
 import InstrumentsList from "../pages/InstrumentsList";
 import AddAlarms from "../pages/Add-Alarms";
-import DataSummmary from "../pages/DataSummmary";
+import LongBridgeDataSummary from "../pages/LongBridgeDataSummary";
 import ReadingTables from "../pages/ReadingTables";
 import AdminSetup from "../pages/AdminSetup";
 import EditInstrument from "../pages/EditInstrument";
@@ -34,6 +34,9 @@ import FileManager from "../pages/FileManager";
 import EventGraph from "../pages/EventGraph";
 import Background from "../pages/Background";
 import DeviceMap from "../pages/DeviceMap";
+import Maps from "../pages/Maps";
+import DataSummary from "../pages/DataSummary";
+import DgmtsDataSummary from "../pages/DgmtsDataSummary";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -61,7 +64,9 @@ const AppRoutes: React.FC = () => {
       <Route path="/amts-ref-graphs" element={<AmtsRefGraphs />} />
       <Route path="/instruments-list" element={<InstrumentsList />} />
       <Route path="/add-alarms" element={<AddAlarms/>}/>
-      <Route path="/data-summary" element={<DataSummmary/>} />
+      <Route path="/long-bridge-data-summary" element={<LongBridgeDataSummary/>} />
+      <Route path="/DGMTS-data-summary" element={<DgmtsDataSummary />} />
+      <Route path='/data-summary' element={<DataSummary />} />
       <Route path="/reading-tables" element={<ReadingTables />} />
       <Route path="/admin-setup" element={<AdminSetup />} />
       <Route path="/edit-instrument" element={<EditInstrument />} />
@@ -73,6 +78,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/event/:id/graph" element={<EventGraph />} /> 
       <Route path="/background" element={<Background />} />
       <Route path="/seismograph-map" element={<DeviceMap/>} />
+      <Route path="/maps" element={<Maps />} />
     </Routes>
   );
 };

@@ -315,8 +315,11 @@ const TrackMerger: React.FC<Props> = ({ onMergeSave }) => {
           backgroundColor: "#f4f7fa",
           fontFamily: "'Inter', sans-serif",
           border: "4px solid black",
-          margin: "10px",
-          padding: "10px",
+          padding: "5px",
+          boxSizing: "border-box", // Add this
+        width: "calc(100% - 8px)", // Account for border width
+        maxWidth: "calc(100vw - 240px - 40px)", // Account for sidebar and padding
+        overflow: "hidden" 
         }}
       >
         <h2

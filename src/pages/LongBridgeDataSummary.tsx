@@ -6,7 +6,7 @@ import excelFile from '../assets/files/track-files-and-amts.xlsx?url';
 import TrackMerger from '../components/MergeATMSTracks';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { toast } from 'react-toastify';
-const DataSummary: React.FC = () => {
+const LongBridgeDataSummary: React.FC = () => {
     const [processedData, setProcessedData] = React.useState<any[]>([]);
     const [headers, setHeaders] = React.useState<string[]>([]);
     const [lessthanValue, setLessThanValue] = React.useState<number | null>(null);
@@ -835,4 +835,4 @@ const DataSummary: React.FC = () => {
     );
 }
 
-export default DataSummary;
+export default LongBridgeDataSummary;

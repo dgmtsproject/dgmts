@@ -28,6 +28,7 @@ import {
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
   AccountTree as ProjectIcon,
+  Map as ProjectMapIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -264,13 +265,6 @@ useEffect(() => {
                       >
                         <ListItemText primary="Background" />
                       </ListItemButton>
-                      <ListItemButton
-                        component={Link}
-                        to="/seismograph-map"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="Map" />
-                      </ListItemButton>
                     </List>
                   </Collapse>
                 </>
@@ -278,6 +272,15 @@ useEffect(() => {
             </List>
           </Collapse>
 
+          <ListItemButton
+            component={Link}
+            to="/maps"
+          >
+            <ListItemIcon sx={{ color: 'inherit' }}>
+              <ProjectMapIcon />
+            </ListItemIcon>
+            <ListItemText primary="Maps" />
+          </ListItemButton>
           <ListItemButton component={Link} to="/file-manager">
             <ListItemIcon sx={{ color: 'inherit' }}>
               <FileManagerIcon />
@@ -293,6 +296,7 @@ useEffect(() => {
             </ListItemIcon>
             <ListItemText primary="Data Summary" />
           </ListItemButton>
+
 
           {isAdmin && (
             <>

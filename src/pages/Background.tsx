@@ -5,7 +5,7 @@ import MainContentWrapper from '../components/MainContentWrapper';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import { format, subDays, parseISO } from 'date-fns';
 
-const MAX_POINTS = 1000; // Maximum points to display
+const MAX_POINTS = 1000;
 const WARNING_LEVEL = 0.5;
 
 const Background: React.FC = () => {
@@ -17,14 +17,12 @@ const Background: React.FC = () => {
   const processedData = useMemo(() => {
     if (!rawData.length) return { time: [], x: [], y: [], z: [] };
 
-    // Sort data by absolute value (descending) to prioritize peaks
     const sortedData = [...rawData].sort((a, b) => {
       const maxA = Math.max(Math.abs(a[1]), Math.abs(a[2]), Math.abs(a[3]));
       const maxB = Math.max(Math.abs(b[1]), Math.abs(b[2]), Math.abs(b[3]));
       return maxB - maxA;
     });
 
-    // Take top N points (or all if less than MAX_POINTS)
     const sampledData = sortedData.slice(0, MAX_POINTS);
 
     return {
@@ -43,7 +41,7 @@ const Background: React.FC = () => {
 
         const endDate = new Date();
         const startDate = subDays(endDate, 7);
-        
+
         const formatDate = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm:ss");
         const startParam = formatDate(startDate);
         const endParam = formatDate(endDate);
@@ -79,82 +77,104 @@ const Background: React.FC = () => {
     fetchBackgroundData();
   }, []);
 
-  const createPlot = (data: number[], axis: string) => {
-    return (
-      <Plot
-        data={[
-          {
-            x: processedData.time,
-            y: data,
-            type: 'scatter',
-            mode: 'markers',
-            marker: {
-              size: 6,
-              color: '#3f51b5',
-              opacity: 0.8
-            },
-            name: `${axis} [in/s]`,
-            hovertemplate: `
-              <b>${axis} Value</b><br>
-              <b>Time</b>: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              <b>Value</b>: %{y:.4f} in/s<extra></extra>
-            `
+const createPlot = (data: number[], axis: string) => {
+  return (
+    <Plot
+      data={[
+        {
+          x: processedData.time,
+          y: data,
+          type: 'scatter',
+          mode: 'markers',
+          marker: {
+            size: 6,
+            color: '#3f51b5',
+            opacity: 0.8
           },
+          name: `${axis} [in/s]`,
+          hovertemplate: `
+            <b>${axis} Value</b><br>
+            <b>Time</b>: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+            <b>Value</b>: %{y:.4f} in/s<extra></extra>
+          `
+        }
+      ]}
+      layout={{
+        title: undefined,
+        xaxis: { 
+          title: undefined,
+          type: 'date',
+          tickformat: '%b %d %H:%M'
+        },
+        yaxis: { 
+          title: { text: `${axis} [in/s]` },
+          fixedrange: false
+        },
+        showlegend: false,
+        height: 300,
+        margin: { t: 20, b: 60, l: 60, r: 20 },
+        hovermode: 'closest',
+        hoverlabel: {
+          bgcolor: '#fff',
+          bordercolor: '#ddd',
+          font: {
+            family: 'Arial',
+            size: 12,
+            color: '#333'
+          }
+        },
+        shapes: [
           {
-            x: [processedData.time[0], processedData.time[processedData.time.length - 1]],
-            y: [WARNING_LEVEL, WARNING_LEVEL],
-            type: 'scatter',
-            mode: 'lines',
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,  // starts at left edge of plot
+            y0: WARNING_LEVEL,
+            x1: 1,  // ends at right edge of plot
+            y1: WARNING_LEVEL,
             line: {
               color: 'red',
-              width: 2
-            },
-            showlegend: false,
-            hovertemplate: 'Warning Level: 0.5 in/s<extra></extra>'
-          }
-        ]}
-        layout={{
-          title: undefined,
-          xaxis: { 
-            title: undefined,
-            type: 'date',
-            tickformat: '%b %d %H:%M'
-          },
-          yaxis: { 
-            title: { text: `${axis} [in/s]` },
-            fixedrange: false
-          },
-          showlegend: false,
-          height: 300,
-          margin: { t: 20, b: 60, l: 60, r: 20 },
-          hovermode: 'closest',
-          hoverlabel: {
-            bgcolor: '#fff',
-            bordercolor: '#ddd',
-            font: {
-              family: 'Arial',
-              size: 12,
-              color: '#333'
+              width: 2,
+              dash: 'solid' // explicit solid line
             }
           }
-        }}
-        config={{
-          responsive: true,
-          displayModeBar: true,
-          scrollZoom: true,
-          toImageButtonOptions: {
-            format: 'svg',
-            filename: `background_${axis.toLowerCase()}`,
-            height: 500,
-            width: 1000,
-            scale: 1
+        ],
+        annotations: [
+          {
+            x: 0.01, // right end of the x-axis
+            y: WARNING_LEVEL,
+            xref: 'paper',
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: {
+              color: 'red',
+              size: 12
+            },
+            xanchor: 'left',
+            yanchor: 'middle',
+            xshift: 5
           }
-        }}
-        style={{ width: '100%' }}
-        useResizeHandler={true}
-      />
-    );
-  };
+        ]
+      }}
+      config={{
+        responsive: true,
+        displayModeBar: true,
+        scrollZoom: true,
+        toImageButtonOptions: {
+          format: 'png',
+          filename: `background_${axis.toLowerCase()}`,
+          height: 500,
+          width: 1000,
+          scale: 1
+        }
+      }}
+      style={{ width: '100%' }}
+      useResizeHandler={true}
+    />
+  );
+};
+
 
   if (loading) {
     return (
@@ -187,16 +207,16 @@ const Background: React.FC = () => {
       <HeaNavLogo />
       <MainContentWrapper>
         <Box p={3}>
-          <Typography variant="h4" gutterBottom>DGMTS Testing - Background </Typography>
-          
+          <Typography variant="h4" gutterBottom>DGMTS Testing - Background</Typography>
+
           <Box mb={4}>
             {createPlot(processedData.x, 'X')}
           </Box>
-          
+
           <Box mb={4}>
             {createPlot(processedData.y, 'Y')}
           </Box>
-          
+
           <Box mb={4}>
             {createPlot(processedData.z, 'Z')}
           </Box>

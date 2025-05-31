@@ -33,7 +33,7 @@ const Seismograph: React.FC = () => {
     setError(null);
     try {
       const apiUrl = import.meta.env.DEV
-        ? "/api/public-api/v1/records/events" // Vite proxy
+        ? "/api/public-api/v1/records/events?itemsPerPage=50" // Vite proxy
         : "/api/fetchEvents"; // Vercel function
 
       const response = await fetch(apiUrl, {

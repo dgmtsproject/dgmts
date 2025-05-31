@@ -11,8 +11,8 @@ const Header: React.FC = () => {
         justifyContent: "space-evenly",
 
         // Align items vertically centered
-        padding: "10px 20px", // Add padding on the sides
-        gap: "20px", // Space between logo section and company info
+        padding: "5px 10px", // Add padding on the sides
+        gap: "10px", // Space between logo section and company info
         borderBottom: "1px solid #000", // Bottom border as seen in the image
       }}
     >
@@ -33,7 +33,7 @@ const Header: React.FC = () => {
           style={{
             fontSize: "16px",
             lineHeight: "1", // Reduce line height to minimize vertical space
-            marginTop: "-5px", // Pull the text closer to the logo
+            marginTop: "-2px", // Pull the text closer to the logo
           }}
         >
           <span style={{ color: "Black", fontWeight: "bold" }}>DGMTS-imSite</span>

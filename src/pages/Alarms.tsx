@@ -7,6 +7,7 @@ import { useAdminContext } from "../context/AdminContext";
 import logo from "../assets/logo.jpg";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
+import { toast } from "react-toastify";
 
 type Alarm = {
   id: number;
@@ -56,6 +57,7 @@ const Alarms: React.FC = () => {
 
   const handleAcknowledge = async (alarmId: number) => {
     try {
+      console.log('Acknowledging alarm with ID:', alarmId);
       const { error } = await supabase
         .from('alarms')
         .update({
@@ -63,7 +65,7 @@ const Alarms: React.FC = () => {
           acknowledged_timestamp: new Date().toISOString()
         })
         .eq('id', alarmId);
-
+      console.log('Update response:', error); 
       if (error) throw error;
 
       // Refresh alarms after update
@@ -73,6 +75,8 @@ const Alarms: React.FC = () => {
         ack_filter: filterAck
       });
       setAlarms(data || []);
+      toast.success('Alarm acknowledged successfully!');
+      
     } catch (error) {
       console.error('Error acknowledging alarm:', error);
     }
