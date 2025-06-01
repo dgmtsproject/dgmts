@@ -37,6 +37,7 @@ import DeviceMap from "../pages/DeviceMap";
 import Maps from "../pages/Maps";
 import DataSummary from "../pages/DataSummary";
 import DgmtsDataSummary from "../pages/DgmtsDataSummary";
+import LongBridgeMap from "../pages/LongBridgeMap";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -78,6 +79,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/event/:id/graph" element={<EventGraph />} /> 
       <Route path="/background" element={<Background />} />
       <Route path="/seismograph-map" element={<DeviceMap/>} />
+      <Route path="/long-bridge-map" element={<LongBridgeMap />} />
       <Route path="/maps" element={<Maps />} />
     </Routes>
   );

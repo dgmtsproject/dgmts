@@ -74,8 +74,13 @@ const Maps: React.FC = () => {
     const selectedProject = projects.find(p => p.id === projectId);
     if (!selectedProject) return;
 
-    if (selectedProject.name === 'DGMTS Testing') {
-      navigate('/seismograph-map');
+    switch(selectedProject.name) {
+      case 'Long Bridge North':
+        navigate('/long-bridge-map');
+        break;
+      case 'DGMTS Testing':
+        navigate('/seismograph-map');
+        break;
     }
   };
 
