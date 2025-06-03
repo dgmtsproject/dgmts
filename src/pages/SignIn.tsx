@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase"; // Your existing Supabase client
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Header from "../components/Header";
+
+import logo from "../assets/logo.jpg";
 import { useAdminContext } from "../context/AdminContext";
 
 // interface User {
@@ -65,7 +66,52 @@ const SignIn: React.FC = () => {
         }}
       >
         <ToastContainer />
-        <Header />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-evenly",
+            padding: "5px 10px",
+            gap: "10px",
+            borderBottom: "1px solid #000",
+            backgroundColor: "white", 
+            width: "100%",
+            boxSizing: "border-box"
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <img
+              src={logo}
+              alt="DGMTS Logo"
+              style={{ height: "50px", display: "block", margin: 0, padding: 0 }}
+            />
+            <div
+              style={{
+                fontSize: "16px",
+                lineHeight: "1",
+                marginTop: "-2px",
+              }}
+            >
+              <span style={{ color: "Black", fontWeight: "bold" }}>DGMTS-imSite</span>
+            </div>
+          </div>
+
+          {/* Company Info */}
+          <div>
+            <h1 style={{ fontSize: "18px", fontWeight: "normal", margin: 0 }}>
+              Dulles Geotechnical and Material Testing Services Inc.
+            </h1>
+            <p style={{ margin: "0", color: "#ff8c00", fontSize: "12px" }}>
+              A Certified SWaM and MBE/DBE Firm
+            </p>
+          </div>
+        </div>
 
         <div style={{ marginTop: "60px", width: "100%", maxWidth: "400px", zIndex: 1 }}>
           <h2 style={{ textAlign: "center", color: "#003087", fontSize: "28px" }}>
