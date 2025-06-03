@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from "../assets/logo.jpg"; 
 import {
   Drawer,
   List,
@@ -126,7 +127,7 @@ useEffect(() => {
   };
 
   return (
-    <Drawer
+ <Drawer
       variant="permanent"
       sx={{
         width: 240,
@@ -138,15 +139,44 @@ useEffect(() => {
           color: theme.palette.primary.contrastText,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          borderRight: '1px solid #000' // Match header's border
         },
       }}
     >
       <Box>
-        <Box sx={{ p: 2, textAlign: 'center' }}>
-          <Typography variant="h6">DGMTS-imSite</Typography>
+         <Box>
+        {/* Updated header area with logo */}
+        <Box sx={{  
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          backgroundColor: 'white', // White background for logo area
+          borderBottom: '1px solid #000' // Match header's border
+        }}>
+          <img
+            src={logo}
+            alt="DGMTS Logo"
+            style={{ 
+              height: '50px', 
+              marginBottom: '-5px',
+            }} 
+          />
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: 'black', // Black text to match your header
+              fontWeight: 'bold',
+              fontSize: '1rem',
+            }}
+          >
+            DGMTS-imSite
+          </Typography>
         </Box>
+        
+        {/* Rest of your existing sidebar content... */}
         <Divider />
+      </Box>
         <List>
           <ListItemButton component={Link} to="/projects">
             <ListItemIcon sx={{ color: 'inherit' }}>
