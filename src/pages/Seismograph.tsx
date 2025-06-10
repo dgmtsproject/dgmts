@@ -5,6 +5,8 @@ import MainContentWrapper from "../components/MainContentWrapper";
 import { supabase } from '../supabase';
 import { Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import * as XLSX from 'xlsx';
+import { toast } from "react-toastify";
+
 
 interface SeismicEvent {
   id: number;
@@ -55,59 +57,74 @@ const Seismograph: React.FC = () => {
     }
   };
 
-  const handleSendEmail = async (event: SeismicEvent) => {
-    if (!instrumentSettings) {
-      setError('Instrument settings not loaded');
+const handleSendEmail = async (event: SeismicEvent) => {
+  if (!instrumentSettings) {
+    setError('Instrument settings not loaded');
+    return;
+  }
+
+  setSendingEmail(event.id);
+  try {
+    const maxPeak = Math.max(Math.abs(event.peakX), Math.abs(event.peakY), Math.abs(event.peakZ));
+    const notifications = [];
+
+    // Check all thresholds independently
+    if (maxPeak >= instrumentSettings.shutdown_value && instrumentSettings.shutdown_emails.length > 0) {
+      notifications.push({
+        level: 'shutdown',
+        recipients: instrumentSettings.shutdown_emails
+      });
+    }
+    
+    if (maxPeak >= instrumentSettings.warning_value && instrumentSettings.warning_emails.length > 0) {
+      notifications.push({
+        level: 'warning',
+        recipients: instrumentSettings.warning_emails
+      });
+    }
+    
+    if (maxPeak >= instrumentSettings.alert_value && instrumentSettings.alert_emails.length > 0) {
+      notifications.push({
+        level: 'alert',
+        recipients: instrumentSettings.alert_emails
+      });
+    }
+
+    if (notifications.length === 0) {
+      setError('No applicable thresholds crossed or recipients configured');
       return;
     }
 
-    setSendingEmail(event.id);
-    try {
-      const maxPeak = Math.max(Math.abs(event.peakX), Math.abs(event.peakY), Math.abs(event.peakZ));
-      let level = '';
-      let recipients: string[] = [];
+    // Send all applicable notifications
+    const results = await Promise.all(
+      notifications.map(async ({ level, recipients }) => {
+        const response = await fetch('/api/send-seismic-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId: event.id,
+            level,
+            peakValue: maxPeak,
+            recipients,
+          }),
+        });
+        return response.ok;
+      })
+    );
 
-      if (maxPeak >= instrumentSettings.shutdown_value) {
-        level = 'shutdown';
-        recipients = instrumentSettings.shutdown_emails;
-      } else if (maxPeak >= instrumentSettings.warning_value) {
-        level = 'warning';
-        recipients = instrumentSettings.warning_emails;
-      } else if (maxPeak >= instrumentSettings.alert_value) {
-        level = 'alert';
-        recipients = instrumentSettings.alert_emails;
-      }
-
-      if (recipients.length === 0) {
-        setError('No email recipients configured for this threshold level');
-        return;
-      }
-
-      const response = await fetch('/api/send-seismic-alert', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventId: event.id,
-          level,
-          peakValue: maxPeak,
-          recipients,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send email notification');
-      }
-
-      alert(`Email notification sent to ${recipients.join(', ')}`);
-    } catch (err) {
-      console.error('Error sending email:', err);
-      setError('Failed to send email notification');
-    } finally {
-      setSendingEmail(null);
+    if (results.every(Boolean)) {
+      toast.success('Email notifications sent successfully');
+      console.log('All notifications sent successfully');
+    } else {
+      throw new Error('Some notifications failed to send');
     }
-  };
+  } catch (err) {
+    console.error('Error sending emails:', err);
+    setError('Failed to send some email notifications');
+  } finally {
+    setSendingEmail(null);
+  }
+};
 
   const handleEvents = async () => {
     setLoading(true);
