@@ -11,7 +11,7 @@ export default async function handler(
         return res.status(400).json({ error: "Device ID is required" });
     }
     
-    const API_URL = `https://scs.syscom-instruments.com/public-api/v1/records/devices/${id}/alarms`;
+    const API_URL = `https://scs.syscom-instruments.com/public-api/v1/devices/${id}/alarms`;
     
     try {
         const response = await fetch(API_URL, {
