@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeaNavLogo from "../components/HeaNavLogo";
 import MainContentWrapper from "../components/MainContentWrapper";
+import { supabase } from '../supabase';
 import { Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import * as XLSX from 'xlsx';
 
@@ -14,11 +15,21 @@ interface SeismicEvent {
   [key: string]: any; // For other properties we might not use
 }
 
+interface InstrumentSettings {
+  alert_value: number;
+  warning_value: number;
+  shutdown_value: number;
+  alert_emails: string[];
+  warning_emails: string[];
+  shutdown_emails: string[];
+}
 const Seismograph: React.FC = () => {
   const syscomapikey = import.meta.env.VITE_SYSCOM_API_KEY;
   const [events, setEvents] = useState<SeismicEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<number | null>(null);
   const navigate = useNavigate();
   // console.log(syscomapikey);
 
@@ -26,7 +37,77 @@ const Seismograph: React.FC = () => {
   useEffect(() => {
     localStorage.removeItem('seismicEvents');
     localStorage.removeItem('fileProcessingStatus');
+    fetchInstrumentSettings();
   }, []);
+
+  const fetchInstrumentSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('instruments')
+        .select('alert_value, warning_value, shutdown_value, alert_emails, warning_emails, shutdown_emails')
+        .eq('instrument_id', 'SMG1')
+        .single();
+
+      if (error) throw error;
+      setInstrumentSettings(data);
+    } catch (err) {
+      console.error('Error fetching instrument settings:', err);
+    }
+  };
+
+  const handleSendEmail = async (event: SeismicEvent) => {
+    if (!instrumentSettings) {
+      setError('Instrument settings not loaded');
+      return;
+    }
+
+    setSendingEmail(event.id);
+    try {
+      const maxPeak = Math.max(Math.abs(event.peakX), Math.abs(event.peakY), Math.abs(event.peakZ));
+      let level = '';
+      let recipients: string[] = [];
+
+      if (maxPeak >= instrumentSettings.shutdown_value) {
+        level = 'shutdown';
+        recipients = instrumentSettings.shutdown_emails;
+      } else if (maxPeak >= instrumentSettings.warning_value) {
+        level = 'warning';
+        recipients = instrumentSettings.warning_emails;
+      } else if (maxPeak >= instrumentSettings.alert_value) {
+        level = 'alert';
+        recipients = instrumentSettings.alert_emails;
+      }
+
+      if (recipients.length === 0) {
+        setError('No email recipients configured for this threshold level');
+        return;
+      }
+
+      const response = await fetch('/api/send-seismic-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId: event.id,
+          level,
+          peakValue: maxPeak,
+          recipients,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email notification');
+      }
+
+      alert(`Email notification sent to ${recipients.join(', ')}`);
+    } catch (err) {
+      console.error('Error sending email:', err);
+      setError('Failed to send email notification');
+    } finally {
+      setSendingEmail(null);
+    }
+  };
 
   const handleEvents = async () => {
     setLoading(true);
@@ -156,12 +237,22 @@ const Seismograph: React.FC = () => {
                     <TableCell>{event.peakY}</TableCell>
                     <TableCell>{event.peakZ}</TableCell>
                     <TableCell>{new Date(event.startTime).toLocaleString()}</TableCell>
-                    <TableCell>
+                    <TableCell style={{ display: 'flex', gap: '8px' }}>
                       <Button
                         variant="outlined"
+                        size="small"
                         onClick={() => navigate(`/event/${event.id}/graph`)}
                       >
                         View Graph
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        onClick={() => handleSendEmail(event)}
+                        disabled={sendingEmail === event.id}
+                      >
+                        {sendingEmail === event.id ? 'Sending...' : 'Send Email'}
                       </Button>
                     </TableCell>
                   </TableRow>
