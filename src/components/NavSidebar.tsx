@@ -140,7 +140,7 @@ useEffect(() => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          borderRight: '1px solid #000' // Match header's border
+          borderRight: '1px solid #fff', // Match the header's border
         },
       }}
     >
