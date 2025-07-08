@@ -14,7 +14,7 @@ interface SeismicEvent {
   peakY: number;
   peakZ: number;
   startTime: string;
-  [key: string]: any; // For other properties we might not use
+  [key: string]: any; 
 }
 
 interface InstrumentSettings {
@@ -148,6 +148,8 @@ const handleSendEmail = async (event: SeismicEvent) => {
       }
 
       const data: SeismicEvent[] = await response.json();
+      // Sort events by startTime descending (latest first)
+      data.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
       setEvents(data);
       localStorage.setItem("seismicEvents", JSON.stringify(data));
     } catch (err: unknown) {

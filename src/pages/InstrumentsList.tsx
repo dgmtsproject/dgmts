@@ -240,7 +240,18 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                       <TableRow key={instrument.id} sx={{ backgroundColor: '#fff' }}>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id}</TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_name}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {instrument.instrument_name === 'Seismograph' ? (
+                            <span
+                              style={{ color: '#1976d2', textDecoration: 'underline', cursor: 'pointer' }}
+                              onClick={() => navigate('/seismograph')}
+                            >
+                              {instrument.instrument_name}
+                            </span>
+                          ) : (
+                            instrument.instrument_name
+                          )}
+                        </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value}</TableCell>

@@ -151,48 +151,52 @@ const EventGraph: React.FC = () => {
 
     const yAxisRange = getYAxisRange();
 
-    const createChart = (data: number[], unit: string, title: string): PlotParams => {
-        return {
-            data: [{
-                x: chartData?.time,
-                y: data,
-                type: 'scatter',
-                mode: 'lines',
-                line: { color: '#3f51b5', width: 2 },
-                hoverinfo: 'x+y',
-                hovertemplate: `<b>${title}</b><br>Time: %{x|%H:%M:%S.%L}<br>Value: %{y:.4f} ${unit}<extra></extra>`,
-            }],
-            layout: {
+ const createChart = (data: number[], unit: string, title: string): PlotParams => {
+    // Convert the time strings to JavaScript Date objects
+    const timeData = chartData?.time.map(t => new Date(t)) || [];
+    
+    return {
+        data: [{
+            x: timeData,
+            y: data,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#3f51b5', width: 2 },
+            hoverinfo: 'x+y',
+            hovertemplate: `<b>${title}</b><br>Time: %{x|%m/%d/%Y, %H:%M:%S}<br>Value: %{y:.4f} ${unit}<extra></extra>`,
+        }],
+        layout: {
+            title: undefined,
+            xaxis: {
                 title: undefined,
-                xaxis: {
-                    title: undefined,
-                    tickformat: '%H:%M:%S.%L',
-                    hoverformat: '%H:%M:%S.%L',
-                    showgrid: true,
-                    gridcolor: '#f0f0f0',
-                    showline: true,
-                },
-                yaxis: {
-                    title: { text: title },
-                    side: 'left',
-                    range: yAxisRange,
-                    showgrid: true,
-                    gridcolor: '#f0f0f0',
-                    showline: true,
-                },
-                margin: { l: 40, r: 20, t: 20, b: 40 },
-                height: 250,
-                showlegend: false,
-                hovermode: 'x unified',
+                type: 'date',
+                tickformat: '%m/%d/%Y, %H:%M:%S',
+                hoverformat: '%m/%d/%Y, %H:%M:%S',
+                showgrid: true,
+                gridcolor: '#f0f0f0',
+                showline: true,
             },
-            config: {
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false,
+            yaxis: {
+                title: { text: title },
+                side: 'left',
+                range: yAxisRange,
+                showgrid: true,
+                gridcolor: '#f0f0f0',
+                showline: true,
             },
-            style: { width: '100%', height: '250px' }
-        };
+            margin: { l: 40, r: 20, t: 20, b: 40 },
+            height: 250,
+            showlegend: false,
+            hovermode: 'x unified',
+        },
+        config: {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+        },
+        style: { width: '100%', height: '250px' }
     };
+};
 
     if (loading) {
         return (
