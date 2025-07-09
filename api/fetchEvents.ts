@@ -6,7 +6,7 @@ export default async function handler(
   res: VercelResponse
 ) {
   const API_KEY = process.env.SYSCOM_API_KEY; // MUST match Vercel env var name
-  const API_URL = "https://scs.syscom-instruments.com/public-api/v1/records/events?itemsPerPage=50";
+  const API_URL = "https://scs.syscom-instruments.com/public-api/v1/records/events?itemsPerPage=500";
 
   try {
     // Use native fetch (Node 18+)
