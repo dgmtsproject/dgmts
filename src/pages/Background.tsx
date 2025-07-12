@@ -2,224 +2,523 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
-import { Box, Typography, CircularProgress } from '@mui/material';
-import { format, subDays, parseISO } from 'date-fns';
+import { Box, Typography, CircularProgress, Button, Stack } from '@mui/material';
+import { format, parseISO } from 'date-fns';
+import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { useNavigate } from 'react-router-dom';
 
 const MAX_POINTS = 1000;
 const WARNING_LEVEL = 0.5;
 
+interface PlotData {
+  time: Date[];
+  values: number[];
+}
+
 const Background: React.FC = () => {
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rawData, setRawData] = useState<any[]>([]);
+  const [fromDate, setFromDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [toDate, setToDate] = useState<Date | null>(new Date());
+  
+  // Separate data structures for each plot
+  const [xData, setXData] = useState<PlotData>({ time: [], values: [] });
+  const [yData, setYData] = useState<PlotData>({ time: [], values: [] });
+  const [zData, setZData] = useState<PlotData>({ time: [], values: [] });
+  const [combinedData, setCombinedData] = useState<PlotData[]>([]);
 
-  // Process data with priority for peak values
   const processedData = useMemo(() => {
-    if (!rawData.length) return { time: [], x: [], y: [], z: [] };
+    if (!rawData.length) {
+      return {
+        combined: { time: [], x: [], y: [], z: [] },
+        x: { time: [], values: [] },
+        y: { time: [], values: [] },
+        z: { time: [], values: [] }
+      };
+    }
 
-    const sortedData = [...rawData].sort((a, b) => {
-      const maxA = Math.max(Math.abs(a[1]), Math.abs(a[2]), Math.abs(a[3]));
-      const maxB = Math.max(Math.abs(b[1]), Math.abs(b[2]), Math.abs(b[3]));
-      return maxB - maxA;
+    // Combined: at least one axis is nonzero
+    const combined = rawData.filter(entry => {
+      const x = Math.abs(Number(entry[1].toFixed(2)));
+      const y = Math.abs(Number(entry[2].toFixed(2)));
+      const z = Math.abs(Number(entry[3].toFixed(2)));
+      return x > 0 || y > 0 || z > 0;
     });
+    const stepCombined = Math.max(1, Math.floor(combined.length / MAX_POINTS));
+    const combinedFiltered = [];
+    for (let i = 0; i < combined.length; i += stepCombined) {
+      combinedFiltered.push(combined[i]);
+    }
 
-    const sampledData = sortedData.slice(0, MAX_POINTS);
+    // X: only where X is nonzero
+    const xFiltered = rawData.filter(entry => Math.abs(Number(entry[1].toFixed(2))) > 0);
+    const stepX = Math.max(1, Math.floor(xFiltered.length / MAX_POINTS));
+    const xDown = [];
+    for (let i = 0; i < xFiltered.length; i += stepX) xDown.push(xFiltered[i]);
+
+    // Y: only where Y is nonzero
+    const yFiltered = rawData.filter(entry => Math.abs(Number(entry[2].toFixed(2))) > 0);
+    const stepY = Math.max(1, Math.floor(yFiltered.length / MAX_POINTS));
+    const yDown = [];
+    for (let i = 0; i < yFiltered.length; i += stepY) yDown.push(yFiltered[i]);
+
+    // Z: only where Z is nonzero
+    const zFiltered = rawData.filter(entry => Math.abs(Number(entry[3].toFixed(2))) > 0);
+    const stepZ = Math.max(1, Math.floor(zFiltered.length / MAX_POINTS));
+    const zDown = [];
+    for (let i = 0; i < zFiltered.length; i += stepZ) zDown.push(zFiltered[i]);
 
     return {
-      time: sampledData.map(entry => parseISO(entry[0])),
-      x: sampledData.map(entry => entry[1]),
-      y: sampledData.map(entry => entry[2]),
-      z: sampledData.map(entry => entry[3])
+      combined: {
+        time: combinedFiltered.map(entry => parseISO(entry[0])),
+        x: combinedFiltered.map(entry => entry[1]),
+        y: combinedFiltered.map(entry => entry[2]),
+        z: combinedFiltered.map(entry => entry[3])
+      },
+      x: {
+        time: xDown.map(entry => parseISO(entry[0])),
+        values: xDown.map(entry => entry[1])
+      },
+      y: {
+        time: yDown.map(entry => parseISO(entry[0])),
+        values: yDown.map(entry => entry[2])
+      },
+      z: {
+        time: zDown.map(entry => parseISO(entry[0])),
+        values: zDown.map(entry => entry[3])
+      }
     };
   }, [rawData]);
 
   useEffect(() => {
-    const fetchBackgroundData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    console.log('rawData', rawData.slice(0, 5));
+    console.log('X', processedData.x);
+    console.log('Y', processedData.y);
+    console.log('Z', processedData.z);
+  }, [rawData, processedData]);
 
-        const endDate = new Date();
-        const startDate = subDays(endDate, 7);
+  useEffect(() => {
+    if (rawData.length > 0) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    }
+  }, [rawData]);
 
-        const formatDate = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm:ss");
-        const startParam = formatDate(startDate);
-        const endParam = formatDate(endDate);
+  const fetchData = async () => {
+    if (!fromDate || !toDate) return;
 
-        const apiUrl = import.meta.env.DEV
-          ? `/api/public-api/v1/records/background/15092/data?start=${startParam}&end=${endParam}`
-          : `/api/fetchBackgroundData?start=${startParam}&end=${endParam}`;
+    try {
+      setLoading(true);
+      setError(null);
 
-        const response = await fetch(apiUrl, {
-          headers: {
-            ...(import.meta.env.DEV && {
-              "x-scs-api-key": import.meta.env.VITE_SYSCOM_API_KEY
-            }),
-            "Accept": "application/json"
-          }
-        });
+      const formatDate = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm:ss");
+      const startParam = formatDate(fromDate);
+      const endParam = formatDate(toDate);
 
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const apiUrl = import.meta.env.DEV
+        ? `/api/public-api/v1/records/background/15092/data?start=${startParam}&end=${endParam}`
+        : `/api/fetchBackgroundData?start=${startParam}&end=${endParam}`;
 
-        const data = await response.json();
-        setRawData(data.data);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? `Failed to fetch background data: ${err.message}`
-            : "An unknown error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBackgroundData();
-  }, []);
-
-const createPlot = (data: number[], axis: string) => {
-  return (
-    <Plot
-      data={[
-        {
-          x: processedData.time,
-          y: data,
-          type: 'scatter',
-          mode: 'markers',
-          marker: {
-            size: 6,
-            color: '#3f51b5',
-            opacity: 0.8
-          },
-          name: `${axis} [in/s]`,
-          hovertemplate: `
-            <b>${axis} Value</b><br>
-            <b>Time</b>: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-            <b>Value</b>: %{y:.4f} in/s<extra></extra>
-          `
+      const response = await fetch(apiUrl, {
+        headers: {
+          ...(import.meta.env.DEV && {
+            "x-scs-api-key": import.meta.env.VITE_SYSCOM_API_KEY
+          }),
+          "Accept": "application/json"
         }
-      ]}
-      layout={{
-        title: undefined,
-        xaxis: { 
-          title: undefined,
-          type: 'date',
-          tickformat: '%b %d %H:%M'
-        },
-        yaxis: { 
-          title: { text: `${axis} [in/s]` },
-          fixedrange: false
-        },
-        showlegend: false,
-        height: 300,
-        margin: { t: 20, b: 60, l: 60, r: 20 },
-        hovermode: 'closest',
-        hoverlabel: {
-          bgcolor: '#fff',
-          bordercolor: '#ddd',
-          font: {
-            family: 'Arial',
-            size: 12,
-            color: '#333'
-          }
-        },
-        shapes: [
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      setRawData(data.data);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Failed to fetch background data: ${err.message}`
+          : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
+    // Filter out any pairs where time or value is missing or invalid
+    const filtered = data.time
+      .map((t, i) => ({ t, v: data.values[i] }))
+      .filter(pair => pair.t && typeof pair.v === 'number' && !isNaN(pair.v));
+
+    if (filtered.length === 0) return null;
+
+    return (
+      <Plot
+        key={`${axis}-plot`}
+        data={[
           {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,  // starts at left edge of plot
-            y0: WARNING_LEVEL,
-            x1: 1,  // ends at right edge of plot
-            y1: WARNING_LEVEL,
+            x: filtered.map(pair => pair.t),
+            y: filtered.map(pair => pair.v),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: `${axis} [in/s]`,
             line: {
-              color: 'red',
-              width: 2,
-              dash: 'solid' // explicit solid line
-            }
-          }
-        ],
-        annotations: [
-          {
-            x: 0.01, // right end of the x-axis
-            y: WARNING_LEVEL,
-            xref: 'paper',
-            yref: 'y',
-            text: 'Warning',
-            showarrow: false,
-            font: {
-              color: 'red',
-              size: 12
+              color: color,
+              shape: 'spline',
+              width: 1.5
             },
-            xanchor: 'left',
-            yanchor: 'middle',
-            xshift: 5
+            marker: {
+              size: 6,
+              color: color
+            },
+            hovertemplate: `
+              <b>${axis}</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
           }
-        ]
-      }}
-      config={{
-        responsive: true,
-        displayModeBar: true,
-        scrollZoom: true,
-        toImageButtonOptions: {
-          format: 'png',
-          filename: `background_${axis.toLowerCase()}`,
-          height: 500,
-          width: 1000,
-          scale: 1
-        }
-      }}
-      style={{ width: '100%' }}
-      useResizeHandler={true}
-    />
-  );
-};
-
-
-  if (loading) {
-    return (
-      <>
-        <HeaNavLogo />
-        <MainContentWrapper>
-          <Box display="flex" justifyContent="center" p={4}>
-            <CircularProgress />
-          </Box>
-        </MainContentWrapper>
-      </>
+        ]}
+        layout={{
+          title: { text: `${axis} Axis Vibration Data`, font: { size: 14 } },
+          xaxis: {
+            title: { text: 'Time' },
+            type: 'date',
+            tickformat: '%m/%d %H:%M',
+            gridcolor: '#f0f0f0',
+            showgrid: true
+          },
+          yaxis: {
+            title: { text: 'Vibration (in/s)', standoff: 15 },
+            fixedrange: false,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#f0f0f0'
+          },
+          showlegend: true,
+          legend: {
+            x: 1.05,
+            xanchor: 'left',
+            y: 0.5,
+            yanchor: 'middle',
+            font: { size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#CCC',
+            borderwidth: 1
+          },
+          height: 350,
+          margin: { t: 40, b: 60, l: 60, r: 200 },
+          hovermode: 'closest',
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          shapes: [
+            {
+              type: 'line',
+              xref: 'paper',
+              yref: 'y',
+              x0: 0,
+              y0: WARNING_LEVEL,
+              x1: 1,
+              y1: WARNING_LEVEL,
+              line: { color: 'red', width: 1.5, dash: 'dash' }
+            },
+            {
+              type: 'line',
+              xref: 'paper',
+              yref: 'y',
+              x0: 0,
+              y0: -WARNING_LEVEL,
+              x1: 1,
+              y1: -WARNING_LEVEL,
+              line: { color: 'red', width: 1.5, dash: 'dash' }
+            }
+          ],
+          annotations: [
+            {
+              x: 0.01,
+              xref: 'paper',
+              y: WARNING_LEVEL,
+              yref: 'y',
+              text: 'Warning',
+              showarrow: false,
+              font: { color: 'black', size: 10 },
+              bgcolor: 'rgba(255,255,255,0.8)',
+              xanchor: 'left'
+            },
+            {
+              x: 0.01,
+              xref: 'paper',
+              y: -WARNING_LEVEL,
+              yref: 'y',
+              text: 'Warning',
+              showarrow: false,
+              font: { color: 'black', size: 10 },
+              bgcolor: 'rgba(255,255,255,0.8)',
+              xanchor: 'left'
+            }
+          ]
+        }}
+        config={{
+          responsive: true,
+          displayModeBar: true,
+          scrollZoom: true,
+          displaylogo: false
+        }}
+        style={{ width: '100%', height: 400 }}
+        useResizeHandler={true}
+      />
     );
-  }
+  };
 
-  if (error) {
+  const createCombinedPlot = (combined: { time: Date[]; x: number[]; y: number[]; z: number[] }) => {
+    if (!combined.time.length) return null;
     return (
-      <>
-        <HeaNavLogo />
-        <MainContentWrapper>
-          <Box p={3}>
-            <Typography color="error">Error: {error}</Typography>
-          </Box>
-        </MainContentWrapper>
-      </>
+      <Plot
+        key="combined-plot"
+        data={[
+          {
+            x: combined.time,
+            y: combined.x,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'X [in/s]',
+            line: {
+              color: '#FF6384',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#FF6384'
+            },
+            hovertemplate: `
+              <b>X</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          {
+            x: combined.time,
+            y: combined.y,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Y [in/s]',
+            line: {
+              color: '#36A2EB',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#36A2EB'
+            },
+            hovertemplate: `
+              <b>Y</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          {
+            x: combined.time,
+            y: combined.z,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Z [in/s]',
+            line: {
+              color: '#FFCE56',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#FFCE56'
+            },
+            hovertemplate: `
+              <b>Z</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
+          }
+        ]}
+        layout={{
+          title: { text: 'Combined Vibration Data', font: { size: 14 } },
+          xaxis: {
+            title: { text: 'Time' },
+            type: 'date',
+            tickformat: '%m/%d %H:%M',
+            gridcolor: '#f0f0f0',
+            showgrid: true
+          },
+          yaxis: {
+            title: { text: 'Vibration (in/s)', standoff: 15 },
+            fixedrange: false,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#f0f0f0'
+          },
+          showlegend: true,
+          legend: {
+            x: 1.05,
+            xanchor: 'left',
+            y: 0.5,
+            yanchor: 'middle',
+            font: { size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#CCC',
+            borderwidth: 1
+          },
+          height: 400,
+          margin: { t: 40, b: 60, l: 60, r: 200 },
+          hovermode: 'closest',
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          shapes: [
+            {
+              type: 'line',
+              xref: 'paper',
+              yref: 'y',
+              x0: 0,
+              y0: WARNING_LEVEL,
+              x1: 1,
+              y1: WARNING_LEVEL,
+              line: { color: 'red', width: 1.5, dash: 'dash' }
+            },
+            {
+              type: 'line',
+              xref: 'paper',
+              yref: 'y',
+              x0: 0,
+              y0: -WARNING_LEVEL,
+              x1: 1,
+              y1: -WARNING_LEVEL,
+              line: { color: 'red', width: 1.5, dash: 'dash' }
+            }
+          ],
+          annotations: [
+            {
+              x: 0.01,
+              xref: 'paper',
+              y: WARNING_LEVEL,
+              yref: 'y',
+              text: 'Warning',
+              showarrow: false,
+              font: { color: 'black', size: 10 },
+              bgcolor: 'rgba(255,255,255,0.8)',
+              xanchor: 'left'
+            },
+            {
+              x: 0.01,
+              xref: 'paper',
+              y: -WARNING_LEVEL,
+              yref: 'y',
+              text: 'Warning',
+              showarrow: false,
+              font: { color: 'black', size: 10 },
+              bgcolor: 'rgba(255,255,255,0.8)',
+              xanchor: 'left'
+            }
+          ]
+        }}
+        config={{
+          responsive: true,
+          displayModeBar: true,
+          scrollZoom: true,
+          displaylogo: false
+        }}
+        style={{ width: '100%', height: 400 }}
+        useResizeHandler={true}
+      />
     );
-  }
+  };
 
   return (
     <>
+
       <HeaNavLogo />
+            
       <MainContentWrapper>
         <Box p={3}>
-          <Typography variant="h4" gutterBottom>DGMTS Testing - Background</Typography>
+          <Typography variant="h4" gutterBottom>Vibration Data Analysis</Typography>
+          
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Stack direction="row" spacing={2} sx={{ mb: 4 }} alignItems="center">
+              <DateTimePicker
+                label="From Date"
+                value={fromDate}
+                onChange={setFromDate}
+                maxDateTime={toDate || undefined}
+                slotProps={{ textField: { size: 'small' } }}
+              />
+              <DateTimePicker
+                label="To Date"
+                value={toDate}
+                onChange={setToDate}
+                minDateTime={fromDate || undefined}
+                maxDateTime={new Date()}
+                slotProps={{ textField: { size: 'small' } }}
+              />
+              <Button 
+                variant="contained" 
+                onClick={fetchData}
+                disabled={loading || !fromDate || !toDate}
+                sx={{ height: 40 }}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Load Data'}
+              </Button>
+              {rawData.length > 0 && (
+                <Button 
+                  variant="outlined" 
+                  onClick={() => navigate('/vibration-data-table', { 
+                    state: { rawData, fromDate, toDate } 
+                  })}
+                  sx={{ height: 40 }}
+                >
+                  View Data Table
+                </Button>
+              )}
+            </Stack>
+          </LocalizationProvider>
 
-          <Box mb={4}>
-            {createPlot(processedData.x, 'X')}
-          </Box>
+          {error && (
+            <Box mb={4}>
+              <Typography color="error">{error}</Typography>
+            </Box>
+          )}
 
-          <Box mb={4}>
-            {createPlot(processedData.y, 'Y')}
-          </Box>
+          {rawData.length > 0 && (
+            <>
+              {processedData.x.values.length > 0 && (
+                <Box mb={4} width="100%">
+                  {createSinglePlot(processedData.x, 'X', '#FF6384')}
+                </Box>
+              )}
+              {processedData.y.values.length > 0 && (
+                <Box mb={4} width="100%">
+                  {createSinglePlot(processedData.y, 'Y', '#36A2EB')}
+                </Box>
+              )}
+              {processedData.z.values.length > 0 && (
+                <Box mb={4} width="100%">
+                  {createSinglePlot(processedData.z, 'Z', '#FFCE56')}
+                </Box>
+              )}
+              <Box mb={4} width="100%">
+                {createCombinedPlot(processedData.combined)}
+              </Box>
+            </>
+          )}
 
-          <Box mb={4}>
-            {createPlot(processedData.z, 'Z')}
-          </Box>
+          {!loading && rawData.length === 0 && !error && (
+            <Typography variant="body1" color="textSecondary">
+              Select a date range and click "Load Data" to view vibration data.
+            </Typography>
+          )}
         </Box>
       </MainContentWrapper>
     </>

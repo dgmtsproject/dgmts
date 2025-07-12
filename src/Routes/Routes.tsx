@@ -33,6 +33,7 @@ import FileProcessor from "../pages/FileProcessor";
 import FileManager from "../pages/FileManager";
 import EventGraph from "../pages/EventGraph";
 import Background from "../pages/Background";
+import VibrationDataTablePage from "../pages/VibrationDataTablePage";
 import DeviceMap from "../pages/DeviceMap";
 import Maps from "../pages/Maps";
 import DataSummary from "../pages/DataSummary";
@@ -78,6 +79,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/dashboard" element={<DashBoard />} />
       <Route path="/event/:id/graph" element={<EventGraph />} /> 
       <Route path="/background" element={<Background />} />
+      <Route path="/vibration-data-table" element={<VibrationDataTablePage />} />
       <Route path="/seismograph-map" element={<DeviceMap/>} />
       <Route path="/long-bridge-map" element={<LongBridgeMap />} />
       <Route path="/maps" element={<Maps />} />
