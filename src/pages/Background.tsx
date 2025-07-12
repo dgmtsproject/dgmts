@@ -11,10 +11,6 @@ import { useNavigate } from 'react-router-dom';
 const MAX_POINTS = 1000;
 const WARNING_LEVEL = 0.5;
 
-interface PlotData {
-  time: Date[];
-  values: number[];
-}
 
 const Background: React.FC = () => {
   const navigate = useNavigate();
@@ -25,10 +21,7 @@ const Background: React.FC = () => {
   const [toDate, setToDate] = useState<Date | null>(new Date());
   
   // Separate data structures for each plot
-  const [xData, setXData] = useState<PlotData>({ time: [], values: [] });
-  const [yData, setYData] = useState<PlotData>({ time: [], values: [] });
-  const [zData, setZData] = useState<PlotData>({ time: [], values: [] });
-  const [combinedData, setCombinedData] = useState<PlotData[]>([]);
+
 
   const processedData = useMemo(() => {
     if (!rawData.length) {
