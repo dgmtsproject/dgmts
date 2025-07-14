@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { useEffect, useState, createContext, ReactNode } from "react";
 
 interface Permissions {
     access_to_site: boolean;
@@ -30,6 +30,42 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         download_data: false
     });
 
+    useEffect(() => {
+        const token = localStorage.getItem("jwtToken");
+        if (token) {
+            fetch("http://192.168.1.219:5000/api/check-auth", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => {
+                    setIsAdmin(data.user.role === "admin");
+                    setUserEmail(data.user.email);
+                    setPermissions({
+                        access_to_site: true,
+                        view_graph: true,
+                        view_data: true,
+                        download_graph: true,
+                        download_data: true,
+                        ...data.user.permissions // if backend returns permissions
+                    });
+                })
+                .catch(() => {
+                    setIsAdmin(false);
+                    setUserEmail(null);
+                    setPermissions({
+                        access_to_site: false,
+                        view_graph: false,
+                        view_data: false,
+                        download_graph: false,
+                        download_data: false
+                    });
+                    localStorage.removeItem("jwtToken");
+                });
+        }
+    }, []);
+
     return (
         <AdminContext.Provider value={{ isAdmin, setIsAdmin, userEmail, setUserEmail, permissions, setPermissions }}>
             {children}
@@ -38,7 +74,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 };
 
 export const useAdminContext = (): AdminContextType => {
-    const context = useContext(AdminContext);
+    const context = React.useContext(AdminContext);
     if (!context) {
         throw new Error('useAdminContext must be used within an AdminProvider');
     }

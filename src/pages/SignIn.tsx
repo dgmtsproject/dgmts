@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabase"; // Your existing Supabase client
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -28,39 +27,31 @@ const SignIn: React.FC = () => {
     }
 
     try {
-      const { data: users, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password);
+      const res = await fetch("http://192.168.1.219:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
 
-      if (error) throw error;
-      if (!users || users.length === 0) {
-        throw new Error("Invalid email or password");
-      }
+      // Store JWT token in localStorage
+      localStorage.setItem('jwtToken', data.token);
 
-      const user = users[0];
-      // Set permissions in context
+      // Set context from backend response
+      setIsAdmin(data.user.role === "admin");
+      setUserEmail(data.user.email);
       setPermissions({
-        access_to_site: !!user.access_to_site,
-        view_graph: !!user.view_graph,
-        view_data: !!user.view_data,
-        download_graph: !!user.download_graph,
-        download_data: !!user.download_data
+        access_to_site: true,
+        view_graph: true,
+        view_data: true,
+        download_graph: true,
+        download_data: true,
+        ...data.user.permissions // if backend returns permissions
       });
 
-      if (!user.access_to_site) {
-        toast.error("You do not have permission to access this site. Please contact your administrator.");
-        return;
-      }
-
-      const isAdmin = user.role === "admin";
-      setIsAdmin(isAdmin);
-      setUserEmail(email); // Store the email in context
-
-      toast.success(`${isAdmin ? "Admin" : "User"} login successful!`);
-      setTimeout(() => navigate("/dashboard"), 2000);
-
+      toast.success(`${data.user.role === "admin" ? "Admin" : "User"} login successful!`);
+      setTimeout(() => navigate("/dashboard"), 1000);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Login failed";
       toast.error(errorMessage);

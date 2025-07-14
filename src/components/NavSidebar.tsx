@@ -120,7 +120,8 @@ useEffect(() => {
     setOpenSecondProject(!opensecondProject);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    localStorage.removeItem('jwtToken');
     setIsAdmin(false);
     navigate('/signin');
   };
