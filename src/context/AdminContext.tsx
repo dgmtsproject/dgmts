@@ -44,12 +44,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     setIsAdmin(data.user.role === "admin");
                     setUserEmail(data.user.email);
                     setPermissions({
-                        access_to_site: true,
-                        view_graph: true,
-                        view_data: true,
-                        download_graph: true,
-                        download_data: true,
-                        ...data.user.permissions // if backend returns permissions
+                        ...data.user.permissions
                     });
                 })
                 .catch(() => {

@@ -39,6 +39,11 @@ const SignIn: React.FC = () => {
       // Store JWT token in localStorage
       localStorage.setItem('jwtToken', data.token);
 
+      // Enforce access_to_site permission
+      if (!data.user.permissions || !data.user.permissions.access_to_site) {
+        toast.error("You do not have permission to access this site. Please contact your administrator.");
+        return;
+      }
       // Set context from backend response
       setIsAdmin(data.user.role === "admin");
       setUserEmail(data.user.email);
