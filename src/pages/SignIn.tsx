@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import logo from "../assets/logo.jpg";
 import { useAdminContext } from "../context/AdminContext";
+import { API_BASE_URL } from '../config';
 
 // interface User {
 //   username: string;
@@ -27,7 +28,7 @@ const SignIn: React.FC = () => {
     }
 
     try {
-      const res = await fetch("http://192.168.1.219:5000/api/login", {
+      const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

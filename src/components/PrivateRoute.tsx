@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const PrivateRoute: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,7 @@ const PrivateRoute: React.FC = () => {
         return;
       }
       try {
-        const res = await fetch('http://192.168.1.219:5000/api/check-auth', {
+        const res = await fetch(`${API_BASE_URL}/api/check-auth`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

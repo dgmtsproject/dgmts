@@ -1,4 +1,5 @@
 import React, { useEffect, useState, createContext, ReactNode } from "react";
+import { API_BASE_URL } from '../config';
 
 interface Permissions {
     access_to_site: boolean;
@@ -33,7 +34,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         const token = localStorage.getItem("jwtToken");
         if (token) {
-            fetch("http://192.168.1.219:5000/api/check-auth", {
+            fetch(`${API_BASE_URL}/api/check-auth`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
