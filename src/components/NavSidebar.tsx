@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import {
   Folder as ProjectsIcon,
-  SettingsInputComponent as InstrumentsIcon,
   Notifications as AlarmsIcon,
   ShowChart as GraphsIcon,
   InsertDriveFile as FileManagerIcon,
@@ -42,7 +41,7 @@ const NavSidebar: React.FC = () => {
   const [opensecondProject, setOpenSecondProject] = useState(false);
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const [hasDgmtsTestingAccess, setHasDgmtsTestingAccess] = useState(false);
-  const { isAdmin, setIsAdmin, userEmail } = useAdminContext();
+  const { isAdmin, setIsAdmin, userEmail, permissions } = useAdminContext();
 
 useEffect(() => {
   const checkProjectAccess = async () => {
@@ -178,22 +177,14 @@ useEffect(() => {
         <Divider />
       </Box>
         <List>
-          <ListItemButton component={Link} to="/projects">
-            <ListItemIcon sx={{ color: 'inherit' }}>
-              <ProjectsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Projects" />
-          </ListItemButton>
-
-          
-            <ListItemButton component={Link} to="/instruments-list">
+          {permissions.access_to_site && (
+            <ListItemButton component={Link} to="/projects-list">
               <ListItemIcon sx={{ color: 'inherit' }}>
-                <InstrumentsIcon />
+                <ProjectsIcon />
               </ListItemIcon>
-              <ListItemText primary="Instruments" />
+              <ListItemText primary="Projects" />
             </ListItemButton>
-
-
+          )}
           <ListItemButton component={Link} to="/alarms">
             <ListItemIcon sx={{ color: 'inherit' }}>
               <AlarmsIcon />
@@ -201,106 +192,121 @@ useEffect(() => {
             <ListItemText primary="Alarms" />
           </ListItemButton>
 
-          <ListItemButton onClick={handleGraphsClick}>
-            <ListItemIcon sx={{ color: 'inherit' }}>
-              <GraphsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Graphs" />
-            {openGraphs ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openGraphs} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ bgcolor: '#003087' }}>
-              <ListItemButton
-                component={Link}
-                to="/project-graphs"
-                sx={{ pl: 4 }}
-              >
-                <ListItemText primary="Project Graphs" />
+          {permissions.view_graph && (
+            <>
+              <ListItemButton onClick={handleGraphsClick}>
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <GraphsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Graphs" />
+                {openGraphs ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
-              <ListItemButton
-                component={Link}
-                to="/view-custom-graphs"
-                sx={{ pl: 4 }}
-              >
-                <ListItemText primary="Custom Graphs" />
-              </ListItemButton>
-
-              {/* Long Bridge North Project Section - only show if has access */}
-              {(isAdmin || hasLongBridgeAccess) && (
-                <>
-                  <ListItemButton onClick={handleProjectClick} sx={{ pl: 4 }}>
-                    <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
-                      <ProjectIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Long Bridge North" />
-                    {openProject ? <ExpandLess /> : <ExpandMore />}
+              <Collapse in={openGraphs} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding sx={{ bgcolor: '#003087' }}>
+                  <ListItemButton
+                    component={Link}
+                    to="/project-graphs"
+                    sx={{ pl: 4 }}
+                  >
+                    <ListItemText primary="Project Graphs" />
                   </ListItemButton>
-                  <Collapse in={openProject} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
-                      <ListItemButton
-                        component={Link}
-                        to="/single-prism-with-time"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="Single Prism" />
-                      </ListItemButton>
-
-                      <ListItemButton
-                        component={Link}
-                        to="/multi-prisms-with-time"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="Multiple Prisms" />
-                      </ListItemButton>
-                      <ListItemButton
-                        component={Link}
-                        to="/amts-track-graphs"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="AMTS Track" />
-                      </ListItemButton>
-                      <ListItemButton
-                        component={Link}
-                        to="/amts-ref-graphs"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="AMTS Ref" />
-                      </ListItemButton>
-                    </List>
-                  </Collapse>
-                </>
-              )}
-              {(isAdmin || hasDgmtsTestingAccess) && (
-                <>
-                  <ListItemButton onClick={handleSecondProjectClick} sx={{ pl: 4 }}>
-                    <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
-                      <ProjectIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="DGMTS Testing" />
-                    {opensecondProject ? <ExpandLess /> : <ExpandMore />}
+                  <ListItemButton
+                    component={Link}
+                    to="/view-custom-graphs"
+                    sx={{ pl: 4 }}
+                  >
+                    <ListItemText primary="Custom Graphs" />
                   </ListItemButton>
-                  <Collapse in={opensecondProject} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
-                      <ListItemButton
-                        component={Link}
-                        to="/seismograph"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="Seismograph" />
+
+                  {/* Long Bridge North Project Section - only show if has access */}
+                  {(isAdmin || hasLongBridgeAccess) && (
+                    <>
+                      <ListItemButton onClick={handleProjectClick} sx={{ pl: 4 }}>
+                        <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                          <ProjectIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Long Bridge North" />
+                        {openProject ? <ExpandLess /> : <ExpandMore />}
                       </ListItemButton>
-                      <ListItemButton
-                        component={Link}
-                        to="/background"
-                        sx={{ pl: 4 }}
-                      >
-                        <ListItemText primary="Background" />
+                      <Collapse in={openProject} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                          <ListItemButton
+                            component={Link}
+                            to="/single-prism-with-time"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Single Prism" />
+                          </ListItemButton>
+
+                          <ListItemButton
+                            component={Link}
+                            to="/multi-prisms-with-time"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Multiple Prisms" />
+                          </ListItemButton>
+                          <ListItemButton
+                            component={Link}
+                            to="/amts-track-graphs"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="AMTS Track" />
+                          </ListItemButton>
+                          <ListItemButton
+                            component={Link}
+                            to="/amts-ref-graphs"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="AMTS Ref" />
+                          </ListItemButton>
+                        </List>
+                      </Collapse>
+                    </>
+                  )}
+                  {(isAdmin || hasDgmtsTestingAccess) && (
+                    <>
+                      <ListItemButton onClick={handleSecondProjectClick} sx={{ pl: 4 }}>
+                        <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                          <ProjectIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="DGMTS Testing" />
+                        {opensecondProject ? <ExpandLess /> : <ExpandMore />}
                       </ListItemButton>
-                    </List>
-                  </Collapse>
-                </>
-              )}
-            </List>
-          </Collapse>
+                      <Collapse in={opensecondProject} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                          <ListItemButton
+                            component={Link}
+                            to="/seismograph"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Seismograph" />
+                          </ListItemButton>
+                          <ListItemButton
+                            component={Link}
+                            to="/background"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Background" />
+                          </ListItemButton>
+                        </List>
+                      </Collapse>
+                    </>
+                  )}
+                </List>
+              </Collapse>
+            </>
+          )}
+          {permissions.view_data && (
+            <ListItemButton
+              component={Link}
+              to="/data-summary"
+            >
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <SummaryIcon />
+              </ListItemIcon>
+              <ListItemText primary="Data Summary" />
+            </ListItemButton>
+          )}
 
           <ListItemButton
             component={Link}
@@ -311,21 +317,22 @@ useEffect(() => {
             </ListItemIcon>
             <ListItemText primary="Maps" />
           </ListItemButton>
-          <ListItemButton component={Link} to="/file-manager">
-            <ListItemIcon sx={{ color: 'inherit' }}>
-              <FileManagerIcon />
-            </ListItemIcon>
-            <ListItemText primary="File Manager" />
-          </ListItemButton>
-          <ListItemButton
-            component={Link}
-            to="/data-summary"
-          >
-            <ListItemIcon sx={{ color: 'inherit' }}>
-              <SummaryIcon />
-            </ListItemIcon>
-            <ListItemText primary="Data Summary" />
-          </ListItemButton>
+          {permissions.view_data && (
+            <ListItemButton component={Link} to="/file-manager">
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <FileManagerIcon />
+              </ListItemIcon>
+              <ListItemText primary="File Manager" />
+            </ListItemButton>
+          )}
+          {isAdmin && permissions.view_data && (
+            <ListItemButton component={Link} to="/export-data">
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <ExportIcon />
+              </ListItemIcon>
+              <ListItemText primary="Export Data" />
+            </ListItemButton>
+          )}
 
 
           {isAdmin && (
@@ -335,12 +342,6 @@ useEffect(() => {
                   <AdminIcon />
                 </ListItemIcon>
                 <ListItemText primary="Admin Setup" />
-              </ListItemButton>
-              <ListItemButton component={Link} to="/export-data">
-                <ListItemIcon sx={{ color: 'inherit' }}>
-                  <ExportIcon />
-                </ListItemIcon>
-                <ListItemText primary="Export Data" />
               </ListItemButton>
               {/* <ListItemButton component={Link} to="/seismograph">
                 <ListItemIcon sx={{ color: 'inherit' }}>

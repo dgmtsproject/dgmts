@@ -88,10 +88,15 @@ const EditInstrument: React.FC = () => {
             return;
         }
 
+        // Filter out empty emails
+        const filteredAlertEmails = EmailsForAlert.filter(email => email.trim() !== '');
+        const filteredWarningEmails = EmailsForWarning.filter(email => email.trim() !== '');
+        const filteredShutdownEmails = ShutEmailsForAlert.filter(email => email.trim() !== '');
+
         const emailData = {
-            alert_emails: EmailsForAlert,
-            warning_emails: EmailsForWarning,
-            shutdown_emails: ShutEmailsForAlert,
+            alert_emails: filteredAlertEmails.length > 0 ? filteredAlertEmails : null,
+            warning_emails: filteredWarningEmails.length > 0 ? filteredWarningEmails : null,
+            shutdown_emails: filteredShutdownEmails.length > 0 ? filteredShutdownEmails : null,
         };
 
         if (instrument) {
@@ -100,9 +105,9 @@ const EditInstrument: React.FC = () => {
                 .update({
                     instrument_id: instrumentId,
                     instrument_name: instrumentName,
-                    alert_value: alertValue,
-                    warning_value: warningValue,
-                    shutdown_value: shutdownValue,
+                    alert_value: alertValue ? Number(alertValue) : null,
+                    warning_value: warningValue ? Number(warningValue) : null,
+                    shutdown_value: shutdownValue ? Number(shutdownValue) : null,
                     project_id: project.id,
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
@@ -126,9 +131,9 @@ const EditInstrument: React.FC = () => {
                 {
                     instrument_id: instrumentId,
                     instrument_name: instrumentName,
-                    alert_value: alertValue,
-                    warning_value: warningValue,
-                    shutdown_value: shutdownValue,
+                    alert_value: alertValue ? Number(alertValue) : null,
+                    warning_value: warningValue ? Number(warningValue) : null,
+                    shutdown_value: shutdownValue ? Number(shutdownValue) : null,
                     project_id: project.id,
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
@@ -310,9 +315,8 @@ const EditInstrument: React.FC = () => {
                             {/* Alert Values */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
-                                    label="Alert Value"
+                                    label="Alert Value (optional)"
                                     type="number"
-                                    required
                                     value={alertValue}
                                     onChange={(e) => setAlertValue(e.target.value)}
                                     fullWidth
@@ -322,7 +326,7 @@ const EditInstrument: React.FC = () => {
                                     {EmailsForAlert.map((email, i) => (
                                         <Box key={i} display="flex" alignItems="center" gap={1}>
                                             <TextField
-                                                label={`Alert Email ${i + 1}`}
+                                                label={`Alert Email ${i + 1} (optional)`}
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => {
@@ -353,9 +357,8 @@ const EditInstrument: React.FC = () => {
                             {/* Warning Values */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
-                                    label="Warning Value"
+                                    label="Warning Value (optional)"
                                     type="number"
-                                    required
                                     value={warningValue}
                                     onChange={(e) => setWarningValue(e.target.value)}
                                     fullWidth
@@ -364,7 +367,7 @@ const EditInstrument: React.FC = () => {
                                     {EmailsForWarning.map((email, i) => (
                                         <Box key={i} display="flex" alignItems="center" gap={1}>
                                             <TextField
-                                                label={`Warning Email ${i + 1}`}
+                                                label={`Warning Email ${i + 1} (optional)`}
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => {
@@ -394,9 +397,8 @@ const EditInstrument: React.FC = () => {
                             {/* Shutdown Values */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
-                                    label="Shutdown Value"
+                                    label="Shutdown Value (optional)"
                                     type="number"
-                                    required
                                     value={shutdownValue}
                                     onChange={(e) => setShutdownValue(e.target.value)}
                                     fullWidth
@@ -405,7 +407,7 @@ const EditInstrument: React.FC = () => {
                                     {ShutEmailsForAlert.map((email, i) => (
                                         <Box key={i} display="flex" alignItems="center" gap={1}>
                                             <TextField
-                                                label={`Shutdown Email ${i + 1}`}
+                                                label={`Shutdown Email ${i + 1} (optional)`}
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => {

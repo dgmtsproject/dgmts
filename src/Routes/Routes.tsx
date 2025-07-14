@@ -1,7 +1,6 @@
 // src/Routes.tsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Projects from "../pages/Projects";
 import Instruments from "../pages/Instruments";
 import Alarms from "../pages/Alarms";
 import ProjectGraphs from "../pages/ProjectGraphs";
@@ -46,7 +45,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<Navigate to="/signin" />} />
       {/* <Route path="/signup" element={<SignUp />} /> */}
       <Route path="/signin" element={<SignIn />} />
-      <Route path="/projects" element={<Projects />} />
       <Route path="/ProjectForm" element={<ProjectForm />} />
       <Route path="/instruments" element={<Instruments />} />
       <Route path="/alarms" element={<Alarms />} />

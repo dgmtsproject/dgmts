@@ -22,9 +22,9 @@ type Instrument = {
   id: number;
   instrument_id: string;
   instrument_name: string;
-  alert_value: number;
-  warning_value: number;
-  shutdown_value: number;
+  alert_value: number | null;
+  warning_value: number | null;
+  shutdown_value: number | null;
   project_id: number;
   project_name?: string;
   sno: string;
@@ -159,7 +159,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
         <HeaNavLogo />
         <MainContentWrapper>
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Button variant="contained" onClick={() => navigate('/projects')}>
+            <Button variant="contained" onClick={() => navigate('/projects-list')}>
               Back to Projects
             </Button>
           </Box>
@@ -198,7 +198,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
       <HeaNavLogo />
       <MainContentWrapper>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 2 }}>
-          <Button variant="contained" onClick={() => navigate('/projects')}>
+          <Button variant="contained" onClick={() => navigate('/projects-list')}>
             Back to Projects
           </Button>
           {!location.state?.project && (
@@ -252,9 +252,9 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                             instrument.instrument_name
                           )}
                         </TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value}</TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value}</TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value || '-'}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value || '-'}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value || '-'}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
                           <Button
                             variant="contained"
@@ -271,6 +271,31 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                             sx={{ py: 1, fontSize: 14, ml: 1 }}
                           >
                             <DeleteIcon />
+                          </Button>
+
+                          <Button
+                            variant="contained"
+                            color="info"
+                            sx={{ py: 1, fontSize: 14, ml: 1 }}
+                            disabled={
+                              !(
+                                instrument.instrument_id === 'SMG1' ||
+                                instrument.instrument_id === 'AMTS-1' ||
+                                instrument.instrument_id === 'AMTS-2'
+                              )
+                            }
+                            onClick={() => {
+                              if (instrument.instrument_id === 'SMG1') {
+                                navigate('/background');
+                              } else if (
+                                instrument.instrument_id === 'AMTS-1' ||
+                                instrument.instrument_id === 'AMTS-2'
+                              ) {
+                                navigate('/single-prism-with-time');
+                              }
+                            }}
+                          >
+                            View
                           </Button>
 
                           <Dialog

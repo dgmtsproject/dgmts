@@ -12,11 +12,15 @@ import {
   Box,
   Typography
 } from '@mui/material';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Project {
   id: string;
   name: string;
 }
+
+const SUPPORTED_PROJECTS = ['Long Bridge North', 'DGMTS Testing'];
 
 const DataSummary: React.FC = () => {
   const navigate = useNavigate();
@@ -29,35 +33,26 @@ const DataSummary: React.FC = () => {
     const fetchProjects = async () => {
       try {
         setLoadingProjects(true);
-        
         const { data: allProjects, error: projectsError } = await supabase
           .from('Projects')
-          .select('id, name')
-          .in('name', ['Long Bridge North', 'DGMTS Testing']);
-
+          .select('id, name');
         if (projectsError) throw projectsError;
         if (!allProjects) return;
-
         setProjects(allProjects);
-
         if (isAdmin) {
           setAccessibleProjects(allProjects);
           setLoadingProjects(false);
           return;
         }
-
         if (userEmail) {
           const { data: userProjects, error: accessError } = await supabase
             .from('ProjectUsers')
             .select('project_id, Projects(id, name)')
             .eq('user_email', userEmail);
-
           if (accessError) throw accessError;
-
           const accessible = allProjects.filter(project => 
             userProjects?.some(up => up.project_id === project.id)
           );
-
           setAccessibleProjects(accessible);
         }
       } catch (error) {
@@ -66,23 +61,25 @@ const DataSummary: React.FC = () => {
         setLoadingProjects(false);
       }
     };
-
     fetchProjects();
   }, [isAdmin, userEmail]);
 
   const handleProjectSelect = (projectId: string) => {
     const selectedProject = projects.find(p => p.id === projectId);
     if (!selectedProject) return;
-
-    switch(selectedProject.name) {
-      case 'Long Bridge North':
-        navigate('/long-bridge-data-summary');
-        break;
-      case 'DGMTS Testing':
-        navigate('/DGMTS-data-summary');
-        break;
-      default:
-        console.warn('Unknown project selected');
+    if (SUPPORTED_PROJECTS.includes(selectedProject.name)) {
+      switch(selectedProject.name) {
+        case 'Long Bridge North':
+          navigate('/long-bridge-data-summary');
+          break;
+        case 'DGMTS Testing':
+          navigate('/DGMTS-data-summary');
+          break;
+        default:
+          break;
+      }
+    } else {
+      toast.info('No data summary available for this project');
     }
   };
 
@@ -90,6 +87,7 @@ const DataSummary: React.FC = () => {
     <>
       <HeaNavLogo/>
       <MainContentWrapper>
+        <ToastContainer />
         <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
           <Typography variant="h5" align="center" gutterBottom>
             Data Summary
@@ -97,7 +95,6 @@ const DataSummary: React.FC = () => {
           <Typography align="center" sx={{ mb: 2 }}>
             Select a project to view its data summary.
             </Typography>
-          
           {loadingProjects ? (
             <Typography align="center">Loading projects...</Typography>
           ) : accessibleProjects.length === 0 ? (

@@ -8,21 +8,15 @@ import { useAdminContext } from '../context/AdminContext';
 const Dashboard: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { isAdmin, userEmail } = useAdminContext();
+  const { isAdmin, userEmail, permissions } = useAdminContext();
 
   const featureCards = [
-    {
+    ...(permissions.access_to_site ? [{
       title: 'Projects',
       description: 'Manage and view all your monitoring projects',
       icon: '📊',
-      path: '/projects'
-    },
-    {
-      title: 'Instruments',
-      description: 'Configure and monitor your instruments',
-      icon: '📡',
-      path: '/instruments-list'
-    },
+      path: '/projects-list'
+    }] : []),
     {
       title: 'Data Visualization',
       description: 'View graphs and analyze your data',
@@ -104,29 +98,33 @@ const Dashboard: React.FC = () => {
             Quick Actions
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-            <Button 
-              variant="contained" 
-              size="large"
-              onClick={() => navigate('/file-manager')}
-            >
-              File Manager
-            </Button>
-            <Button 
-              variant="outlined" 
-              size="large"
-              onClick={() => navigate('/data-summary')}
-            >
-              Data Summary
-            </Button>
-            {isAdmin && (
-              <Button 
-                variant="contained" 
-                color="secondary" 
-                size="large"
-                onClick={() => navigate('/export-data')}
-              >
-                Export Data
-              </Button>
+            {permissions.view_data && (
+              <>
+                <Button 
+                  variant="contained" 
+                  size="large"
+                  onClick={() => navigate('/file-manager')}
+                >
+                  File Manager
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  size="large"
+                  onClick={() => navigate('/data-summary')}
+                >
+                  Data Summary
+                </Button>
+                {isAdmin && (
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    size="large"
+                    onClick={() => navigate('/export-data')}
+                  >
+                    Export Data
+                  </Button>
+                )}
+              </>
             )}
           </Box>
         </Box>

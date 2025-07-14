@@ -7,10 +7,15 @@ import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
 const MAX_POINTS = 1000;
-const WARNING_LEVEL = 0.5;
 
+interface InstrumentSettings {
+  alert_value: number;
+  warning_value: number;
+  shutdown_value: number;
+}
 
 const Background: React.FC = () => {
   const navigate = useNavigate();
@@ -19,9 +24,33 @@ const Background: React.FC = () => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [fromDate, setFromDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [toDate, setToDate] = useState<Date | null>(new Date());
+  const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
   
   // Separate data structures for each plot
 
+  // Fetch instrument settings on component mount
+  useEffect(() => {
+    fetchInstrumentSettings();
+  }, []);
+
+  const fetchInstrumentSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('instruments')
+        .select('alert_value, warning_value, shutdown_value')
+        .eq('instrument_id', 'SMG1')
+        .single();
+
+      if (error) {
+        console.error('Error fetching instrument settings:', error);
+        return;
+      }
+      
+      setInstrumentSettings(data);
+    } catch (err) {
+      console.error('Error fetching instrument settings:', err);
+    }
+  };
 
   const processedData = useMemo(() => {
     if (!rawData.length) {
@@ -148,6 +177,162 @@ const Background: React.FC = () => {
 
     if (filtered.length === 0) return null;
 
+    // Create shapes and annotations for reference lines
+    const shapes: any[] = [];
+    const annotations: any[] = [];
+
+    if (instrumentSettings) {
+      // Alert level (orange)
+      if (instrumentSettings.alert_value) {
+        shapes.push(
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: instrumentSettings.alert_value,
+            x1: 1,
+            y1: instrumentSettings.alert_value,
+            line: { color: 'orange', width: 2, dash: 'dash' }
+          },
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: -instrumentSettings.alert_value,
+            x1: 1,
+            y1: -instrumentSettings.alert_value,
+            line: { color: 'orange', width: 2, dash: 'dash' }
+          }
+        );
+        annotations.push(
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: instrumentSettings.alert_value,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,165,0,0.8)',
+            xanchor: 'left'
+          },
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: -instrumentSettings.alert_value,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,165,0,0.8)',
+            xanchor: 'left'
+          }
+        );
+      }
+
+      // Warning level (red)
+      if (instrumentSettings.warning_value) {
+        shapes.push(
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: instrumentSettings.warning_value,
+            x1: 1,
+            y1: instrumentSettings.warning_value,
+            line: { color: 'red', width: 2, dash: 'dash' }
+          },
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: -instrumentSettings.warning_value,
+            x1: 1,
+            y1: -instrumentSettings.warning_value,
+            line: { color: 'red', width: 2, dash: 'dash' }
+          }
+        );
+        annotations.push(
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: instrumentSettings.warning_value,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,0,0,0.8)',
+            xanchor: 'left'
+          },
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: -instrumentSettings.warning_value,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,0,0,0.8)',
+            xanchor: 'left'
+          }
+        );
+      }
+
+      // Shutdown level (dark red)
+      if (instrumentSettings.shutdown_value) {
+        shapes.push(
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: instrumentSettings.shutdown_value,
+            x1: 1,
+            y1: instrumentSettings.shutdown_value,
+            line: { color: 'darkred', width: 3, dash: 'solid' }
+          },
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: -instrumentSettings.shutdown_value,
+            x1: 1,
+            y1: -instrumentSettings.shutdown_value,
+            line: { color: 'darkred', width: 3, dash: 'solid' }
+          }
+        );
+        annotations.push(
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: instrumentSettings.shutdown_value,
+            yref: 'y',
+            text: 'Shutdown',
+            showarrow: false,
+            font: { color: 'white', size: 10 },
+            bgcolor: 'rgba(139,0,0,0.9)',
+            xanchor: 'left'
+          },
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: -instrumentSettings.shutdown_value,
+            yref: 'y',
+            text: 'Shutdown',
+            showarrow: false,
+            font: { color: 'white', size: 10 },
+            bgcolor: 'rgba(139,0,0,0.9)',
+            xanchor: 'left'
+          }
+        );
+      }
+    }
+
     return (
       <Plot
         key={`${axis}-plot`}
@@ -207,52 +392,8 @@ const Background: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: [
-            {
-              type: 'line',
-              xref: 'paper',
-              yref: 'y',
-              x0: 0,
-              y0: WARNING_LEVEL,
-              x1: 1,
-              y1: WARNING_LEVEL,
-              line: { color: 'red', width: 1.5, dash: 'dash' }
-            },
-            {
-              type: 'line',
-              xref: 'paper',
-              yref: 'y',
-              x0: 0,
-              y0: -WARNING_LEVEL,
-              x1: 1,
-              y1: -WARNING_LEVEL,
-              line: { color: 'red', width: 1.5, dash: 'dash' }
-            }
-          ],
-          annotations: [
-            {
-              x: 0.01,
-              xref: 'paper',
-              y: WARNING_LEVEL,
-              yref: 'y',
-              text: 'Warning',
-              showarrow: false,
-              font: { color: 'black', size: 10 },
-              bgcolor: 'rgba(255,255,255,0.8)',
-              xanchor: 'left'
-            },
-            {
-              x: 0.01,
-              xref: 'paper',
-              y: -WARNING_LEVEL,
-              yref: 'y',
-              text: 'Warning',
-              showarrow: false,
-              font: { color: 'black', size: 10 },
-              bgcolor: 'rgba(255,255,255,0.8)',
-              xanchor: 'left'
-            }
-          ]
+          shapes: shapes,
+          annotations: annotations
         }}
         config={{
           responsive: true,
@@ -268,6 +409,163 @@ const Background: React.FC = () => {
 
   const createCombinedPlot = (combined: { time: Date[]; x: number[]; y: number[]; z: number[] }) => {
     if (!combined.time.length) return null;
+
+    // Create shapes and annotations for reference lines
+    const shapes: any[] = [];
+    const annotations: any[] = [];
+
+    if (instrumentSettings) {
+      // Alert level (orange)
+      if (instrumentSettings.alert_value) {
+        shapes.push(
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: instrumentSettings.alert_value,
+            x1: 1,
+            y1: instrumentSettings.alert_value,
+            line: { color: 'orange', width: 2, dash: 'dash' }
+          },
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: -instrumentSettings.alert_value,
+            x1: 1,
+            y1: -instrumentSettings.alert_value,
+            line: { color: 'orange', width: 2, dash: 'dash' }
+          }
+        );
+        annotations.push(
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: instrumentSettings.alert_value,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,165,0,0.8)',
+            xanchor: 'left'
+          },
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: -instrumentSettings.alert_value,
+            yref: 'y',
+            text: 'Alert',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,165,0,0.8)',
+            xanchor: 'left'
+          }
+        );
+      }
+
+      // Warning level (red)
+      if (instrumentSettings.warning_value) {
+        shapes.push(
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: instrumentSettings.warning_value,
+            x1: 1,
+            y1: instrumentSettings.warning_value,
+            line: { color: 'red', width: 2, dash: 'dash' }
+          },
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: -instrumentSettings.warning_value,
+            x1: 1,
+            y1: -instrumentSettings.warning_value,
+            line: { color: 'red', width: 2, dash: 'dash' }
+          }
+        );
+        annotations.push(
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: instrumentSettings.warning_value,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,0,0,0.8)',
+            xanchor: 'left'
+          },
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: -instrumentSettings.warning_value,
+            yref: 'y',
+            text: 'Warning',
+            showarrow: false,
+            font: { color: 'black', size: 10 },
+            bgcolor: 'rgba(255,0,0,0.8)',
+            xanchor: 'left'
+          }
+        );
+      }
+
+      // Shutdown level (dark red)
+      if (instrumentSettings.shutdown_value) {
+        shapes.push(
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: instrumentSettings.shutdown_value,
+            x1: 1,
+            y1: instrumentSettings.shutdown_value,
+            line: { color: 'darkred', width: 3, dash: 'solid' }
+          },
+          {
+            type: 'line',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: -instrumentSettings.shutdown_value,
+            x1: 1,
+            y1: -instrumentSettings.shutdown_value,
+            line: { color: 'darkred', width: 3, dash: 'solid' }
+          }
+        );
+        annotations.push(
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: instrumentSettings.shutdown_value,
+            yref: 'y',
+            text: 'Shutdown',
+            showarrow: false,
+            font: { color: 'white', size: 10 },
+            bgcolor: 'rgba(139,0,0,0.9)',
+            xanchor: 'left'
+          },
+          {
+            x: 0.01,
+            xref: 'paper',
+            y: -instrumentSettings.shutdown_value,
+            yref: 'y',
+            text: 'Shutdown',
+            showarrow: false,
+            font: { color: 'white', size: 10 },
+            bgcolor: 'rgba(139,0,0,0.9)',
+            xanchor: 'left'
+          }
+        );
+      }
+    }
+
     return (
       <Plot
         key="combined-plot"
@@ -337,7 +635,38 @@ const Background: React.FC = () => {
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
-          }
+          },
+          // Add reference line traces for legend
+          ...(instrumentSettings?.alert_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Alert (${instrumentSettings.alert_value} in/s)`,
+            line: { color: 'orange', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.warning_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Warning (${instrumentSettings.warning_value} in/s)`,
+            line: { color: 'red', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.shutdown_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Shutdown (${instrumentSettings.shutdown_value} in/s)`,
+            line: { color: 'darkred', width: 3, dash: 'solid' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : [])
         ]}
         layout={{
           title: { text: 'Combined Vibration Data', font: { size: 14 } },
@@ -371,52 +700,8 @@ const Background: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: [
-            {
-              type: 'line',
-              xref: 'paper',
-              yref: 'y',
-              x0: 0,
-              y0: WARNING_LEVEL,
-              x1: 1,
-              y1: WARNING_LEVEL,
-              line: { color: 'red', width: 1.5, dash: 'dash' }
-            },
-            {
-              type: 'line',
-              xref: 'paper',
-              yref: 'y',
-              x0: 0,
-              y0: -WARNING_LEVEL,
-              x1: 1,
-              y1: -WARNING_LEVEL,
-              line: { color: 'red', width: 1.5, dash: 'dash' }
-            }
-          ],
-          annotations: [
-            {
-              x: 0.01,
-              xref: 'paper',
-              y: WARNING_LEVEL,
-              yref: 'y',
-              text: 'Warning',
-              showarrow: false,
-              font: { color: 'black', size: 10 },
-              bgcolor: 'rgba(255,255,255,0.8)',
-              xanchor: 'left'
-            },
-            {
-              x: 0.01,
-              xref: 'paper',
-              y: -WARNING_LEVEL,
-              yref: 'y',
-              text: 'Warning',
-              showarrow: false,
-              font: { color: 'black', size: 10 },
-              bgcolor: 'rgba(255,255,255,0.8)',
-              xanchor: 'left'
-            }
-          ]
+          shapes: shapes,
+          annotations: annotations
         }}
         config={{
           responsive: true,
@@ -511,6 +796,29 @@ const Background: React.FC = () => {
             <Typography variant="body1" color="textSecondary">
               Select a date range and click "Load Data" to view vibration data.
             </Typography>
+          )}
+
+          {instrumentSettings && (
+            <Box mt={2} p={2} bgcolor="grey.100" borderRadius={1}>
+              <Typography variant="h6" gutterBottom>Seismograph Reference Levels</Typography>
+              <Stack direction="row" spacing={3}>
+                {instrumentSettings.alert_value && (
+                  <Typography variant="body2">
+                    <span style={{ color: 'orange', fontWeight: 'bold' }}>Alert:</span> ±{instrumentSettings.alert_value} in/s
+                  </Typography>
+                )}
+                {instrumentSettings.warning_value && (
+                  <Typography variant="body2">
+                    <span style={{ color: 'red', fontWeight: 'bold' }}>Warning:</span> ±{instrumentSettings.warning_value} in/s
+                  </Typography>
+                )}
+                {instrumentSettings.shutdown_value && (
+                  <Typography variant="body2">
+                    <span style={{ color: 'darkred', fontWeight: 'bold' }}>Shutdown:</span> ±{instrumentSettings.shutdown_value} in/s
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
           )}
         </Box>
       </MainContentWrapper>

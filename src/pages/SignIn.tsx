@@ -17,8 +17,9 @@ import { useAdminContext } from "../context/AdminContext";
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { setIsAdmin, setUserEmail } = useAdminContext();
+  const { setIsAdmin, setUserEmail, setPermissions } = useAdminContext();
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -39,6 +40,20 @@ const SignIn: React.FC = () => {
       }
 
       const user = users[0];
+      // Set permissions in context
+      setPermissions({
+        access_to_site: !!user.access_to_site,
+        view_graph: !!user.view_graph,
+        view_data: !!user.view_data,
+        download_graph: !!user.download_graph,
+        download_data: !!user.download_data
+      });
+
+      if (!user.access_to_site) {
+        toast.error("You do not have permission to access this site. Please contact your administrator.");
+        return;
+      }
+
       const isAdmin = user.role === "admin";
       setIsAdmin(isAdmin);
       setUserEmail(email); // Store the email in context
@@ -140,18 +155,42 @@ const SignIn: React.FC = () => {
                 fontSize: "16px",
               }}
             />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                fontSize: "16px",
-              }}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  padding: "12px",
+                  paddingRight: "40px",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  fontSize: "16px",
+                  width: "100%",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  color: "#666",
+                  padding: "4px",
+                }}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
             <button
               onClick={handleSignIn}
               style={{

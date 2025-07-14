@@ -12,11 +12,15 @@ import {
   Box,
   Typography
 } from '@mui/material';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Project {
   id: string;
   name: string;
 }
+
+const SUPPORTED_PROJECTS = ['Long Bridge North', 'DGMTS Testing'];
 
 const FileManager: React.FC = () => {
   const navigate = useNavigate();
@@ -29,38 +33,29 @@ const FileManager: React.FC = () => {
     const fetchProjects = async () => {
       try {
         setLoadingProjects(true);
-        
         // Fetch all projects
         const { data: allProjects, error: projectsError } = await supabase
           .from('Projects')
-          .select('id, name')
-          .in('name', ['Long Bridge North', 'DGMTS Testing']);
-
+          .select('id, name');
         if (projectsError) throw projectsError;
         if (!allProjects) return;
-
         setProjects(allProjects);
-
         // For admin, all projects are accessible
         if (isAdmin) {
           setAccessibleProjects(allProjects);
           setLoadingProjects(false);
           return;
         }
-
         // For regular users, projects they have access to
         if (userEmail) {
           const { data: userProjects, error: accessError } = await supabase
             .from('ProjectUsers')
             .select('project_id, Projects(id, name)')
             .eq('user_email', userEmail);
-
           if (accessError) throw accessError;
-
           const accessible = allProjects.filter(project => 
             userProjects?.some(up => up.project_id === project.id)
           );
-
           setAccessibleProjects(accessible);
         }
       } catch (error) {
@@ -69,23 +64,25 @@ const FileManager: React.FC = () => {
         setLoadingProjects(false);
       }
     };
-
     fetchProjects();
   }, [isAdmin, userEmail]);
 
   const handleProjectSelect = (projectId: string) => {
     const selectedProject = projects.find(p => p.id === projectId);
     if (!selectedProject) return;
-
-    switch(selectedProject.name) {
-      case 'Long Bridge North':
-        navigate('/reading-tables');
-        break;
-      case 'DGMTS Testing':
-        navigate('/seismograph');
-        break;
-      default:
-        console.warn('Unknown project selected');
+    if (SUPPORTED_PROJECTS.includes(selectedProject.name)) {
+      switch(selectedProject.name) {
+        case 'Long Bridge North':
+          navigate('/reading-tables');
+          break;
+        case 'DGMTS Testing':
+          navigate('/seismograph');
+          break;
+        default:
+          break;
+      }
+    } else {
+      toast.info('No file manager available for this project');
     }
   };
 
@@ -93,11 +90,11 @@ const FileManager: React.FC = () => {
     <>
       <HeaNavLogo/>
       <MainContentWrapper>
+        <ToastContainer />
         <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
           <Typography variant="h5" align="center" gutterBottom>
             Select Project to View Files
           </Typography>
-          
           {loadingProjects ? (
             <Typography align="center">Loading projects...</Typography>
           ) : accessibleProjects.length === 0 ? (

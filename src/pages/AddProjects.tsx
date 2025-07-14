@@ -61,7 +61,7 @@ const AddProjects: React.FC = () => {
             toast.success("Project added successfully!");
             // navigate in two seconds
             setTimeout(() => {
-                navigate('/projects');
+                navigate('/projects-list');
             }, 2000);
         }
     };
@@ -72,7 +72,7 @@ const AddProjects: React.FC = () => {
             <MainContentWrapper>
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                    <Button variant="contained" color="primary" onClick={() => navigate('/projects')}>
+                    <Button variant="contained" color="primary" onClick={() => navigate('/projects-list')}>
                         Back to Projects
                     </Button>
                 </Box>

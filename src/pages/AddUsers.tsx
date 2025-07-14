@@ -74,16 +74,15 @@ const AddUsers: React.FC = () => {
 
       if (userError) throw userError;
 
-      // 2. Add user to selected projects' user_emails array
+      // 2. Add user to ProjectUsers for each selected project (using user_email)
       if (selectedProjects.length > 0) {
-        const updates = selectedProjects.map(project => 
-          supabase.rpc('append_to_user_emails', {
-        p_project_id: project.id,  // Match the parameter names
-        p_user_email: formData.email
+        const inserts = selectedProjects.map(project =>
+          supabase.from('ProjectUsers').insert({
+            project_id: project.id,
+            user_email: formData.email
           })
         );
-
-        const results = await Promise.all(updates);
+        const results = await Promise.all(inserts);
         const errors = results.filter(r => r.error);
         if (errors.length > 0) throw errors[0].error;
       }

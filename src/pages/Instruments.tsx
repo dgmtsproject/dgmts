@@ -108,7 +108,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     console.log('Instrument added successfully:', data);
     toast.success('Instrument added successfully!');
     setTimeout(() => {
-      navigate('/projects', { state: { project } });
+      navigate('/projects-list', { state: { project } });
     }, 2000);
   }
 };

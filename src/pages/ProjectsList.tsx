@@ -31,30 +31,32 @@ const Projectslist: React.FC = () => {
     const fetchProjects = async () => {
       try {
         console.log('Fetching projects for:', userEmail, 'isAdmin:', isAdmin);
-  
-        let query = supabase.from('Projects').select('*');
-        
-        if (!isAdmin && userEmail) {
-          // For regular users - ONLY their projects (exclude null)
-          query = query.eq('user_email', userEmail);
+
+        let projects = [];
+        if (isAdmin) {
+          // Admins get everything
+          const { data, error } = await supabase.from('Projects').select('*');
+          if (error) throw error;
+          projects = data || [];
+        } else if (userEmail) {
+          // For regular users, get projects via ProjectUsers
+          const { data: projectUsers, error: puError } = await supabase
+            .from('ProjectUsers')
+            .select('project_id, Projects(*)')
+            .eq('user_email', userEmail);
+          if (puError) throw puError;
+          // Extract unique projects
+          projects = (projectUsers || [])
+            .map(pu => pu.Projects)
+            .filter(Boolean);
         }
-        // Admins get everything (no additional filters)
-  
-        const { data, error } = await query;
-  
-        if (error) throw error;
-  
         // Debug logging
-        console.log('Raw projects data:', data);
-        console.log('Filtered projects count:', data?.length);
-        
-        setProjectsData(data || []);
-  
+        console.log('Raw projects data:', projects);
+        setProjectsData(projects);
       } catch (err) {
         console.error('Error fetching projects:', err);
       }
     };
-  
     fetchProjects();
   }, [isAdmin, userEmail]);
 
@@ -72,16 +74,7 @@ const Projectslist: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', alignItems: 'center' }}>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={() => navigate('/projects')} 
-            style={{ marginLeft: '20px' }}
-          >
-            Back to Projects
-          </Button>
-        </div>
+      
       
         <div style={{ fontFamily: 'Arial, sans-serif', padding: '0px' }}>
           <h2 style={{ textAlign: 'center', marginTop: '20px', color: '#333' }}>
