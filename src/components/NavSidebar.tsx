@@ -39,8 +39,10 @@ const NavSidebar: React.FC = () => {
   const [openGraphs, setOpenGraphs] = useState(false);
   const [openProject, setOpenProject] = useState(false);
   const [opensecondProject, setOpenSecondProject] = useState(false);
+  const [openThirdProject, setOpenThirdProject] = useState(false);
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const [hasDgmtsTestingAccess, setHasDgmtsTestingAccess] = useState(false);
+  const [hasAncDarBcAccess, setHasAncDarBcAccess] = useState(false);
   const { isAdmin, setIsAdmin, userEmail, permissions } = useAdminContext();
 
 useEffect(() => {
@@ -105,8 +107,39 @@ useEffect(() => {
     }
   }
 
+  const checkAncDarBcAccess = async () => {
+    if (!userEmail) return;
+    try{
+      const { data: projectData, error: projectError} = await supabase
+        .from('Projects')
+        .select('id')
+        .eq('name', 'ANC DAR-BC Vibration Monitoring')
+        .single();
+      if (projectError || !projectData) {
+        console.error('Error fetching ANC DAR-BC Vibration Monitoring project:', projectError);
+        setHasAncDarBcAccess(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('ProjectUsers')
+        .select('*')
+        .eq('user_email', userEmail)
+        .eq('project_id', projectData.id);
+      setHasAncDarBcAccess(Boolean(isAdmin || (data && data.length > 0)));
+      if (error) {
+        console.error('Error checking ANC DAR-BC Vibration Monitoring access:', error);
+      }
+    
+    }
+    catch (err) {
+      console.error('Unexpected error checking ANC DAR-BC Vibration Monitoring access:', err);
+      setHasAncDarBcAccess(false);
+    }
+  }
+
   checkProjectAccess();
   checkDgmtsTestingAccess();
+  checkAncDarBcAccess();
 }, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
@@ -118,6 +151,9 @@ useEffect(() => {
   };
   const handleSecondProjectClick = () => {
     setOpenSecondProject(!opensecondProject);
+  };
+  const handleThirdProjectClick = () => {
+    setOpenThirdProject(!openThirdProject);
   };
 
   const handleLogout = async () => {
@@ -288,6 +324,28 @@ useEffect(() => {
                             sx={{ pl: 4 }}
                           >
                             <ListItemText primary="Background" />
+                          </ListItemButton>
+                        </List>
+                      </Collapse>
+                    </>
+                  )}
+                  {(isAdmin || hasAncDarBcAccess) && (
+                    <>
+                      <ListItemButton onClick={handleThirdProjectClick} sx={{ pl: 4 }}>
+                        <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                          <ProjectIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="ANC DAR-BC Vibration Monitoring" />
+                        {openThirdProject ? <ExpandLess /> : <ExpandMore />}
+                      </ListItemButton>
+                      <Collapse in={openThirdProject} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                          <ListItemButton
+                            component={Link}
+                            to="/tiltmeter"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Tiltmeter" />
                           </ListItemButton>
                         </List>
                       </Collapse>
