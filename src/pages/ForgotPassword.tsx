@@ -4,58 +4,37 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import logo from "../assets/logo.jpg";
-import { useAdminContext } from "../context/AdminContext";
 import { API_BASE_URL } from '../config';
 
-// interface User {
-//   username: string;
-//   email: string;
-//   password: string;
-//   role?: string; 
-// }
-
-const SignIn: React.FC = () => {
+const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setIsAdmin, setUserEmail, setPermissions } = useAdminContext();
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address");
       return;
     }
 
+    setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      
+      if (!res.ok) throw new Error(data.error || "Failed to send reset email");
 
-      // Store JWT token in localStorage
-      localStorage.setItem('jwtToken', data.token);
-
-      // Enforce access_to_site permission
-      if (!data.user.permissions || !data.user.permissions.access_to_site) {
-        toast.error("You do not have permission to access this site. Please contact your administrator.");
-        return;
-      }
-      // Set context from backend response
-      setIsAdmin(data.user.role === "admin");
-      setUserEmail(data.user.email);
-      setPermissions({
-        ...data.user.permissions
-      });
-
-      toast.success(`${data.user.role === "admin" ? "Admin" : "User"} login successful!`);
-      setTimeout(() => navigate("/dashboard"), 1000);
+      toast.success("Password reset email sent successfully! Please check your inbox.");
+      setTimeout(() => navigate("/signin"), 2000);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Login failed";
+      const errorMessage = error instanceof Error ? error.message : "Failed to send reset email";
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -122,7 +101,7 @@ const SignIn: React.FC = () => {
 
         <div style={{ marginTop: "60px", width: "100%", maxWidth: "400px", zIndex: 1 }}>
           <h2 style={{ textAlign: "center", color: "#003087", fontSize: "28px" }}>
-            Sign In
+            Forgot Password
           </h2>
           <div
             style={{
@@ -135,6 +114,10 @@ const SignIn: React.FC = () => {
               gap: "20px",
             }}
           >
+            <p style={{ textAlign: "center", color: "#666", margin: "0 0 20px 0" }}>
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+            
             <input
               type="email"
               placeholder="Email"
@@ -147,86 +130,59 @@ const SignIn: React.FC = () => {
                 fontSize: "16px",
               }}
             />
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  padding: "12px",
-                  paddingRight: "40px",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  fontSize: "16px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "16px",
-                  color: "#666",
-                  padding: "4px",
-                }}
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
-              </button>
-            </div>
+            
             <button
-              onClick={handleSignIn}
+              onClick={handleForgotPassword}
+              disabled={isLoading}
               style={{
                 padding: "14px",
-                backgroundColor: "#0056d2",
+                backgroundColor: isLoading ? "#ccc" : "#0056d2",
                 color: "white",
                 fontWeight: "bold",
                 fontSize: "16px",
                 borderRadius: "8px",
                 border: "none",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 transition: "background 0.3s ease",
               }}
               onMouseOver={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0044aa";
+                if (!isLoading) {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0044aa";
+                }
               }}
               onMouseOut={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0056d2";
+                if (!isLoading) {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0056d2";
+                }
               }}
             >
-              Sign In
+              {isLoading ? "Sending..." : "Send Reset Link"}
             </button>
             
-            <div style={{ textAlign: "center", marginTop: "10px" }}>
-              <button
-                onClick={() => navigate("/forgot-password")}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#0056d2",
-                  textDecoration: "underline",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                }}
-                onMouseOver={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.color = "#0044aa";
-                }}
-                onMouseOut={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.color = "#0056d2";
-                }}
-              >
-                Forgot Password?
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/signin")}
+              style={{
+                padding: "12px",
+                backgroundColor: "transparent",
+                color: "#0056d2",
+                fontWeight: "bold",
+                fontSize: "14px",
+                borderRadius: "8px",
+                border: "1px solid #0056d2",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+              onMouseOver={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0056d2";
+                (e.currentTarget as HTMLButtonElement).style.color = "white";
+              }}
+              onMouseOut={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                (e.currentTarget as HTMLButtonElement).style.color = "#0056d2";
+              }}
+            >
+              Back to Sign In
+            </button>
           </div>
         </div>
 
@@ -250,4 +206,4 @@ const SignIn: React.FC = () => {
   );
 };
 
-export default SignIn;
+export default ForgotPassword; 

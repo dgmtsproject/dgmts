@@ -347,6 +347,13 @@ useEffect(() => {
                           >
                             <ListItemText primary="Tiltmeter" />
                           </ListItemButton>
+                          <ListItemButton
+                            component={Link}
+                            to="/tiltmeter-30846"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Tiltmeter (30846)" />
+                          </ListItemButton>
                         </List>
                       </Collapse>
                     </>

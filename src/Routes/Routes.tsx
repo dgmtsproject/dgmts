@@ -9,6 +9,8 @@ import ExportData from "../pages/ExportData";
 import Help from "../pages/Help";
 // import SignUp from './pages/SignUp'; // Uncomment if using SignUp
 import SignIn from "../pages/SignIn";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 import ProjectForm from "../pages/ProjectForm";
 import DashBoard from "../pages/DashBoard";
 // import MergeTracks from "../components/MergeTracks";
@@ -39,6 +41,7 @@ import DataSummary from "../pages/DataSummary";
 import DgmtsDataSummary from "../pages/DgmtsDataSummary";
 import LongBridgeMap from "../pages/LongBridgeMap";
 import Tiltmeter from "../pages/Tiltmeter";
+import Tiltmeter30846 from "../pages/Tiltmeter30846";
 import PrivateRoute from "../components/PrivateRoute";
 
 const AppRoutes: React.FC = () => {
@@ -47,6 +50,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<Navigate to="/signin" />} />
       {/* <Route path="/signup" element={<SignUp />} /> */}
       <Route path="/signin" element={<SignIn />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<PrivateRoute />}> {/* All protected routes below */}
         <Route path="/ProjectForm" element={<ProjectForm />} />
         <Route path="/instruments" element={<Instruments />} />
@@ -81,6 +86,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/event/:id/graph" element={<EventGraph />} /> 
         <Route path="/background" element={<Background />} />
         <Route path="/tiltmeter" element={<Tiltmeter />} />
+        <Route path="/tiltmeter-30846" element={<Tiltmeter30846 />} />
         <Route path="/vibration-data-table" element={<VibrationDataTablePage />} />
         <Route path="/seismograph-map" element={<DeviceMap/>} />
         <Route path="/long-bridge-map" element={<LongBridgeMap />} />
