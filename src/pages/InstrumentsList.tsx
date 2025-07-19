@@ -241,47 +241,43 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
-                          {instrument.instrument_name === 'Seismograph' ? (
-                            <span
-                              style={{ color: '#1976d2', textDecoration: 'underline', cursor: 'pointer' }}
-                              onClick={() => navigate('/seismograph')}
-                            >
-                              {instrument.instrument_name}
-                            </span>
-                          ) : (
-                            instrument.instrument_name
-                          )}
+                          {instrument.instrument_name}
                         </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value || '-'}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value || '-'}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value || '-'}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handleEditInstrument(instrument)}
-                            sx={{ py: 1, fontSize: 14 }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="error"
-                            onClick={() => setOpenDialogId(instrument.instrument_id)}
-                            sx={{ py: 1, fontSize: 14, ml: 1 }}
-                          >
-                            <DeleteIcon />
-                          </Button>
-
+                          {isAdmin && (
+                            <>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handleEditInstrument(instrument)}
+                                sx={{ py: 1, fontSize: 14 }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="contained"
+                                color="error"
+                                onClick={() => setOpenDialogId(instrument.instrument_id)}
+                                sx={{ py: 1, fontSize: 14, ml: 1 }}
+                              >
+                                <DeleteIcon />
+                              </Button>
+                            </>
+                          )}
                           <Button
                             variant="contained"
                             color="info"
-                            sx={{ py: 1, fontSize: 14, ml: 1 }}
+                            sx={{ py: 1, fontSize: 14, ml: isAdmin ? 1 : 0 }}
                             disabled={
                               !(
                                 instrument.instrument_id === 'SMG1' ||
                                 instrument.instrument_id === 'AMTS-1' ||
-                                instrument.instrument_id === 'AMTS-2'
+                                instrument.instrument_id === 'AMTS-2' ||
+                                instrument.instrument_name === 'Tiltmeter' ||
+                                instrument.instrument_name === 'Tiltmeter (30846)'
                               )
                             }
                             onClick={() => {
@@ -292,41 +288,45 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                 instrument.instrument_id === 'AMTS-2'
                               ) {
                                 navigate('/single-prism-with-time');
+                              } else if (instrument.instrument_name === 'Tiltmeter') {
+                                navigate('/tiltmeter');
+                              } else if (instrument.instrument_name === 'Tiltmeter (30846)') {
+                                navigate('/tiltmeter-30846');
                               }
                             }}
                           >
                             View
                           </Button>
 
-                          <Dialog
-                             open={openDialogId === instrument.instrument_id}
-                            onClose={() => setOpenDialogId(null)}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
-                          >
-                            <DialogTitle id="alert-dialog-title">
-                              Confirm Deletion
-                            </DialogTitle>
-                            <DialogContent>
-                              <DialogContentText id="alert-dialog-description">
-                                Are you sure you want to delete this instrument? This action cannot be undone.
-                              </DialogContentText>
-                            </DialogContent>
-                            <DialogActions>
-                              <Button onClick={() => setOpenDialogId(null)} color="primary">
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={() => handleDeleteInstrument(instrument.instrument_id)}
-                                color="error"
-                                autoFocus
-                              >
-                                Delete
-                              </Button>
-                            </DialogActions>
-                          </Dialog>
-
-
+                          {isAdmin && (
+                            <Dialog
+                               open={openDialogId === instrument.instrument_id}
+                              onClose={() => setOpenDialogId(null)}
+                              aria-labelledby="alert-dialog-title"
+                              aria-describedby="alert-dialog-description"
+                            >
+                              <DialogTitle id="alert-dialog-title">
+                                Confirm Deletion
+                              </DialogTitle>
+                              <DialogContent>
+                                <DialogContentText id="alert-dialog-description">
+                                  Are you sure you want to delete this instrument? This action cannot be undone.
+                                </DialogContentText>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={() => setOpenDialogId(null)} color="primary">
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteInstrument(instrument.instrument_id)}
+                                  color="error"
+                                  autoFocus
+                                >
+                                  Delete
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))

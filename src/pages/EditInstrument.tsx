@@ -17,11 +17,13 @@ import HeaNavLogo from '../components/HeaNavLogo';
 import { supabase } from '../supabase';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAdminContext } from '../context/AdminContext';
 
 const EditInstrument: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { instrument } = location.state || {};
+    const { isAdmin } = useAdminContext();
 
     type Project = {
         id: string;
@@ -46,6 +48,14 @@ const EditInstrument: React.FC = () => {
     const [alertValue, setAlertValue] = useState<number | string>(instrument?.alert_value || '');
     const [warningValue, setWarningValue] = useState<number | string>(instrument?.warning_value || '');
     const [shutdownValue, setShutdownValue] = useState<number | string>(instrument?.shutdown_value || '');
+
+    // Restrict access to only admins
+    useEffect(() => {
+        if (!isAdmin) {
+            toast.error('You do not have permission to edit instruments.');
+            navigate('/projects-list');
+        }
+    }, [isAdmin, navigate]);
 
     useEffect(() => {
         if (instrument) {
