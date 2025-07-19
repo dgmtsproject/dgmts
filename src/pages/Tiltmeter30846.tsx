@@ -16,6 +16,7 @@ import {
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
+import { supabase } from '../supabase';
 
 interface SensorData {
   id: number;
@@ -27,11 +28,18 @@ interface SensorData {
   created_at: string;
 }
 
+interface InstrumentSettings {
+  alert_value?: number;
+  warning_value?: number;
+  shutdown_value?: number;
+}
+
 const Tiltmeter30846: React.FC = () => {
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedNode, setSelectedNode] = useState<number>(142939);
   const [timeRange, setTimeRange] = useState<string>('24h');
+  const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
 
   const fetchSensorData = async () => {
     setLoading(true);
@@ -96,8 +104,23 @@ const Tiltmeter30846: React.FC = () => {
     }
   };
 
+  const fetchInstrumentSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('instruments')
+        .select('alert_value, warning_value, shutdown_value')
+        .eq('instrument_name', 'Tiltmeter (30846)')
+        .single();
+      if (error) throw error;
+      setInstrumentSettings(data);
+    } catch (err) {
+      console.error('Error fetching instrument settings:', err);
+    }
+  };
+
   useEffect(() => {
     fetchSensorData();
+    fetchInstrumentSettings();
   }, [selectedNode, timeRange]);
 
   // Prepare data for charts
@@ -106,14 +129,139 @@ const Tiltmeter30846: React.FC = () => {
   const yValues = sensorData.map(d => d.y_value);
   const zValues = sensorData.map(d => d.z_value);
 
-  const chartLayout = {
-    autosize: true,
-    margin: { l: 50, r: 50, t: 50, b: 50 },
-    showlegend: true,
-    xaxis: { title: { text: 'Time' } },
-    yaxis: { title: { text: 'Tilt (degrees)' } },
-    height: 400,
+  // Color palette and hovertemplate for consistency
+  const COLORS = {
+    x: '#10b981',
+    y: '#8b5cf6',
+    z: '#f59e0b',
   };
+  const AXIS_HOVERTEMPLATE = (axis: string) => `
+    <b>${axis}-Axis</b><br>
+    Time: %{x|%m/%d/%Y %H:%M}<br>
+    Value: %{y:.6f}<extra></extra>
+  `;
+
+  const plotlyLayout = {
+    autosize: true,
+    height: 500,
+    margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
+    xaxis: {
+      title: { text: 'Time', standoff: 25, font: { size: 12, weight: 600 } },
+      type: 'date' as const,
+      tickmode: 'auto' as const,
+      nticks: 5,
+      tickformat: '%m/%d %H:%M',
+      tickangle: 0,
+      gridcolor: '#f0f0f0',
+      gridwidth: 1,
+      showgrid: true,
+      automargin: true,
+      autorange: true,
+    },
+    yaxis: {
+      title: { text: 'Tilt (degrees)', standoff: 15 },
+      autorange: true,
+      tickmode: 'auto' as const,
+      gridcolor: '#f0f0f0',
+      gridwidth: 1,
+      zeroline: true,
+      zerolinecolor: '#f0f0f0',
+      zerolinewidth: 1,
+      showgrid: true,
+      fixedrange: false,
+    },
+    showlegend: true,
+    legend: {
+      orientation: 'h' as const,
+      y: -0.2,
+      x: 0.5,
+      xanchor: 'center' as const,
+      font: { size: 12 },
+      bgcolor: 'rgba(255,255,255,0.8)',
+      bordercolor: '#CCC',
+      borderwidth: 1,
+    },
+    hovermode: 'x unified' as const,
+    hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } },
+    plot_bgcolor: 'white',
+    paper_bgcolor: 'white',
+  };
+
+  function getReferenceShapesAndAnnotations() {
+    const shapes: any[] = [];
+    const annotations: any[] = [];
+    if (!instrumentSettings) return { shapes, annotations };
+    // Alert (orange)
+    if (instrumentSettings.alert_value) {
+      shapes.push(
+        {
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.alert_value, x1: 1, y1: instrumentSettings.alert_value,
+          line: { color: 'orange', width: 2, dash: 'dash' }
+        },
+        {
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.alert_value, x1: 1, y1: -instrumentSettings.alert_value,
+          line: { color: 'orange', width: 2, dash: 'dash' }
+        }
+      );
+      annotations.push(
+        {
+          x: 0.01, xref: 'paper', y: instrumentSettings.alert_value, yref: 'y', text: 'Alert', showarrow: false,
+          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
+        },
+        {
+          x: 0.01, xref: 'paper', y: -instrumentSettings.alert_value, yref: 'y', text: 'Alert', showarrow: false,
+          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
+        }
+      );
+    }
+    // Warning (light yellow)
+    if (instrumentSettings.warning_value) {
+      shapes.push(
+        {
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.warning_value, x1: 1, y1: instrumentSettings.warning_value,
+          line: { color: '#ffe066', width: 2, dash: 'dash' }
+        },
+        {
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.warning_value, x1: 1, y1: -instrumentSettings.warning_value,
+          line: { color: '#ffe066', width: 2, dash: 'dash' }
+        }
+      );
+      annotations.push(
+        {
+          x: 0.01, xref: 'paper', y: instrumentSettings.warning_value, yref: 'y', text: 'Warning', showarrow: false,
+          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
+        },
+        {
+          x: 0.01, xref: 'paper', y: -instrumentSettings.warning_value, yref: 'y', text: 'Warning', showarrow: false,
+          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
+        }
+      );
+    }
+    // Shutdown (red)
+    if (instrumentSettings.shutdown_value) {
+      shapes.push(
+        {
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.shutdown_value, x1: 1, y1: instrumentSettings.shutdown_value,
+          line: { color: 'red', width: 3, dash: 'solid' }
+        },
+        {
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.shutdown_value, x1: 1, y1: -instrumentSettings.shutdown_value,
+          line: { color: 'red', width: 3, dash: 'solid' }
+        }
+      );
+      annotations.push(
+        {
+          x: 0.01, xref: 'paper', y: instrumentSettings.shutdown_value, yref: 'y', text: 'Shutdown', showarrow: false,
+          font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
+        },
+        {
+          x: 0.01, xref: 'paper', y: -instrumentSettings.shutdown_value, yref: 'y', text: 'Shutdown', showarrow: false,
+          font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
+        }
+      );
+    }
+    return { shapes, annotations };
+  }
 
   const xChartData = [
     {
@@ -121,64 +269,73 @@ const Tiltmeter30846: React.FC = () => {
       y: xValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'X-Axis (Channel 0)',
-      line: { color: '#ff6384' },
-      marker: { size: 4 }
-    }
+      name: 'X-Axis',
+      line: { color: COLORS.x, shape: 'spline' as const },
+      marker: { size: 6, color: COLORS.x },
+      hovertemplate: AXIS_HOVERTEMPLATE('X'),
+      connectgaps: true,
+    },
   ];
-
   const yChartData = [
     {
       x: timestamps,
       y: yValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'Y-Axis (Channel 1)',
-      line: { color: '#36a2eb' },
-      marker: { size: 4 }
-    }
+      name: 'Y-Axis',
+      line: { color: COLORS.y, shape: 'spline' as const },
+      marker: { size: 6, color: COLORS.y },
+      hovertemplate: AXIS_HOVERTEMPLATE('Y'),
+      connectgaps: true,
+    },
   ];
-
   const zChartData = [
     {
       x: timestamps,
       y: zValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'Z-Axis (Channel 2)',
-      line: { color: '#ffce56' },
-      marker: { size: 4 }
-    }
+      name: 'Z-Axis',
+      line: { color: COLORS.z, shape: 'spline' as const },
+      marker: { size: 6, color: COLORS.z },
+      hovertemplate: AXIS_HOVERTEMPLATE('Z'),
+      connectgaps: true,
+    },
   ];
-
   const combinedChartData = [
     {
       x: timestamps,
       y: xValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'X-Axis (Channel 0)',
-      line: { color: '#ff6384' },
-      marker: { size: 4 }
+      name: 'X-Axis',
+      line: { color: COLORS.x, shape: 'spline' as const },
+      marker: { size: 6, color: COLORS.x },
+      hovertemplate: AXIS_HOVERTEMPLATE('X'),
+      connectgaps: true,
     },
     {
       x: timestamps,
       y: yValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'Y-Axis (Channel 1)',
-      line: { color: '#36a2eb' },
-      marker: { size: 4 }
+      name: 'Y-Axis',
+      line: { color: COLORS.y, shape: 'spline' as const },
+      marker: { size: 6, color: COLORS.y },
+      hovertemplate: AXIS_HOVERTEMPLATE('Y'),
+      connectgaps: true,
     },
     {
       x: timestamps,
       y: zValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'Z-Axis (Channel 2)',
-      line: { color: '#ffce56' },
-      marker: { size: 4 }
-    }
+      name: 'Z-Axis',
+      line: { color: COLORS.z, shape: 'spline' as const },
+      marker: { size: 6, color: COLORS.z },
+      hovertemplate: AXIS_HOVERTEMPLATE('Z'),
+      connectgaps: true,
+    },
   ];
 
   return (
@@ -242,76 +399,87 @@ const Tiltmeter30846: React.FC = () => {
           </Typography>
         </Paper>
 
-        {/* Combined Chart */}
+        {/* Individual Charts in order: X, Y, Z */}
+        {/* X-Axis Chart */}
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Combined X, Y, Z Tilt Data
+            X-Axis Tilt (Channel 0)
           </Typography>
-          <Plot
-            data={combinedChartData}
-            layout={{
-              ...chartLayout,
-              title: { text: `Combined Tilt Data - Node ${selectedNode}` },
-              height: 500
-            }}
-            style={{ width: '100%' }}
-            useResizeHandler={true}
-          />
-        </Paper>
-
-        {/* Individual Charts */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: 3 }}>
-          {/* X-Axis Chart */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              X-Axis Tilt (Channel 0)
-            </Typography>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
             <Plot
               data={xChartData}
               layout={{
-                ...chartLayout,
+                ...plotlyLayout,
                 title: { text: `X-Axis Tilt - Node ${selectedNode}` },
-                yaxis: { title: { text: 'Tilt (degrees)' } }
+                yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
+                ...getReferenceShapesAndAnnotations(),
               }}
+              config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}
               useResizeHandler={true}
             />
-          </Paper>
-
-          {/* Y-Axis Chart */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Y-Axis Tilt (Channel 1)
-            </Typography>
+          </div>
+        </Paper>
+        {/* Y-Axis Chart */}
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Y-Axis Tilt (Channel 1)
+          </Typography>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
             <Plot
               data={yChartData}
               layout={{
-                ...chartLayout,
+                ...plotlyLayout,
                 title: { text: `Y-Axis Tilt - Node ${selectedNode}` },
-                yaxis: { title: { text: 'Tilt (degrees)' } }
+                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
+                ...getReferenceShapesAndAnnotations(),
               }}
+              config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}
               useResizeHandler={true}
             />
-          </Paper>
-
-          {/* Z-Axis Chart */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Z-Axis Tilt (Channel 2)
-            </Typography>
+          </div>
+        </Paper>
+        {/* Z-Axis Chart */}
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Z-Axis Tilt (Channel 2)
+          </Typography>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
             <Plot
               data={zChartData}
               layout={{
-                ...chartLayout,
+                ...plotlyLayout,
                 title: { text: `Z-Axis Tilt - Node ${selectedNode}` },
-                yaxis: { title: { text: 'Tilt (degrees)' } }
+                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
+                ...getReferenceShapesAndAnnotations(),
               }}
+              config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}
               useResizeHandler={true}
             />
-          </Paper>
-        </Box>
+          </div>
+        </Paper>
+        {/* Combined Chart - last */}
+        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Combined X, Y, Z Tilt Data
+          </Typography>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
+            <Plot
+              data={combinedChartData}
+              layout={{
+                ...plotlyLayout,
+                title: { text: `Combined Tilt Data - Node ${selectedNode}` },
+                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Axis Values', standoff: 15 } },
+                ...getReferenceShapesAndAnnotations(),
+              }}
+              config={{ responsive: true, displayModeBar: true, displaylogo: false }}
+              style={{ width: '100%' }}
+              useResizeHandler={true}
+            />
+          </div>
+        </Paper>
       </MainContentWrapper>
       <ToastContainer />
     </>

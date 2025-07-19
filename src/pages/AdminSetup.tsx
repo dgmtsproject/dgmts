@@ -43,7 +43,7 @@ const AdminSetup: React.FC = () => {
                         Add User
                     </Button>
                     <Button variant="contained" color="primary" onClick={handlePermissions} style={{ marginBottom: '10px' }}>
-                        Permissions
+                        Users and Permissions
                     </Button>
                 </div>
             </MainContentWrapper>

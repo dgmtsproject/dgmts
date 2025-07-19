@@ -722,7 +722,9 @@ const Background: React.FC = () => {
             
       <MainContentWrapper>
         <Box p={3}>
-          <Typography variant="h4" gutterBottom>Vibration Data Analysis</Typography>
+          <Typography variant="h4" align="center" sx={{ mb: 3, mt: 2 }}>
+            Seismograph Data Graphs
+          </Typography>
           
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Stack direction="row" spacing={2} sx={{ mb: 4 }} alignItems="center">

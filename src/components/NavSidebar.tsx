@@ -20,7 +20,6 @@ import {
   ShowChart as GraphsIcon,
   InsertDriveFile as FileManagerIcon,
   AdminPanelSettings as AdminIcon,
-  CloudDownload as ExportIcon,
   ExpandLess,
   ExpandMore,
   Summarize as SummaryIcon,
@@ -311,19 +310,13 @@ useEffect(() => {
                       </ListItemButton>
                       <Collapse in={opensecondProject} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
-                          <ListItemButton
-                            component={Link}
-                            to="/seismograph"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Seismograph" />
-                          </ListItemButton>
+                          {/* Remove Seismograph link, keep only Background as Seismograph Data Graphs */}
                           <ListItemButton
                             component={Link}
                             to="/background"
                             sx={{ pl: 4 }}
                           >
-                            <ListItemText primary="Background" />
+                            <ListItemText primary="Seismograph" />
                           </ListItemButton>
                         </List>
                       </Collapse>
@@ -389,14 +382,6 @@ useEffect(() => {
                 <FileManagerIcon />
               </ListItemIcon>
               <ListItemText primary="File Manager" />
-            </ListItemButton>
-          )}
-          {isAdmin && permissions.view_data && (
-            <ListItemButton component={Link} to="/export-data">
-              <ListItemIcon sx={{ color: 'inherit' }}>
-                <ExportIcon />
-              </ListItemIcon>
-              <ListItemText primary="Export Data" />
             </ListItemButton>
           )}
 

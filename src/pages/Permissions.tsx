@@ -4,12 +4,13 @@ import {
   Paper, Button, Box, Typography, Dialog, DialogTitle, DialogContent,
   DialogActions, Checkbox, FormControlLabel, FormGroup
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { supabase } from '../supabase';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
+import { useAdminContext } from '../context/AdminContext';
 
 type User = {
   id: string;
@@ -38,6 +39,12 @@ const Permissions: React.FC = () => {
     view_data: false,
     download_data: false
   });
+  // Add state for user-projects and delete dialog
+  const [userProjects, setUserProjects] = useState<{ [email: string]: string[] }>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+  const { isAdmin, userEmail } = useAdminContext();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -56,8 +63,21 @@ const Permissions: React.FC = () => {
         })) || [];
 
         setUsers(usersWithSno);
+        // Fetch user-project assignments
+        const { data: projectUsers, error: puError } = await supabase
+          .from('ProjectUsers')
+          .select('user_email, project_id, Projects(name)');
+        if (puError) throw puError;
+        // Map user_email to array of project names
+        const projMap: { [email: string]: string[] } = {};
+        (projectUsers || []).forEach((pu: any) => {
+          if (!pu.user_email) return;
+          if (!projMap[pu.user_email]) projMap[pu.user_email] = [];
+          if (pu.Projects && pu.Projects.name) projMap[pu.user_email].push(pu.Projects.name);
+        });
+        setUserProjects(projMap);
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching users or projects:', error);
       } finally {
         setLoading(false);
       }
@@ -129,17 +149,19 @@ const Permissions: React.FC = () => {
                   <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Company</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Position</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Phone No</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Projects</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Permissions</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">Loading users...</TableCell>
+                    <TableCell colSpan={9} align="center">Loading users...</TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">No users found</TableCell>
+                    <TableCell colSpan={9} align="center">No users found</TableCell>
                   </TableRow>
                 ) : (
                   users.map((user) => (
@@ -150,6 +172,9 @@ const Permissions: React.FC = () => {
                       <TableCell sx={{ border: '1px solid black' }}>{user.Company || '-'}</TableCell>
                       <TableCell sx={{ border: '1px solid black' }}>{user.Position || '-'}</TableCell>
                       <TableCell sx={{ border: '1px solid black' }}>{user['Phone No'] || '-'}</TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>
+                        {(user.email === userEmail && isAdmin) || user.username === 'admin' || user.email === 'admin' ? 'All' : (userProjects[user.email] || []).join(', ') || '-'}
+                      </TableCell>
                       <TableCell sx={{ border: '1px solid black' }}>
                         <Button
                           variant="contained"
@@ -163,6 +188,21 @@ const Permissions: React.FC = () => {
                           }}
                         >
                             <EditIcon />
+                        </Button>
+                      </TableCell>
+                      <TableCell sx={{ border: '1px solid black' }}>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }}
+                          sx={{ 
+                            py: 1, 
+                            fontSize: 14,
+                            minWidth: 'auto',
+                            px: 1
+                          }}
+                        >
+                            <DeleteIcon />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -241,6 +281,45 @@ const Permissions: React.FC = () => {
             <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveChanges} variant="contained" color="primary">
               Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete User Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+          <DialogTitle>Confirm User Deletion</DialogTitle>
+          <DialogContent>
+            <Typography>Are you sure you want to delete this user? This action cannot be undone.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)} color="primary">Cancel</Button>
+            <Button
+              onClick={async () => {
+                if (!userToDelete) return;
+                setLoading(true);
+                // Delete from ProjectUsers first
+                const { error: puError } = await supabase
+                  .from('ProjectUsers')
+                  .delete()
+                  .eq('user_email', userToDelete.email);
+                // Delete from users
+                const { error: userError } = await supabase
+                  .from('users')
+                  .delete()
+                  .eq('id', userToDelete.id);
+                setLoading(false);
+                setDeleteDialogOpen(false);
+                if (puError || userError) {
+                  toast.error('Error deleting user or project assignments');
+                } else {
+                  setUsers(users.filter(u => u.id !== userToDelete.id));
+                  toast.success('User deleted successfully');
+                }
+              }}
+              color="error"
+              autoFocus
+            >
+              Delete
             </Button>
           </DialogActions>
         </Dialog>

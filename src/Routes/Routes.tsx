@@ -5,7 +5,6 @@ import Instruments from "../pages/Instruments";
 import Alarms from "../pages/Alarms";
 import ProjectGraphs from "../pages/ProjectGraphs";
 import ViewCustomGraphs from "../pages/ViewCustomGraphs";
-import ExportData from "../pages/ExportData";
 import Help from "../pages/Help";
 // import SignUp from './pages/SignUp'; // Uncomment if using SignUp
 import SignIn from "../pages/SignIn";
@@ -60,7 +59,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/view-custom-graphs" element={<ViewCustomGraphs />} />
         <Route path="/file-manager" element={<FileManager />} />
         <Route path="/reading-tables" element={<ReadingTables />} />
-        <Route path="/export-data" element={<ExportData />} />
         <Route path="/help" element={<Help />} />
         {/* <Route path="/MergeTracks" element={<MergeTracks />} /> */}
         <Route path="/single-prism-with-time" element={<GapRemoval />} />

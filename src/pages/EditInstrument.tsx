@@ -33,15 +33,24 @@ const EditInstrument: React.FC = () => {
     const [project, setProject] = useState<Project | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     const [loadingProjects, setLoadingProjects] = useState(false);
+
+    const parseEmails = (emails: any) => {
+        if (Array.isArray(emails)) return emails;
+        if (typeof emails === 'string') {
+            return emails.split(',').map((e: string) => e.trim()).filter((e: string) => e);
+        }
+        return [''];
+    };
+
     const [EmailsForAlert, setEmailsForAlert] = useState<string[]>(
-        instrument?.alert_emails || ['']
+        parseEmails(instrument?.alert_emails)
     );
     const [instrumentSno, setInstrumentSno] = useState(instrument?.sno || '');
     const [EmailsForWarning, setEmailsForWarning] = useState<string[]>(
-        instrument?.warning_emails || ['']
+        parseEmails(instrument?.warning_emails)
     );
     const [ShutEmailsForAlert, setShutEmailsForAlert] = useState<string[]>(
-        instrument?.shutdown_emails || ['']
+        parseEmails(instrument?.shutdown_emails)
     );
     const [instrumentId, setInstrumentId] = useState(instrument?.instrument_id || '');
     const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
@@ -60,6 +69,15 @@ const EditInstrument: React.FC = () => {
     useEffect(() => {
         if (instrument) {
             setProject({ id: instrument.project_id, name: instrument.project_name || '' });
+            setEmailsForAlert(parseEmails(instrument.alert_emails));
+            setEmailsForWarning(parseEmails(instrument.warning_emails));
+            setShutEmailsForAlert(parseEmails(instrument.shutdown_emails));
+            setInstrumentSno(instrument.sno || '');
+            setInstrumentId(instrument.instrument_id || '');
+            setInstrumentName(instrument.instrument_name || '');
+            setAlertValue(instrument.alert_value || '');
+            setWarningValue(instrument.warning_value || '');
+            setShutdownValue(instrument.shutdown_value || '');
         } else {
             fetchProjects();
         }

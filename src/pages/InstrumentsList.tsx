@@ -28,6 +28,9 @@ type Instrument = {
   project_id: number;
   project_name?: string;
   sno: string;
+  alert_emails?: string[];
+  warning_emails?: string[];
+  shutdown_emails?: string[];
 };
 
 type Project = {
@@ -108,7 +111,10 @@ const InstrumentsList: React.FC = () => {
           warning_value,
           shutdown_value,
           project_id,
-          sno
+          sno,
+          alert_emails,
+          warning_emails,
+          shutdown_emails
         `)
         .eq('project_id', projectId)
         .order('sno', { ascending: true });
@@ -117,7 +123,10 @@ const InstrumentsList: React.FC = () => {
 
       const formattedData = instrumentsData.map((instrument: any) => ({
         ...instrument,
-        project_name: projectData?.name || 'Unknown Project'
+        project_name: projectData?.name || 'Unknown Project',
+        alert_emails: instrument.alert_emails,
+        warning_emails: instrument.warning_emails,
+        shutdown_emails: instrument.shutdown_emails,
       }));
       setInstrumentsData(formattedData as Instrument[]);
     } catch (error) {

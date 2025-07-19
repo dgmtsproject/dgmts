@@ -114,16 +114,6 @@ const Dashboard: React.FC = () => {
                 >
                   Data Summary
                 </Button>
-                {isAdmin && (
-                  <Button 
-                    variant="contained" 
-                    color="secondary" 
-                    size="large"
-                    onClick={() => navigate('/export-data')}
-                  >
-                    Export Data
-                  </Button>
-                )}
               </>
             )}
           </Box>
