@@ -283,24 +283,28 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                             disabled={
                               !(
                                 instrument.instrument_id === 'SMG1' ||
+                                instrument.instrument_id === 'SMG-2' ||
                                 instrument.instrument_id === 'AMTS-1' ||
                                 instrument.instrument_id === 'AMTS-2' ||
-                                instrument.instrument_name === 'Tiltmeter' ||
-                                instrument.instrument_name === 'Tiltmeter (30846)'
+                                instrument.instrument_id === 'TILT-142939' ||
+                                instrument.instrument_id === 'TILT-143969' ||
+                                instrument.instrument_name === 'Tiltmeter'
                               )
                             }
                             onClick={() => {
-                              if (instrument.instrument_id === 'SMG1') {
+                              if (instrument.instrument_id === 'SMG1' || instrument.instrument_id === 'SMG-2') {
                                 navigate('/background');
                               } else if (
                                 instrument.instrument_id === 'AMTS-1' ||
                                 instrument.instrument_id === 'AMTS-2'
                               ) {
                                 navigate('/single-prism-with-time');
+                              } else if (instrument.instrument_id === 'TILT-142939') {
+                                navigate('/tiltmeter-142939');
+                              } else if (instrument.instrument_id === 'TILT-143969') {
+                                navigate('/tiltmeter-143969');
                               } else if (instrument.instrument_name === 'Tiltmeter') {
                                 navigate('/tiltmeter');
-                              } else if (instrument.instrument_name === 'Tiltmeter (30846)') {
-                                navigate('/tiltmeter-30846');
                               }
                             }}
                           >

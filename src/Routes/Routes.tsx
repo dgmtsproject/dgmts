@@ -41,6 +41,8 @@ import DgmtsDataSummary from "../pages/DgmtsDataSummary";
 import LongBridgeMap from "../pages/LongBridgeMap";
 import Tiltmeter from "../pages/Tiltmeter";
 import Tiltmeter30846 from "../pages/Tiltmeter30846";
+import Tiltmeter142939 from "../pages/Tiltmeter142939";
+import Tiltmeter143969 from "../pages/Tiltmeter143969";
 import PrivateRoute from "../components/PrivateRoute";
 
 const AppRoutes: React.FC = () => {
@@ -85,6 +87,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/background" element={<Background />} />
         <Route path="/tiltmeter" element={<Tiltmeter />} />
         <Route path="/tiltmeter-30846" element={<Tiltmeter30846 />} />
+        <Route path="/tiltmeter-142939" element={<Tiltmeter142939 />} />
+        <Route path="/tiltmeter-143969" element={<Tiltmeter143969 />} />
         <Route path="/vibration-data-table" element={<VibrationDataTablePage />} />
         <Route path="/seismograph-map" element={<DeviceMap/>} />
         <Route path="/long-bridge-map" element={<LongBridgeMap />} />

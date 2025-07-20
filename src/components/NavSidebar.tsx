@@ -112,7 +112,7 @@ useEffect(() => {
       const { data: projectData, error: projectError} = await supabase
         .from('Projects')
         .select('id')
-        .eq('name', 'ANC DAR-BC Vibration Monitoring')
+        .eq('name', 'ANC DAR-BC')
         .single();
       if (projectError || !projectData) {
         console.error('Error fetching ANC DAR-BC Vibration Monitoring project:', projectError);
@@ -328,27 +328,41 @@ useEffect(() => {
                         <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
                           <ProjectIcon fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText primary="ANC DAR-BC Vibration Monitoring" />
+                        <ListItemText primary="ANC DAR-BC" />
                         {openThirdProject ? <ExpandLess /> : <ExpandMore />}
                       </ListItemButton>
-                      <Collapse in={openThirdProject} timeout="auto" unmountOnExit>
-                        <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
-                          <ListItemButton
-                            component={Link}
-                            to="/tiltmeter"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Tiltmeter" />
-                          </ListItemButton>
-                          <ListItemButton
-                            component={Link}
-                            to="/tiltmeter-30846"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Tiltmeter (30846)" />
-                          </ListItemButton>
-                        </List>
-                      </Collapse>
+                                              <Collapse in={openThirdProject} timeout="auto" unmountOnExit>
+                          <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                            {/* <ListItemButton
+                              // component={Link}
+                              // to="/tiltmeter"
+                              sx={{ pl: 4 }}
+                            >
+                              <ListItemText primary="Tiltmeter" />
+                            </ListItemButton> */}
+                            <ListItemButton
+                              component={Link}
+                              to="/background"
+                              sx={{ pl: 4 }}
+                            >
+                              <ListItemText primary="Seismograph" />
+                            </ListItemButton>
+                            <ListItemButton
+                              component={Link}
+                              to="/tiltmeter-142939"
+                              sx={{ pl: 4 }}
+                            >
+                              <ListItemText primary="Tiltmeter-Node-142939" />
+                            </ListItemButton>
+                            <ListItemButton
+                              component={Link}
+                              to="/tiltmeter-143969"
+                              sx={{ pl: 4 }}
+                            >
+                              <ListItemText primary="Tiltmeter-Node-143969" />
+                            </ListItemButton>
+                          </List>
+                        </Collapse>
                     </>
                   )}
                 </List>
