@@ -118,7 +118,7 @@ const Projectslist: React.FC = () => {
                                           project.status === 'Not Started' ? 'red' : '#ccc',
                             marginRight: '5px'
                           }}></div>
-                          {project.status}
+                          {project.status ? project.status : <span style={{ color: '#000', fontStyle: 'italic' }}>N/A</span>}
                         </div>
                       </TableCell>
                       <TableCell style={{ border: '1px solid black' }}>
@@ -165,6 +165,30 @@ const Projectslist: React.FC = () => {
                               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4caf50'}
                             >
                               Add Instrument
+                            </Button>
+                          )}
+                          {isAdmin && (
+                            <Button
+                              variant="contained"
+                              color="warning"
+                              onClick={() => navigate('/edit-project', { state: { project } })}
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '14px',
+                                backgroundColor: '#ffa726',
+                                color: 'white',
+                                minWidth: '120px',
+                                textTransform: 'none',
+                                fontWeight: '500',
+                                boxShadow: 'none',
+                                borderRadius: '4px',
+                                transition: 'background-color 0.3s ease',
+                                marginLeft: '8px',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f57c00'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffa726'}
+                            >
+                              Edit Project
                             </Button>
                           )}
                         </div>

@@ -11,15 +11,19 @@ import {
   Stack,
   Checkbox,
   FormControlLabel,
-  TextField
+  TextField,
+  Menu,
+  MenuItem
 } from '@mui/material';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
 import { format } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 interface SensorData {
   id: number;
@@ -49,6 +53,7 @@ const Tiltmeter142939: React.FC = () => {
   const [referenceZ, setReferenceZ] = useState<string>('');
   const [referenceEnabled, setReferenceEnabled] = useState(false);
   const nodeId = 142939; // Hardcoded node ID
+  const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
 
   const fetchSensorData = async () => {
     if (!fromDate || !toDate) return;
@@ -287,41 +292,31 @@ const Tiltmeter142939: React.FC = () => {
       connectgaps: true,
     },
   ];
-  const combinedChartData = [
-    {
-      x: timestamps,
-      y: xValues,
-      type: 'scatter' as const,
-      mode: 'lines+markers' as const,
-      name: 'X-Axis',
-      line: { color: COLORS.x, shape: 'spline' as const },
-      marker: { size: 6, color: COLORS.x },
-      hovertemplate: AXIS_HOVERTEMPLATE('X'),
-      connectgaps: true,
-    },
-    {
-      x: timestamps,
-      y: yValues,
-      type: 'scatter' as const,
-      mode: 'lines+markers' as const,
-      name: 'Y-Axis',
-      line: { color: COLORS.y, shape: 'spline' as const },
-      marker: { size: 6, color: COLORS.y },
-      hovertemplate: AXIS_HOVERTEMPLATE('Y'),
-      connectgaps: true,
-    },
-    {
-      x: timestamps,
-      y: zValues,
-      type: 'scatter' as const,
-      mode: 'lines+markers' as const,
-      name: 'Z-Axis',
-      line: { color: COLORS.z, shape: 'spline' as const },
-      marker: { size: 6, color: COLORS.z },
-      hovertemplate: AXIS_HOVERTEMPLATE('Z'),
-      connectgaps: true,
-    },
-  ];
+
+  const handleDownloadExcel = (type: 'raw' | 'calibrated') => {
+    let dataToExport: any[] = [];
+    if (type === 'raw') {
+      dataToExport = sensorData.map(d => ({
+        Time: d.timestamp,
+        X: d.x_value,
+        Y: d.y_value,
+        Z: d.z_value,
+      }));
+    } else if (type === 'calibrated') {
+      dataToExport = sensorData.map(d => ({
+        Time: d.timestamp,
+        X: d.x_value - refX,
+        Y: d.y_value - refY,
+        Z: d.z_value - refZ,
+      }));
+    }
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, type === 'raw' ? 'Raw Data' : 'Calibrated Data');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    saveAs(blob, `tiltmeter-${nodeId}-${type}-data.xlsx`);
+  };
 
   return (
     <>
@@ -359,6 +354,38 @@ const Tiltmeter142939: React.FC = () => {
               </Button>
             </Stack>
           </LocalizationProvider>
+
+          {/* Download Excel Section */}
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant="outlined"
+              id="download-excel-button"
+              aria-controls="download-excel-menu"
+              aria-haspopup="true"
+              onClick={(e) => setDownloadMenuAnchor(e.currentTarget)}
+              sx={{ mr: 2 }}
+            >
+              Download Excel
+            </Button>
+            <Menu
+              id="download-excel-menu"
+              anchorEl={downloadMenuAnchor}
+              open={Boolean(downloadMenuAnchor)}
+              onClose={() => setDownloadMenuAnchor(null)}
+            >
+              <MenuItem onClick={() => { handleDownloadExcel('raw'); setDownloadMenuAnchor(null); }}>
+                Raw Data
+              </MenuItem>
+              <MenuItem disabled={!referenceEnabled} onClick={() => { handleDownloadExcel('calibrated'); setDownloadMenuAnchor(null); }}>
+                Calibrated Data
+                {!referenceEnabled && (
+                  <Typography variant="caption" color="error" sx={{ ml: 1 }}>
+                    (Enable and add reference values to get calibrated data)
+                  </Typography>
+                )}
+              </MenuItem>
+            </Menu>
+          </Box>
 
           {/* Reference Lines Section */}
           <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
@@ -481,30 +508,9 @@ const Tiltmeter142939: React.FC = () => {
             />
           </div>
         </Paper>
-        {/* Combined Chart - last */}
-        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Combined X, Y, Z Tilt Data
-          </Typography>
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-            <Plot
-              data={combinedChartData}
-              layout={{
-                ...plotlyLayout,
-                title: { text: `Combined Tilt Data - Node ${nodeId}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Axis Values', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
-              }}
-              config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-              style={{ width: '100%' }}
-              useResizeHandler={true}
-            />
-          </div>
-        </Paper>
       </MainContentWrapper>
-      <ToastContainer />
     </>
   );
 };
 
-export default Tiltmeter142939; 
+export default Tiltmeter142939;

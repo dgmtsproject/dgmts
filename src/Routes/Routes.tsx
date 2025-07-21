@@ -44,6 +44,7 @@ import Tiltmeter30846 from "../pages/Tiltmeter30846";
 import Tiltmeter142939 from "../pages/Tiltmeter142939";
 import Tiltmeter143969 from "../pages/Tiltmeter143969";
 import PrivateRoute from "../components/PrivateRoute";
+import EditProject from "../pages/EditProject";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -93,6 +94,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/seismograph-map" element={<DeviceMap/>} />
         <Route path="/long-bridge-map" element={<LongBridgeMap />} />
         <Route path="/maps" element={<Maps />} />
+        <Route path="/edit-project" element={<EditProject />} />
       </Route>
     </Routes>
   );
