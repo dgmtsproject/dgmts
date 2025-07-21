@@ -19,7 +19,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
-import { format } from 'date-fns';
+// import { format } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import * as XLSX from "xlsx";
@@ -60,9 +60,19 @@ const Tiltmeter143969: React.FC = () => {
     
     setLoading(true);
     try {
-      const formatDate = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm:ss");
-      const startParam = formatDate(fromDate);
-      const endParam = formatDate(toDate);
+      // Format fromDate as start of day in local timezone
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      // For fromDate, use start of day (00:00:00)
+      const startParam = `${formatDate(fromDate)}T00:00:00`;
+      
+      // For toDate, use end of day (23:59:59) to include all data for that day
+      const endParam = `${formatDate(toDate)}T23:59:59`;
 
       const response = await fetch(
         `${API_BASE_URL}/api/sensor-data/${nodeId}?start_time=${startParam}&end_time=${endParam}&limit=1000`
