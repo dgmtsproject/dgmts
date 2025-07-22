@@ -292,8 +292,10 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                               )
                             }
                             onClick={() => {
-                              if (instrument.instrument_id === 'SMG1' || instrument.instrument_id === 'SMG-2') {
+                              if (instrument.instrument_id === 'SMG1') {
                                 navigate('/background');
+                              } else if (instrument.instrument_id === 'SMG-2') {
+                                navigate('/anc-seismograph');
                               } else if (
                                 instrument.instrument_id === 'AMTS-1' ||
                                 instrument.instrument_id === 'AMTS-2'

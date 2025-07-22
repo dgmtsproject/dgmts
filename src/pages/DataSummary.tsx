@@ -16,11 +16,11 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 interface Project {
-  id: string;
+  id: number;
   name: string;
 }
 
-const SUPPORTED_PROJECTS = ['Long Bridge North', 'DGMTS Testing'];
+const SUPPORTED_PROJECTS = [24637, 20151]; // Long Bridge North, DGMTS Testing
 
 const DataSummary: React.FC = () => {
   const navigate = useNavigate();
@@ -64,15 +64,15 @@ const DataSummary: React.FC = () => {
     fetchProjects();
   }, [isAdmin, userEmail]);
 
-  const handleProjectSelect = (projectId: string) => {
+  const handleProjectSelect = (projectId: number) => {
     const selectedProject = projects.find(p => p.id === projectId);
     if (!selectedProject) return;
-    if (SUPPORTED_PROJECTS.includes(selectedProject.name)) {
-      switch(selectedProject.name) {
-        case 'Long Bridge North':
+    if (SUPPORTED_PROJECTS.includes(selectedProject.id)) {
+      switch(selectedProject.id) {
+        case 24637: // Long Bridge North
           navigate('/long-bridge-data-summary');
           break;
-        case 'DGMTS Testing':
+        case 20151: // DGMTS Testing
           navigate('/DGMTS-data-summary');
           break;
         default:
@@ -106,7 +106,7 @@ const DataSummary: React.FC = () => {
               <InputLabel>Project</InputLabel>
               <Select
                 value=""
-                onChange={(e) => handleProjectSelect(e.target.value as string)}
+                onChange={(e) => handleProjectSelect(Number(e.target.value))}
                 label="Project"
               >
                 {accessibleProjects.map((project) => (

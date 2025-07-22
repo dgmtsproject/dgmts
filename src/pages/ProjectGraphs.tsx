@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 
 interface Project {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -37,16 +37,20 @@ const ProjectGraphs: React.FC = () => {
   const [accessibleProjects, setAccessibleProjects] = useState<Project[]>([]);
   const [graphOptions, setGraphOptions] = useState<GraphOption[]>([]);
 
-  const projectGraphs: Record<string, GraphOption[]> = {
-    'Long Bridge North': [
+  const projectGraphs: Record<number, GraphOption[]> = {
+    24637: [ // Long Bridge North
       { name: 'Single Prism', path: '/single-prism-with-time', description: 'View data for a single prism' },
       { name: 'Multiple Prisms', path: '/multi-prisms-with-time', description: 'Compare multiple prisms' },
       { name: 'AMTS Track', path: '/amts-track-graphs', description: 'AMTS track monitoring graphs' },
       { name: 'AMTS Ref', path: '/amts-ref-graphs', description: 'AMTS reference graphs' }
     ],
-    'DGMTS Testing': [
-      { name: 'Seismograph', path: '/seismograph', description: 'Seismograph event graphs' },
-      { name: 'Background', path: '/background', description: 'Background graphs' },
+    20151: [ // DGMTS Testing
+      { name: 'Seismograph', path: '/background', description: 'Seismograph event graphs' },
+    ],
+    24429: [ // ANC DAR-BC
+      { name: 'Seismograph', path: '/anc-seismograph', description: 'ANC DAR-BC Seismograph graphs' },
+      { name: 'Tiltmeter-142939', path: '/tiltmeter-142939', description: 'Tiltmeter Node 142939' },
+      { name: 'Tiltmeter-143969', path: '/tiltmeter-143969', description: 'Tiltmeter Node 143969' },
     ]
   };
 
@@ -57,7 +61,7 @@ const ProjectGraphs: React.FC = () => {
         const { data: allProjects, error: projectsError } = await supabase
           .from('Projects')
           .select('id, name')
-          .in('name', ['Long Bridge North', 'DGMTS Testing']);
+          .in('id', [24637, 20151, 24429]);
 
         if (projectsError) throw projectsError;
         if (!allProjects) return;
@@ -93,11 +97,11 @@ const ProjectGraphs: React.FC = () => {
     fetchProjects();
   }, [isAdmin, userEmail]);
 
-  const handleProjectSelect = (projectId: string) => {
+  const handleProjectSelect = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
     setSelectedProject(project);
-    setGraphOptions(projectGraphs[project.name] || []);
+    setGraphOptions(projectGraphs[project.id] || []);
   };
 
   const handleGraphSelect = (path: string) => {
@@ -125,7 +129,7 @@ const ProjectGraphs: React.FC = () => {
                 <InputLabel>Select Project</InputLabel>
                 <Select
                   value=""
-                  onChange={(e) => handleProjectSelect(e.target.value as string)}
+                  onChange={(e) => handleProjectSelect(Number(e.target.value))}
                   label="Select Project"
                 >
                   {accessibleProjects.map((project) => (

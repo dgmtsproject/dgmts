@@ -19,6 +19,7 @@ const EditProject: React.FC = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [formValues, setFormValues] = useState({
+    name: '',
     client: '',
     location: '',
     email: '',
@@ -30,6 +31,7 @@ const EditProject: React.FC = () => {
   useEffect(() => {
     if (project) {
       setFormValues({
+        name: project.name || '',
         client: project.client || '',
         location: project.location || '',
         email: project.Email || '',
@@ -57,6 +59,7 @@ const EditProject: React.FC = () => {
     const { error } = await supabase
       .from('Projects')
       .update({
+        name: formValues.name,
         client: formValues.client,
         location: formValues.location,
         Email: formValues.email,
@@ -111,10 +114,11 @@ const EditProject: React.FC = () => {
             margin="normal"
           />
           <TextField
-            name="projectName"
+            name="name"
             label="Project Name"
-            value={project.name}
-            disabled
+            value={formValues.name}
+            onChange={handleChange}
+            required
             fullWidth
             margin="normal"
           />

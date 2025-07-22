@@ -42,6 +42,11 @@ const NavSidebar: React.FC = () => {
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const [hasDgmtsTestingAccess, setHasDgmtsTestingAccess] = useState(false);
   const [hasAncDarBcAccess, setHasAncDarBcAccess] = useState(false);
+  const [projectNames, setProjectNames] = useState({
+    longBridge: 'Long Bridge North',
+    dgmtsTesting: 'DGMTS Testing',
+    ancDarBc: 'ANC DAR-BC'
+  });
   const { isAdmin, setIsAdmin, userEmail, permissions } = useAdminContext();
 
 useEffect(() => {
@@ -49,96 +54,95 @@ useEffect(() => {
     if (!userEmail) return;
 
     try {
-      const { data: projectData, error: projectError } = await supabase
-        .from('Projects')
-        .select('id')
-        .eq('name', 'Long Bridge North')
-        .single();
-
-      if (projectError || !projectData) {
-        console.error('Error fetching project:', projectError);
-        setHasLongBridgeAccess(false);
-        return;
-      }
+      // Check access for Long Bridge North (ID: 24637)
       const { data, error } = await supabase
         .from('ProjectUsers')
         .select('*')
         .eq('user_email', userEmail)
-        .eq('project_id', projectData.id);
+        .eq('project_id', 24637);
 
       setHasLongBridgeAccess(Boolean(isAdmin || (data && data.length > 0)));
 
       if (error) {
-        console.error('Error checking access:', error);
+        console.error('Error checking Long Bridge North access:', error);
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('Unexpected error checking Long Bridge North access:', err);
       setHasLongBridgeAccess(false);
     }
   };
+
   const checkDgmtsTestingAccess = async () => {
     if (!userEmail) return;
-    try{
-      const { data: projectData, error: projectError} = await supabase
-        .from('Projects')
-        .select('id')
-        .eq('name', 'DGMTS Testing')
-        .single();
-      if (projectError || !projectData) {
-        console.error('Error fetching DGMTS Testing project:', projectError);
-        setHasDgmtsTestingAccess(false);
-        return;
-      }
+    try {
+      // Check access for DGMTS Testing (ID: 20151)
       const { data, error } = await supabase
         .from('ProjectUsers')
         .select('*')
         .eq('user_email', userEmail)
-        .eq('project_id', projectData.id);
+        .eq('project_id', 20151);
+      
       setHasDgmtsTestingAccess(Boolean(isAdmin || (data && data.length > 0)));
+      
       if (error) {
         console.error('Error checking DGMTS Testing access:', error);
       }
-    
-    }
-    catch (err) {
+    } catch (err) {
       console.error('Unexpected error checking DGMTS Testing access:', err);
       setHasDgmtsTestingAccess(false);
     }
-  }
+  };
 
   const checkAncDarBcAccess = async () => {
     if (!userEmail) return;
-    try{
-      const { data: projectData, error: projectError} = await supabase
-        .from('Projects')
-        .select('id')
-        .eq('name', 'ANC DAR-BC')
-        .single();
-      if (projectError || !projectData) {
-        console.error('Error fetching ANC DAR-BC Vibration Monitoring project:', projectError);
-        setHasAncDarBcAccess(false);
-        return;
-      }
+    try {
+      // Check access for ANC DAR-BC (ID: 24429)
       const { data, error } = await supabase
         .from('ProjectUsers')
         .select('*')
         .eq('user_email', userEmail)
-        .eq('project_id', projectData.id);
+        .eq('project_id', 24429);
+      
       setHasAncDarBcAccess(Boolean(isAdmin || (data && data.length > 0)));
+      
       if (error) {
-        console.error('Error checking ANC DAR-BC Vibration Monitoring access:', error);
+        console.error('Error checking ANC DAR-BC access:', error);
       }
-    
-    }
-    catch (err) {
-      console.error('Unexpected error checking ANC DAR-BC Vibration Monitoring access:', err);
+    } catch (err) {
+      console.error('Unexpected error checking ANC DAR-BC access:', err);
       setHasAncDarBcAccess(false);
     }
-  }
+  };
+
+  const fetchProjectNames = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .in('id', [24637, 20151, 24429]);
+      
+      if (error) {
+        console.error('Error fetching project names:', error);
+        return;
+      }
+      
+      if (data) {
+        const names = {
+          longBridge: data.find(p => p.id === 24637)?.name || 'Long Bridge North',
+          dgmtsTesting: data.find(p => p.id === 20151)?.name || 'DGMTS Testing',
+          ancDarBc: data.find(p => p.id === 24429)?.name || 'ANC DAR-BC'
+        };
+        setProjectNames(names);
+      }
+    } catch (err) {
+      console.error('Error fetching project names:', err);
+    }
+  };
 
   checkProjectAccess();
   checkDgmtsTestingAccess();
   checkAncDarBcAccess();
+  fetchProjectNames();
 }, [userEmail, isAdmin]);
 
   const handleGraphsClick = () => {
@@ -261,7 +265,7 @@ useEffect(() => {
                         <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
                           <ProjectIcon fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText primary="Long Bridge North" />
+                        <ListItemText primary={projectNames.longBridge} />
                         {openProject ? <ExpandLess /> : <ExpandMore />}
                       </ListItemButton>
                       <Collapse in={openProject} timeout="auto" unmountOnExit>
@@ -305,7 +309,7 @@ useEffect(() => {
                         <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
                           <ProjectIcon fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText primary="DGMTS Testing" />
+                        <ListItemText primary={projectNames.dgmtsTesting} />
                         {opensecondProject ? <ExpandLess /> : <ExpandMore />}
                       </ListItemButton>
                       <Collapse in={opensecondProject} timeout="auto" unmountOnExit>
@@ -328,7 +332,7 @@ useEffect(() => {
                         <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
                           <ProjectIcon fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText primary="ANC DAR-BC" />
+                        <ListItemText primary={projectNames.ancDarBc} />
                         {openThirdProject ? <ExpandLess /> : <ExpandMore />}
                       </ListItemButton>
                                               <Collapse in={openThirdProject} timeout="auto" unmountOnExit>
@@ -342,7 +346,7 @@ useEffect(() => {
                             </ListItemButton> */}
                             <ListItemButton
                               component={Link}
-                              to="/background"
+                              to="/anc-seismograph"
                               sx={{ pl: 4 }}
                             >
                               <ListItemText primary="Seismograph" />
