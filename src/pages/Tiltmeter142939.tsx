@@ -39,6 +39,9 @@ interface InstrumentSettings {
   alert_value?: number;
   warning_value?: number;
   shutdown_value?: number;
+  x_y_z_alert_values?: { x: number; y: number; z: number } | null;
+  x_y_z_warning_values?: { x: number; y: number; z: number } | null;
+  x_y_z_shutdown_values?: { x: number; y: number; z: number } | null;
 }
 
 const Tiltmeter142939: React.FC = () => {
@@ -96,7 +99,7 @@ const Tiltmeter142939: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('instruments')
-        .select('alert_value, warning_value, shutdown_value')
+        .select('alert_value, warning_value, shutdown_value, x_y_z_alert_values, x_y_z_warning_values, x_y_z_shutdown_values')
         .eq('instrument_id', 'TILT-142939')
         .single();
       if (error) throw error;
@@ -187,75 +190,86 @@ const Tiltmeter142939: React.FC = () => {
     paper_bgcolor: 'white',
   };
 
-  function getReferenceShapesAndAnnotations() {
+  function getReferenceShapesAndAnnotations(axis: 'x' | 'y' | 'z' = 'x') {
     const shapes: any[] = [];
     const annotations: any[] = [];
     if (!instrumentSettings) return { shapes, annotations };
+    
+    // Use ONLY XYZ values for tiltmeters
+    const alertValues = instrumentSettings.x_y_z_alert_values;
+    const warningValues = instrumentSettings.x_y_z_warning_values;
+    const shutdownValues = instrumentSettings.x_y_z_shutdown_values;
+    
+    // Get the value for the specific axis
+    const alertValue = alertValues?.[axis];
+    const warningValue = warningValues?.[axis];
+    const shutdownValue = shutdownValues?.[axis];
+    
     // Alert (orange)
-    if (instrumentSettings.alert_value) {
+    if (alertValue) {
       shapes.push(
         {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.alert_value, x1: 1, y1: instrumentSettings.alert_value,
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: alertValue, x1: 1, y1: alertValue,
           line: { color: 'orange', width: 2, dash: 'dash' }
         },
         {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.alert_value, x1: 1, y1: -instrumentSettings.alert_value,
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -alertValue, x1: 1, y1: -alertValue,
           line: { color: 'orange', width: 2, dash: 'dash' }
         }
       );
       annotations.push(
         {
-          x: 0.01, xref: 'paper', y: instrumentSettings.alert_value, yref: 'y', text: 'Alert', showarrow: false,
+          x: 0.01, xref: 'paper', y: alertValue, yref: 'y', text: 'Alert', showarrow: false,
           font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
         },
         {
-          x: 0.01, xref: 'paper', y: -instrumentSettings.alert_value, yref: 'y', text: 'Alert', showarrow: false,
+          x: 0.01, xref: 'paper', y: -alertValue, yref: 'y', text: 'Alert', showarrow: false,
           font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
         }
       );
     }
     // Warning (light yellow)
-    if (instrumentSettings.warning_value) {
+    if (warningValue) {
       shapes.push(
         {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.warning_value, x1: 1, y1: instrumentSettings.warning_value,
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: warningValue, x1: 1, y1: warningValue,
           line: { color: '#ffe066', width: 2, dash: 'dash' }
         },
         {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.warning_value, x1: 1, y1: -instrumentSettings.warning_value,
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -warningValue, x1: 1, y1: -warningValue,
           line: { color: '#ffe066', width: 2, dash: 'dash' }
         }
       );
       annotations.push(
         {
-          x: 0.01, xref: 'paper', y: instrumentSettings.warning_value, yref: 'y', text: 'Warning', showarrow: false,
+          x: 0.01, xref: 'paper', y: warningValue, yref: 'y', text: 'Warning', showarrow: false,
           font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
         },
         {
-          x: 0.01, xref: 'paper', y: -instrumentSettings.warning_value, yref: 'y', text: 'Warning', showarrow: false,
+          x: 0.01, xref: 'paper', y: -warningValue, yref: 'y', text: 'Warning', showarrow: false,
           font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
         }
       );
     }
     // Shutdown (red)
-    if (instrumentSettings.shutdown_value) {
+    if (shutdownValue) {
       shapes.push(
         {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.shutdown_value, x1: 1, y1: instrumentSettings.shutdown_value,
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: shutdownValue, x1: 1, y1: shutdownValue,
           line: { color: 'red', width: 3, dash: 'solid' }
         },
         {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.shutdown_value, x1: 1, y1: -instrumentSettings.shutdown_value,
+          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -shutdownValue, x1: 1, y1: -shutdownValue,
           line: { color: 'red', width: 3, dash: 'solid' }
         }
       );
       annotations.push(
         {
-          x: 0.01, xref: 'paper', y: instrumentSettings.shutdown_value, yref: 'y', text: 'Shutdown', showarrow: false,
+          x: 0.01, xref: 'paper', y: shutdownValue, yref: 'y', text: 'Shutdown', showarrow: false,
           font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
         },
         {
-          x: 0.01, xref: 'paper', y: -instrumentSettings.shutdown_value, yref: 'y', text: 'Shutdown', showarrow: false,
+          x: 0.01, xref: 'paper', y: -shutdownValue, yref: 'y', text: 'Shutdown', showarrow: false,
           font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
         }
       );
@@ -470,7 +484,7 @@ const Tiltmeter142939: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `X-Axis Tilt - Node ${nodeId}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                ...getReferenceShapesAndAnnotations('x'),
               }}
               config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
               style={{ width: '100%' }}
@@ -490,7 +504,7 @@ const Tiltmeter142939: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `Y-Axis Tilt - Node ${nodeId}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                ...getReferenceShapesAndAnnotations('y'),
               }}
               config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
               style={{ width: '100%' }}
@@ -510,7 +524,7 @@ const Tiltmeter142939: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `Z-Axis Tilt - Node ${nodeId}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                ...getReferenceShapesAndAnnotations('z'),
               }}
               config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
               style={{ width: '100%' }}

@@ -45,7 +45,6 @@ const EditInstrument: React.FC = () => {
     const [EmailsForAlert, setEmailsForAlert] = useState<string[]>(
         parseEmails(instrument?.alert_emails)
     );
-    const [instrumentSno, setInstrumentSno] = useState(instrument?.sno || '');
     const [EmailsForWarning, setEmailsForWarning] = useState<string[]>(
         parseEmails(instrument?.warning_emails)
     );
@@ -72,7 +71,6 @@ const EditInstrument: React.FC = () => {
             setEmailsForAlert(parseEmails(instrument.alert_emails));
             setEmailsForWarning(parseEmails(instrument.warning_emails));
             setShutEmailsForAlert(parseEmails(instrument.shutdown_emails));
-            setInstrumentSno(instrument.sno || '');
             setInstrumentId(instrument.instrument_id || '');
             setInstrumentName(instrument.instrument_name || '');
             setAlertValue(instrument.alert_value || '');
@@ -133,14 +131,13 @@ const EditInstrument: React.FC = () => {
                 .update({
                     instrument_id: instrumentId,
                     instrument_name: instrumentName,
-                    alert_value: alertValue ? Number(alertValue) : null,
-                    warning_value: warningValue ? Number(warningValue) : null,
-                    shutdown_value: shutdownValue ? Number(shutdownValue) : null,
                     project_id: project.id,
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
                     shutdown_emails: emailData.shutdown_emails,
-                    sno: instrumentSno,
+                    alert_value: alertValue ? Number(alertValue) : null,
+                    warning_value: warningValue ? Number(warningValue) : null,
+                    shutdown_value: shutdownValue ? Number(shutdownValue) : null,
                 })
                 .eq('instrument_id', instrument.instrument_id);
 
@@ -166,7 +163,6 @@ const EditInstrument: React.FC = () => {
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
                     shutdown_emails: emailData.shutdown_emails,
-                    sno: instrumentSno,
                 },
             ]);
 
@@ -331,13 +327,6 @@ const EditInstrument: React.FC = () => {
                                     onChange={(e) => setInstrumentName(e.target.value)}
                                     fullWidth
                                 />
-                                <TextField
-                                    label="Instrument SNo."
-                                    type="number"
-                                    value={instrumentSno}
-                                    onChange={(e) => setInstrumentSno(e.target.value)}
-                                    style={{ width: '100%' }}
-                                />
                             </Box>
 
                             {/* Alert Values */}
@@ -349,10 +338,9 @@ const EditInstrument: React.FC = () => {
                                     onChange={(e) => setAlertValue(e.target.value)}
                                     fullWidth
                                 />
-
-                                <Box display="flex" flexDirection="column" gap={1}>
+                                <Box display="flex" flexDirection="column" gap={1} width="100%">
                                     {EmailsForAlert.map((email, i) => (
-                                        <Box key={i} display="flex" alignItems="center" gap={1}>
+                                        <Box key={i} display="flex" alignItems="center" gap={1} width="100%">
                                             <TextField
                                                 label={`Alert Email ${i + 1} (optional)`}
                                                 type="email"
@@ -373,7 +361,6 @@ const EditInstrument: React.FC = () => {
                                             </Button>
                                         </Box>
                                     ))}
-
                                     {EmailsForAlert.length < 3 && (
                                         <Button variant="outlined" onClick={addEmailField}>
                                             Add Alert Email
@@ -381,7 +368,6 @@ const EditInstrument: React.FC = () => {
                                     )}
                                 </Box>
                             </Box>
-
                             {/* Warning Values */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
@@ -391,9 +377,9 @@ const EditInstrument: React.FC = () => {
                                     onChange={(e) => setWarningValue(e.target.value)}
                                     fullWidth
                                 />
-                                <Box display="flex" flexDirection="column" gap={1}>
+                                <Box display="flex" flexDirection="column" gap={1} width="100%">
                                     {EmailsForWarning.map((email, i) => (
-                                        <Box key={i} display="flex" alignItems="center" gap={1}>
+                                        <Box key={i} display="flex" alignItems="center" gap={1} width="100%">
                                             <TextField
                                                 label={`Warning Email ${i + 1} (optional)`}
                                                 type="email"
@@ -421,7 +407,6 @@ const EditInstrument: React.FC = () => {
                                     )}
                                 </Box>
                             </Box>
-
                             {/* Shutdown Values */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
@@ -431,9 +416,9 @@ const EditInstrument: React.FC = () => {
                                     onChange={(e) => setShutdownValue(e.target.value)}
                                     fullWidth
                                 />
-                                <Box display="flex" flexDirection="column" gap={1}>
+                                <Box display="flex" flexDirection="column" gap={1} width="100%">
                                     {ShutEmailsForAlert.map((email, i) => (
-                                        <Box key={i} display="flex" alignItems="center" gap={1}>
+                                        <Box key={i} display="flex" alignItems="center" gap={1} width="100%">
                                             <TextField
                                                 label={`Shutdown Email ${i + 1} (optional)`}
                                                 type="email"

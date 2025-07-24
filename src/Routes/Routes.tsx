@@ -46,6 +46,7 @@ import Tiltmeter142939 from "../pages/Tiltmeter142939";
 import Tiltmeter143969 from "../pages/Tiltmeter143969";
 import PrivateRoute from "../components/PrivateRoute";
 import EditProject from "../pages/EditProject";
+import EditTiltmeterInstrument from "../pages/EditTiltmeterInstrument";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -80,6 +81,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/reading-tables" element={<ReadingTables />} />
         <Route path="/admin-setup" element={<AdminSetup />} />
         <Route path="/edit-instrument" element={<EditInstrument />} />
+        <Route path="/edit-tiltmeter-instrument" element={<EditTiltmeterInstrument />} />
         <Route path='/add-users' element={<AddUsers />} />
         <Route path="/permissions" element={<Permissions />} />
         {/* <Route path="/seismograph" element={<Seismograph />} /> */}

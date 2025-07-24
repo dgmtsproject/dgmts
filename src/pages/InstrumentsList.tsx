@@ -25,6 +25,9 @@ type Instrument = {
   alert_value: number | null;
   warning_value: number | null;
   shutdown_value: number | null;
+  x_y_z_alert_values: { x: number; y: number; z: number } | null;
+  x_y_z_warning_values: { x: number; y: number; z: number } | null;
+  x_y_z_shutdown_values: { x: number; y: number; z: number } | null;
   project_id: number;
   project_name?: string;
   sno: string;
@@ -110,6 +113,9 @@ const InstrumentsList: React.FC = () => {
           alert_value,
           warning_value,
           shutdown_value,
+          x_y_z_alert_values,
+          x_y_z_warning_values,
+          x_y_z_shutdown_values,
           project_id,
           sno,
           alert_emails,
@@ -142,7 +148,35 @@ const InstrumentsList: React.FC = () => {
   };
 
   const handleEditInstrument = (instrument: Instrument) => {
-    navigate('/edit-instrument', { state: { instrument } });
+    if (instrument.instrument_id === 'TILT-142939' || instrument.instrument_id === 'TILT-143969') {
+      navigate('/edit-tiltmeter-instrument', { state: { instrument } });
+    } else {
+      navigate('/edit-instrument', { state: { instrument } });
+    }
+  };
+
+  // Helper function to format XYZ values for display
+  const formatXYZValues = (instrument: Instrument) => {
+    const isTiltmeter = instrument.instrument_id === 'TILT-142939' || instrument.instrument_id === 'TILT-143969';
+    
+    if (!isTiltmeter) {
+      return {
+        alert: instrument.alert_value || '-',
+        warning: instrument.warning_value || '-',
+        shutdown: instrument.shutdown_value || '-'
+      };
+    }
+
+    const formatXYZ = (values: { x: number; y: number; z: number } | null) => {
+      if (!values) return '-';
+      return `X:${values.x}, Y:${values.y}, Z:${values.z}`;
+    };
+
+    return {
+      alert: formatXYZ(instrument.x_y_z_alert_values || null),
+      warning: formatXYZ(instrument.x_y_z_warning_values || null),
+      shutdown: formatXYZ(instrument.x_y_z_shutdown_values || null)
+    };
   };
 
 const handleDeleteInstrument = async (instrumentId: string) => {  
@@ -252,9 +286,24 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                         <TableCell sx={{ border: '1px solid black' }}>
                           {instrument.instrument_name}
                         </TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.alert_value || '-'}</TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.warning_value || '-'}</TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.shutdown_value || '-'}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {(() => {
+                            const values = formatXYZValues(instrument);
+                            return values.alert;
+                          })()}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {(() => {
+                            const values = formatXYZValues(instrument);
+                            return values.warning;
+                          })()}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {(() => {
+                            const values = formatXYZValues(instrument);
+                            return values.shutdown;
+                          })()}
+                        </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
                           {isAdmin && (
                             <>

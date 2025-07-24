@@ -39,6 +39,23 @@ const Instruments: React.FC = () => {
   const [warningValue, setWarningValue] = React.useState<number | string>('');
   const [shutdownValue, setShutdownValue] = React.useState<number | string>('');
 
+  // New state for XYZ values (for tiltmeters)
+  const [xyzAlertValues, setXyzAlertValues] = React.useState({
+    x: '',
+    y: '',
+    z: ''
+  });
+  const [xyzWarningValues, setXyzWarningValues] = React.useState({
+    x: '',
+    y: '',
+    z: ''
+  });
+  const [xyzShutdownValues, setXyzShutdownValues] = React.useState({
+    x: '',
+    y: '',
+    z: ''
+  });
+
   useEffect(() => {
     if (!project) {
       fetchProjects();
@@ -86,18 +103,51 @@ const handleSubmit = async (e: React.FormEvent) => {
   const filteredWarningEmails = EmailsForWarning.filter(email => email.trim() !== '');
   const filteredShutdownEmails = ShutEmailsForAlert.filter(email => email.trim() !== '');
 
-  const instrumentData = {
+  // Determine if this is a tiltmeter
+  const isTiltmeter = instrumentId === 'TILT-142939' || instrumentId === 'TILT-143969';
+  
+  // Prepare instrument data
+  const instrumentData: any = {
     instrument_id: instrumentId,
     instrument_name: instrumentName,
     project_id: project.id,
     sno: instrumentSno || null,
-    alert_value: alertValue ? Number(alertValue) : null,
-    warning_value: warningValue ? Number(warningValue) : null,
-    shutdown_value: shutdownValue ? Number(shutdownValue) : null,
     alert_emails: filteredAlertEmails.length > 0 ? filteredAlertEmails : null,
     warning_emails: filteredWarningEmails.length > 0 ? filteredWarningEmails : null,
     shutdown_emails: filteredShutdownEmails.length > 0 ? filteredShutdownEmails : null,
   };
+
+  if (isTiltmeter) {
+    // For tiltmeters, use ONLY XYZ JSON values
+    instrumentData.x_y_z_alert_values = {
+      x: xyzAlertValues.x ? Number(xyzAlertValues.x) : null,
+      y: xyzAlertValues.y ? Number(xyzAlertValues.y) : null,
+      z: xyzAlertValues.z ? Number(xyzAlertValues.z) : null
+    };
+    instrumentData.x_y_z_warning_values = {
+      x: xyzWarningValues.x ? Number(xyzWarningValues.x) : null,
+      y: xyzWarningValues.y ? Number(xyzWarningValues.y) : null,
+      z: xyzWarningValues.z ? Number(xyzWarningValues.z) : null
+    };
+    instrumentData.x_y_z_shutdown_values = {
+      x: xyzShutdownValues.x ? Number(xyzShutdownValues.x) : null,
+      y: xyzShutdownValues.y ? Number(xyzShutdownValues.y) : null,
+      z: xyzShutdownValues.z ? Number(xyzShutdownValues.z) : null
+    };
+    // Always set single values to null for tiltmeters
+    instrumentData.alert_value = null;
+    instrumentData.warning_value = null;
+    instrumentData.shutdown_value = null;
+  } else {
+    // For non-tiltmeters, use ONLY single values
+    instrumentData.alert_value = alertValue ? Number(alertValue) : null;
+    instrumentData.warning_value = warningValue ? Number(warningValue) : null;
+    instrumentData.shutdown_value = shutdownValue ? Number(shutdownValue) : null;
+    // Always set XYZ values to null for non-tiltmeters
+    instrumentData.x_y_z_alert_values = null;
+    instrumentData.x_y_z_warning_values = null;
+    instrumentData.x_y_z_shutdown_values = null;
+  }
 
   const { data, error } = await supabase.from('instruments').insert([instrumentData]);
 
@@ -270,125 +320,220 @@ const handleSubmit = async (e: React.FormEvent) => {
         />
       </Box>
 
-      {/* Alert Values - Optional */}
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
-        <TextField
-          label="Alert Value (optional)"
-          type="number"
-          value={alertValue}
-          onChange={(e) => setAlertValue(e.target.value)}
-          fullWidth
-        />
-        <Box display="flex" flexDirection="column" gap={1}>
-          {EmailsForAlert.map((email, i) => (
-            <Box key={i} display="flex" alignItems="center" gap={1}>
-              <TextField
-                label={`Alert Email ${i + 1} (optional)`}
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  const updatedEmails = [...EmailsForAlert];
-                  updatedEmails[i] = e.target.value;
-                  setEmailsForAlert(updatedEmails);
-                }}
-                fullWidth
-              />
-              <Button
-                size="small"
-                color="error"
-                onClick={() => removeEmailField(i)}
-              >
-                ❌
+      {/* Alert Values - Optional (Only for non-tiltmeters) */}
+      {!(instrumentId === 'TILT-142939' || instrumentId === 'TILT-143969') && (
+        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+          <TextField
+            label="Alert Value (optional)"
+            type="number"
+            value={alertValue}
+            onChange={(e) => setAlertValue(e.target.value)}
+            fullWidth
+          />
+          <Box display="flex" flexDirection="column" gap={1}>
+            {EmailsForAlert.map((email, i) => (
+              <Box key={i} display="flex" alignItems="center" gap={1}>
+                <TextField
+                  label={`Alert Email ${i + 1} (optional)`}
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    const updatedEmails = [...EmailsForAlert];
+                    updatedEmails[i] = e.target.value;
+                    setEmailsForAlert(updatedEmails);
+                  }}
+                  fullWidth
+                />
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={() => removeEmailField(i)}
+                >
+                  ❌
+                </Button>
+              </Box>
+            ))}
+            {EmailsForAlert.length < 3 && (
+              <Button variant="outlined" onClick={addEmailField}>
+                Add Alert Email
               </Button>
-            </Box>
-          ))}
-          {EmailsForAlert.length < 3 && (
-            <Button variant="outlined" onClick={addEmailField}>
-              Add Alert Email
-            </Button>
-          )}
+            )}
+          </Box>
         </Box>
-      </Box>
+      )}
 
-      {/* Warning Values - Optional */}
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
-        <TextField
-          label="Warning Value (optional)"
-          type="number"
-          value={warningValue}
-          onChange={(e) => setWarningValue(e.target.value)}
-          fullWidth
-        />
-        <Box display="flex" flexDirection="column" gap={1}>
-          {EmailsForWarning.map((email, i) => (
-            <Box key={i} display="flex" alignItems="center" gap={1}>
-              <TextField
-                label={`Warning Email ${i + 1} (optional)`}
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  const updatedEmails = [...EmailsForWarning];
-                  updatedEmails[i] = e.target.value;
-                  setEmailsForWarning(updatedEmails);
-                }}
-                fullWidth
-              />
-              <Button
-                size="small"
-                color="error"
-                onClick={() => removeWarnEmailField(i)}
-              >
-                ❌
+      {/* Warning Values - Optional (Only for non-tiltmeters) */}
+      {!(instrumentId === 'TILT-142939' || instrumentId === 'TILT-143969') && (
+        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+          <TextField
+            label="Warning Value (optional)"
+            type="number"
+            value={warningValue}
+            onChange={(e) => setWarningValue(e.target.value)}
+            fullWidth
+          />
+          <Box display="flex" flexDirection="column" gap={1}>
+            {EmailsForWarning.map((email, i) => (
+              <Box key={i} display="flex" alignItems="center" gap={1}>
+                <TextField
+                  label={`Warning Email ${i + 1} (optional)`}
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    const updatedEmails = [...EmailsForWarning];
+                    updatedEmails[i] = e.target.value;
+                    setEmailsForWarning(updatedEmails);
+                  }}
+                  fullWidth
+                />
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={() => removeWarnEmailField(i)}
+                >
+                  ❌
+                </Button>
+              </Box>
+            ))}
+            {EmailsForWarning.length < 3 && (
+              <Button variant="outlined" onClick={addWarnEmailField}>
+                Add Warning Email
               </Button>
-            </Box>
-          ))}
-          {EmailsForWarning.length < 3 && (
-            <Button variant="outlined" onClick={addWarnEmailField}>
-              Add Warning Email
-            </Button>
-          )}
+            )}
+          </Box>
         </Box>
-      </Box>
+      )}
 
-      {/* Shutdown Values - Optional */}
-      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
-        <TextField
-          label="Shutdown Value (optional)"
-          type="number"
-          value={shutdownValue}
-          onChange={(e) => setShutdownValue(e.target.value)}
-          fullWidth
-        />
-        <Box display="flex" flexDirection="column" gap={1}>
-          {ShutEmailsForAlert.map((email, i) => (
-            <Box key={i} display="flex" alignItems="center" gap={1}>
-              <TextField
-                label={`Shutdown Email ${i + 1} (optional)`}
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  const updatedEmails = [...ShutEmailsForAlert];
-                  updatedEmails[i] = e.target.value;
-                  setShutEmailsForAlert(updatedEmails);
-                }}
-                fullWidth
-              />
-              <Button
-                size="small"
-                color="error"
-                onClick={() => removeShutEmailField(i)}
-              >
-                ❌
+      {/* Shutdown Values - Optional (Only for non-tiltmeters) */}
+      {!(instrumentId === 'TILT-142939' || instrumentId === 'TILT-143969') && (
+        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+          <TextField
+            label="Shutdown Value (optional)"
+            type="number"
+            value={shutdownValue}
+            onChange={(e) => setShutdownValue(e.target.value)}
+            fullWidth
+          />
+          <Box display="flex" flexDirection="column" gap={1}>
+            {ShutEmailsForAlert.map((email, i) => (
+              <Box key={i} display="flex" alignItems="center" gap={1}>
+                <TextField
+                  label={`Shutdown Email ${i + 1} (optional)`}
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    const updatedEmails = [...ShutEmailsForAlert];
+                    updatedEmails[i] = e.target.value;
+                    setShutEmailsForAlert(updatedEmails);
+                  }}
+                  fullWidth
+                />
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={() => removeShutEmailField(i)}
+                >
+                  ❌
+                </Button>
+              </Box>
+            ))}
+            {ShutEmailsForAlert.length < 3 && (
+              <Button variant="outlined" onClick={addShutEmailField}>
+                Add Shutdown Email
               </Button>
-            </Box>
-          ))}
-          {ShutEmailsForAlert.length < 3 && (
-            <Button variant="outlined" onClick={addShutEmailField}>
-              Add Shutdown Email
-            </Button>
-          )}
+            )}
+          </Box>
         </Box>
-      </Box>
+      )}
+
+      {/* XYZ Values for Tiltmeters */}
+      {(instrumentId === 'TILT-142939' || instrumentId === 'TILT-143969') && (
+        <>
+          {/* XYZ Alert Values */}
+          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} width="100%" mb={2}>
+            <Typography variant="h6" gridColumn="1 / -1" sx={{ mt: 2, mb: 1 }}>
+              XYZ Alert Values (Tiltmeter)
+            </Typography>
+            <TextField
+              label="X-Axis Alert Value"
+              type="number"
+              value={xyzAlertValues.x}
+              onChange={(e) => setXyzAlertValues({...xyzAlertValues, x: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Y-Axis Alert Value"
+              type="number"
+              value={xyzAlertValues.y}
+              onChange={(e) => setXyzAlertValues({...xyzAlertValues, y: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Z-Axis Alert Value"
+              type="number"
+              value={xyzAlertValues.z}
+              onChange={(e) => setXyzAlertValues({...xyzAlertValues, z: e.target.value})}
+              fullWidth
+            />
+          </Box>
+
+          {/* XYZ Warning Values */}
+          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} width="100%" mb={2}>
+            <Typography variant="h6" gridColumn="1 / -1" sx={{ mt: 2, mb: 1 }}>
+              XYZ Warning Values (Tiltmeter)
+            </Typography>
+            <TextField
+              label="X-Axis Warning Value"
+              type="number"
+              value={xyzWarningValues.x}
+              onChange={(e) => setXyzWarningValues({...xyzWarningValues, x: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Y-Axis Warning Value"
+              type="number"
+              value={xyzWarningValues.y}
+              onChange={(e) => setXyzWarningValues({...xyzWarningValues, y: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Z-Axis Warning Value"
+              type="number"
+              value={xyzWarningValues.z}
+              onChange={(e) => setXyzWarningValues({...xyzWarningValues, z: e.target.value})}
+              fullWidth
+            />
+          </Box>
+
+          {/* XYZ Shutdown Values */}
+          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} width="100%" mb={2}>
+            <Typography variant="h6" gridColumn="1 / -1" sx={{ mt: 2, mb: 1 }}>
+              XYZ Shutdown Values (Tiltmeter)
+            </Typography>
+            <TextField
+              label="X-Axis Shutdown Value"
+              type="number"
+              value={xyzShutdownValues.x}
+              onChange={(e) => setXyzShutdownValues({...xyzShutdownValues, x: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Y-Axis Shutdown Value"
+              type="number"
+              value={xyzShutdownValues.y}
+              onChange={(e) => setXyzShutdownValues({...xyzShutdownValues, y: e.target.value})}
+              fullWidth
+            />
+            <TextField
+              label="Z-Axis Shutdown Value"
+              type="number"
+              value={xyzShutdownValues.z}
+              onChange={(e) => setXyzShutdownValues({...xyzShutdownValues, z: e.target.value})}
+              fullWidth
+            />
+          </Box>
+        </>
+      )}
 
       {/* Submit Button */}
       <Box mt={4} textAlign="center">
