@@ -9,21 +9,22 @@ import {
   Box,
   Paper,
   Stack,
+  Menu,
+  MenuItem,
   Checkbox,
   FormControlLabel,
   TextField,
-  Menu,
-  MenuItem
+  Alert
 } from '@mui/material';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
-// import { format } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useAdminContext } from '../context/AdminContext';
 
 interface SensorData {
   id: number;
@@ -44,17 +45,32 @@ interface InstrumentSettings {
   x_y_z_shutdown_values?: { x: number; y: number; z: number } | null;
 }
 
+interface ReferenceValues {
+  enabled: boolean;
+  reference_x_value: number | null;
+  reference_y_value: number | null;
+  reference_z_value: number | null;
+}
+
 const Tiltmeter143969: React.FC = () => {
+  const { isAdmin } = useAdminContext();
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
   const [loading, setLoading] = useState(false);
   const [fromDate, setFromDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [toDate, setToDate] = useState<Date | null>(new Date());
   const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
-  const [showReferenceLines, setShowReferenceLines] = useState(false);
-  const [referenceX, setReferenceX] = useState<string>('');
-  const [referenceY, setReferenceY] = useState<string>('');
-  const [referenceZ, setReferenceZ] = useState<string>('');
-  const [referenceEnabled, setReferenceEnabled] = useState(false);
+  const [referenceValues, setReferenceValues] = useState<ReferenceValues>({
+    enabled: false,
+    reference_x_value: null,
+    reference_y_value: null,
+    reference_z_value: null
+  });
+  const [tempReferenceValues, setTempReferenceValues] = useState({
+    reference_x_value: '',
+    reference_y_value: '',
+    reference_z_value: ''
+  });
+  const [savingReference, setSavingReference] = useState(false);
   const nodeId = 143969; // Hardcoded node ID
   const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
 
@@ -109,24 +125,90 @@ const Tiltmeter143969: React.FC = () => {
     }
   };
 
-  const enableReferenceLines = () => {
-    if (referenceX && referenceY && referenceZ) {
-      setReferenceEnabled(true);
-      toast.success('Reference lines enabled. Values will be subtracted from measurements.');
-    } else {
-      toast.error('Please enter all three reference values (X, Y, Z)');
+  // Fetch reference values from database
+  const fetchReferenceValues = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reference_values')
+        .select('*')
+        .eq('instrument_id', 'TILT-143969')
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        throw error;
+      }
+
+      if (data) {
+        setReferenceValues({
+          enabled: data.enabled || false,
+          reference_x_value: data.reference_x_value,
+          reference_y_value: data.reference_y_value,
+          reference_z_value: data.reference_z_value
+        });
+        
+        setTempReferenceValues({
+          reference_x_value: data.reference_x_value?.toString() || '',
+          reference_y_value: data.reference_y_value?.toString() || '',
+          reference_z_value: data.reference_z_value?.toString() || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching reference values:', error);
+      toast.error('Failed to load reference values');
+    }
+  };
+
+  // Save reference values to database
+  const saveReferenceValues = async () => {
+    setSavingReference(true);
+    try {
+      const valuesToSave = {
+        instrument_id: 'TILT-143969',
+        enabled: referenceValues.enabled,
+        reference_x_value: tempReferenceValues.reference_x_value ? parseFloat(tempReferenceValues.reference_x_value) : null,
+        reference_y_value: tempReferenceValues.reference_y_value ? parseFloat(tempReferenceValues.reference_y_value) : null,
+        reference_z_value: tempReferenceValues.reference_z_value ? parseFloat(tempReferenceValues.reference_z_value) : null
+      };
+
+      const { error } = await supabase
+        .from('reference_values')
+        .update({
+          enabled: referenceValues.enabled,
+          reference_x_value: tempReferenceValues.reference_x_value ? parseFloat(tempReferenceValues.reference_x_value) : null,
+          reference_y_value: tempReferenceValues.reference_y_value ? parseFloat(tempReferenceValues.reference_y_value) : null,
+          reference_z_value: tempReferenceValues.reference_z_value ? parseFloat(tempReferenceValues.reference_z_value) : null
+        })
+        .eq('instrument_id', 'TILT-143969');
+
+      if (error) throw error;
+
+      // Update local state
+      setReferenceValues({
+        enabled: referenceValues.enabled,
+        reference_x_value: valuesToSave.reference_x_value,
+        reference_y_value: valuesToSave.reference_y_value,
+        reference_z_value: valuesToSave.reference_z_value
+      });
+
+      toast.success('Reference values updated successfully');
+    } catch (error) {
+      console.error('Error saving reference values:', error);
+      toast.error('Failed to save reference values');
+    } finally {
+      setSavingReference(false);
     }
   };
 
   useEffect(() => {
     fetchInstrumentSettings();
+    fetchReferenceValues();
   }, []);
 
   // Prepare data for charts
   const timestamps = sensorData.map(d => new Date(d.timestamp));
-  const refX = referenceEnabled && referenceX ? parseFloat(referenceX) : 0;
-  const refY = referenceEnabled && referenceY ? parseFloat(referenceY) : 0;
-  const refZ = referenceEnabled && referenceZ ? parseFloat(referenceZ) : 0;
+  const refX = referenceValues.enabled && referenceValues.reference_x_value ? referenceValues.reference_x_value : 0;
+  const refY = referenceValues.enabled && referenceValues.reference_y_value ? referenceValues.reference_y_value : 0;
+  const refZ = referenceValues.enabled && referenceValues.reference_z_value ? referenceValues.reference_z_value : 0;
   
   const xValues = sensorData.map(d => d.x_value - refX);
   const yValues = sensorData.map(d => d.y_value - refY);
@@ -342,10 +424,13 @@ const Tiltmeter143969: React.FC = () => {
     saveAs(blob, `tiltmeter-${nodeId}-${type}-data.xlsx`);
   };
 
+
+
   return (
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Typography variant="h4" gutterBottom>
           Tiltmeter-Node-143969 - Data Graphs
         </Typography>
@@ -400,9 +485,9 @@ const Tiltmeter143969: React.FC = () => {
               <MenuItem onClick={() => { handleDownloadExcel('raw'); setDownloadMenuAnchor(null); }}>
                 Raw Data
               </MenuItem>
-              <MenuItem disabled={!referenceEnabled} onClick={() => { handleDownloadExcel('calibrated'); setDownloadMenuAnchor(null); }}>
+              <MenuItem disabled={!referenceValues.enabled} onClick={() => { handleDownloadExcel('calibrated'); setDownloadMenuAnchor(null); }}>
                 Calibrated Data
-                {!referenceEnabled && (
+                {!referenceValues.enabled && (
                   <Typography variant="caption" color="error" sx={{ ml: 1 }}>
                     (Enable and add reference values to get calibrated data)
                   </Typography>
@@ -410,65 +495,95 @@ const Tiltmeter143969: React.FC = () => {
               </MenuItem>
             </Menu>
           </Box>
-
-          {/* Reference Lines Section */}
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={showReferenceLines}
-                  onChange={(e) => setShowReferenceLines(e.target.checked)}
-                />
-              }
-              label="Enable Reference Lines"
-            />
-            
-            {showReferenceLines && (
-              <Stack direction="row" spacing={2} sx={{ mt: 2 }} alignItems="center">
-                <TextField
-                  label="Reference X Value"
-                  type="number"
-                  value={referenceX}
-                  onChange={(e) => setReferenceX(e.target.value)}
-                  size="small"
-                  sx={{ width: 150 }}
-                />
-                <TextField
-                  label="Reference Y Value"
-                  type="number"
-                  value={referenceY}
-                  onChange={(e) => setReferenceY(e.target.value)}
-                  size="small"
-                  sx={{ width: 150 }}
-                />
-                <TextField
-                  label="Reference Z Value"
-                  type="number"
-                  value={referenceZ}
-                  onChange={(e) => setReferenceZ(e.target.value)}
-                  size="small"
-                  sx={{ width: 150 }}
-                />
-                <Button
-                  variant="contained"
-                  onClick={enableReferenceLines}
-                  disabled={!referenceX || !referenceY || !referenceZ}
-                >
-                  Enable References
-                </Button>
-              </Stack>
-            )}
-          </Box>
           
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             <strong>Data Points:</strong> {sensorData.length} | 
             <strong> Last Updated:</strong> {sensorData.length > 0 ? new Date(sensorData[sensorData.length - 1].timestamp).toLocaleString() : 'No data'}
-            {referenceEnabled && (
+            {referenceValues.enabled && (
               <span style={{ color: 'green', fontWeight: 'bold' }}>
                 {' | Reference values enabled'}
               </span>
             )}
           </Typography>
+
+          {/* Reference Values Section */}
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={referenceValues.enabled}
+                  onChange={(e) => {
+                    if (!isAdmin) return;
+                    setReferenceValues(prev => ({ ...prev, enabled: e.target.checked }));
+                  }}
+                  disabled={!isAdmin}
+                />
+              }
+              label="Enable Reference Values"
+            />
+            
+            {referenceValues.enabled && (
+              <Box sx={{ mt: 2 }}>
+                {!isAdmin && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Reference values are enabled. Contact an administrator to modify these values.
+                  </Alert>
+                )}
+                
+                <Stack direction="row" spacing={2} sx={{ mb: 2 }} alignItems="center">
+                  <TextField
+                    label="Reference X Value"
+                    type="number"
+                    value={tempReferenceValues.reference_x_value}
+                    onChange={(e) => {
+                      if (!isAdmin) return;
+                      setTempReferenceValues(prev => ({ ...prev, reference_x_value: e.target.value }));
+                    }}
+                    size="small"
+                    sx={{ width: 150 }}
+                    disabled={!isAdmin}
+                    inputProps={{ step: "any" }}
+                  />
+                  <TextField
+                    label="Reference Y Value"
+                    type="number"
+                    value={tempReferenceValues.reference_y_value}
+                    onChange={(e) => {
+                      if (!isAdmin) return;
+                      setTempReferenceValues(prev => ({ ...prev, reference_y_value: e.target.value }));
+                    }}
+                    size="small"
+                    sx={{ width: 150 }}
+                    disabled={!isAdmin}
+                    inputProps={{ step: "any" }}
+                  />
+                  <TextField
+                    label="Reference Z Value"
+                    type="number"
+                    value={tempReferenceValues.reference_z_value}
+                    onChange={(e) => {
+                      if (!isAdmin) return;
+                      setTempReferenceValues(prev => ({ ...prev, reference_z_value: e.target.value }));
+                    }}
+                    size="small"
+                    sx={{ width: 150 }}
+                    disabled={!isAdmin}
+                    inputProps={{ step: "any" }}
+                  />
+                  {isAdmin && (
+                    <Button
+                      variant="contained"
+                      onClick={saveReferenceValues}
+                      disabled={savingReference}
+                      startIcon={savingReference ? <CircularProgress size={16} /> : null}
+                    >
+                      {savingReference ? 'Saving...' : 'Update Reference Values'}
+                    </Button>
+                  )}
+                </Stack>
+              </Box>
+            )}
+          </Box>
         </Paper>
 
         {/* Individual Charts in order: X, Y, Z */}
