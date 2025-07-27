@@ -98,13 +98,14 @@ const Tiltmeter143969: React.FC = () => {
       );
       
       if (!response.ok) {
-        throw new Error('Failed to fetch sensor data');
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
       const data = await response.json();
       setSensorData(data.reverse()); // Reverse to show chronological order
     } catch (error) {
-      toast.error('Failed to fetch sensor data');
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      toast.error(`Failed to fetch sensor data: ${errorMessage}`);
       console.error('Error fetching sensor data:', error);
     } finally {
       setLoading(false);
@@ -206,13 +207,13 @@ const Tiltmeter143969: React.FC = () => {
 
   // Prepare data for charts
   const timestamps = sensorData.map(d => new Date(d.timestamp));
-  const refX = referenceValues.enabled && referenceValues.reference_x_value ? referenceValues.reference_x_value : 0;
-  const refY = referenceValues.enabled && referenceValues.reference_y_value ? referenceValues.reference_y_value : 0;
-  const refZ = referenceValues.enabled && referenceValues.reference_z_value ? referenceValues.reference_z_value : 0;
   
-  const xValues = sensorData.map(d => d.x_value - refX);
-  const yValues = sensorData.map(d => d.y_value - refY);
-  const zValues = sensorData.map(d => d.z_value - refZ);
+  // The backend API already applies reference values when enabled, so we don't need to subtract again
+  // If reference values are enabled, the data from API is already calibrated
+  // If reference values are disabled, we use raw data as is
+  const xValues = sensorData.map(d => d.x_value);
+  const yValues = sensorData.map(d => d.y_value);
+  const zValues = sensorData.map(d => d.z_value);
 
   // Color palette and hovertemplate for consistency
   const COLORS = {
@@ -228,46 +229,34 @@ const Tiltmeter143969: React.FC = () => {
 
   const plotlyLayout = {
     autosize: true,
-    height: 500,
-    margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
+    height: 350,
+    margin: { l: 60, r: 30, b: 60, t: 40, pad: 4 },
     xaxis: {
-      title: { text: 'Time', standoff: 25, font: { size: 12, weight: 600 } },
+      title: { text: 'Time' },
       type: 'date' as const,
-      tickmode: 'auto' as const,
-      nticks: 5,
       tickformat: '%m/%d %H:%M',
-      tickangle: 0,
       gridcolor: '#f0f0f0',
-      gridwidth: 1,
       showgrid: true,
-      automargin: true,
-      autorange: true,
     },
     yaxis: {
       title: { text: 'Tilt (degrees)', standoff: 15 },
-      autorange: true,
-      tickmode: 'auto' as const,
+      fixedrange: false,
       gridcolor: '#f0f0f0',
-      gridwidth: 1,
       zeroline: true,
       zerolinecolor: '#f0f0f0',
-      zerolinewidth: 1,
-      showgrid: true,
-      fixedrange: false,
     },
     showlegend: true,
     legend: {
-      orientation: 'h' as const,
-      y: -0.2,
-      x: 0.5,
-      xanchor: 'center' as const,
-      font: { size: 12 },
+      x: 1.05,
+      xanchor: 'left',
+      y: 0.5,
+      yanchor: 'middle',
+      font: { size: 10 },
       bgcolor: 'rgba(255,255,255,0.8)',
       bordercolor: '#CCC',
       borderwidth: 1,
-    },
+    } as any,
     hovermode: 'closest' as const,
-    hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } },
     plot_bgcolor: 'white',
     paper_bgcolor: 'white',
   };
@@ -366,7 +355,7 @@ const Tiltmeter143969: React.FC = () => {
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
       name: 'X-Axis',
-      line: { color: COLORS.x, shape: 'spline' as const },
+      line: { color: COLORS.x, width: 1.5 },
       marker: { size: 6, color: COLORS.x },
       hovertemplate: AXIS_HOVERTEMPLATE('X'),
       connectgaps: true,
@@ -379,7 +368,7 @@ const Tiltmeter143969: React.FC = () => {
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
       name: 'Y-Axis',
-      line: { color: COLORS.y, shape: 'spline' as const },
+      line: { color: COLORS.y, width: 1.5 },
       marker: { size: 6, color: COLORS.y },
       hovertemplate: AXIS_HOVERTEMPLATE('Y'),
       connectgaps: true,
@@ -392,7 +381,7 @@ const Tiltmeter143969: React.FC = () => {
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
       name: 'Z-Axis',
-      line: { color: COLORS.z, shape: 'spline' as const },
+      line: { color: COLORS.z, width: 1.5 },
       marker: { size: 6, color: COLORS.z },
       hovertemplate: AXIS_HOVERTEMPLATE('Z'),
       connectgaps: true,
@@ -411,9 +400,9 @@ const Tiltmeter143969: React.FC = () => {
     } else if (type === 'calibrated') {
       dataToExport = sensorData.map(d => ({
         Time: d.timestamp,
-        X: d.x_value - refX,
-        Y: d.y_value - refY,
-        Z: d.z_value - refZ,
+        X: d.x_value, // Already calibrated by backend API
+        Y: d.y_value, // Already calibrated by backend API
+        Z: d.z_value, // Already calibrated by backend API
       }));
     }
     const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -587,66 +576,76 @@ const Tiltmeter143969: React.FC = () => {
         </Paper>
 
         {/* Individual Charts in order: X, Y, Z */}
-        {/* X-Axis Chart */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            X-Axis Tilt (Channel 0)
-          </Typography>
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-            <Plot
-              data={xChartData}
-              layout={{
-                ...plotlyLayout,
-                title: { text: `X-Axis Tilt - Node ${nodeId}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations('x'),
-              }}
-              config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-              style={{ width: '100%' }}
-              useResizeHandler={true}
-            />
-          </div>
-        </Paper>
-        {/* Y-Axis Chart */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Y-Axis Tilt (Channel 1)
-          </Typography>
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-            <Plot
-              data={yChartData}
-              layout={{
-                ...plotlyLayout,
-                title: { text: `Y-Axis Tilt - Node ${nodeId}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations('y'),
-              }}
-              config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-              style={{ width: '100%' }}
-              useResizeHandler={true}
-            />
-          </div>
-        </Paper>
-        {/* Z-Axis Chart */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Z-Axis Tilt (Channel 2)
-          </Typography>
-          <div style={{ width: '100%', overflowX: 'auto' }}>
-            <Plot
-              data={zChartData}
-              layout={{
-                ...plotlyLayout,
-                title: { text: `Z-Axis Tilt - Node ${nodeId}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations('z'),
-              }}
-              config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-              style={{ width: '100%' }}
-              useResizeHandler={true}
-            />
-          </div>
-        </Paper>
+        {sensorData.length > 0 ? (
+          <>
+            {/* X-Axis Chart */}
+            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                X-Axis Tilt (Channel 0)
+              </Typography>
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <Plot
+                  data={xChartData}
+                  layout={{
+                    ...plotlyLayout,
+                    title: { text: `X-Axis Tilt - Node ${nodeId}` },
+                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
+                    ...getReferenceShapesAndAnnotations('x'),
+                  }}
+                  config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
+                  style={{ width: '100%' }}
+                  useResizeHandler={true}
+                />
+              </div>
+            </Paper>
+            {/* Y-Axis Chart */}
+            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Y-Axis Tilt (Channel 1)
+              </Typography>
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <Plot
+                  data={yChartData}
+                  layout={{
+                    ...plotlyLayout,
+                    title: { text: `Y-Axis Tilt - Node ${nodeId}` },
+                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
+                    ...getReferenceShapesAndAnnotations('y'),
+                  }}
+                  config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
+                  style={{ width: '100%' }}
+                  useResizeHandler={true}
+                />
+              </div>
+            </Paper>
+            {/* Z-Axis Chart */}
+            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Z-Axis Tilt (Channel 2)
+              </Typography>
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <Plot
+                  data={zChartData}
+                  layout={{
+                    ...plotlyLayout,
+                    title: { text: `Z-Axis Tilt - Node ${nodeId}` },
+                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
+                    ...getReferenceShapesAndAnnotations('z'),
+                  }}
+                  config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
+                  style={{ width: '100%' }}
+                  useResizeHandler={true}
+                />
+              </div>
+            </Paper>
+          </>
+        ) : (
+          <Paper elevation={3} sx={{ p: 3, mb: 3, textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary" sx={{ py: 4 }}>
+              {loading ? 'Loading data...' : 'Click "Load Data" to view tiltmeter graphs'}
+            </Typography>
+          </Paper>
+        )}
       </MainContentWrapper>
     </>
   );
