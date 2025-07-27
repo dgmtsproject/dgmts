@@ -9,7 +9,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
-const MAX_POINTS = 1000;
+// const MAX_POINTS = 1000;
 
 interface InstrumentSettings {
   alert_value: number;
@@ -62,38 +62,62 @@ const Background: React.FC = () => {
       };
     }
 
-    // Combined: at least one axis is nonzero
-    const combined = rawData.filter(entry => {
-      const x = Math.abs(Number(entry[1].toFixed(2)));
-      const y = Math.abs(Number(entry[2].toFixed(2)));
-      const z = Math.abs(Number(entry[3].toFixed(2)));
-      return x > 0 || y > 0 || z > 0;
+        // Date and hour-based filtering: Ensure at least one point per hour per date
+    const getDateHourKey = (timestamp: string) => {
+      const date = timestamp.split('T')[0]; // Get YYYY-MM-DD
+      const hour = timestamp.split('T')[1]?.split(':')[0]; // Get HH
+      return `${date}-${hour}`;
+    };
+
+    // Group data by date and hour
+    const dataByDateHour = new Map<string, any[]>();
+    rawData.forEach(entry => {
+      const dateHourKey = getDateHourKey(entry[0]);
+      if (!dataByDateHour.has(dateHourKey)) {
+        dataByDateHour.set(dateHourKey, []);
+      }
+      dataByDateHour.get(dateHourKey)!.push(entry);
     });
-    const stepCombined = Math.max(1, Math.floor(combined.length / MAX_POINTS));
-    const combinedFiltered = [];
-    for (let i = 0; i < combined.length; i += stepCombined) {
-      combinedFiltered.push(combined[i]);
-    }
 
-    // X: only where X is nonzero
-    const xFiltered = rawData.filter(entry => Math.abs(Number(entry[1].toFixed(2))) > 0);
-    const stepX = Math.max(1, Math.floor(xFiltered.length / MAX_POINTS));
-    const xDown = [];
-    for (let i = 0; i < xFiltered.length; i += stepX) xDown.push(xFiltered[i]);
+    // For each date-hour, keep the last entry (most recent) to ensure date-hour coverage
+    const dateHourCoverageData: any[] = [];
+    dataByDateHour.forEach((dateHourEntries) => {
+      // Sort by timestamp to get the latest entry for each date-hour
+      const sortedEntries = dateHourEntries.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+      dateHourCoverageData.push(sortedEntries[sortedEntries.length - 1]); // Get the latest entry
+    });
 
-    // Y: only where Y is nonzero
-    const yFiltered = rawData.filter(entry => Math.abs(Number(entry[2].toFixed(2))) > 0);
-    const stepY = Math.max(1, Math.floor(yFiltered.length / MAX_POINTS));
-    const yDown = [];
-    for (let i = 0; i < yFiltered.length; i += stepY) yDown.push(yFiltered[i]);
+    // Ensure minimum 500 points per chart while covering all dates
+    const MIN_POINTS = 500;
+    
+    // Combined: at least one axis is nonzero (from date-hour coverage data)
+    const combined = dateHourCoverageData.filter((entry: any) => {
+      const x = Math.abs(Number(entry[1]));
+      const y = Math.abs(Number(entry[2]));
+      const z = Math.abs(Number(entry[3]));
+      return x > 0.0001 || y > 0.0001 || z > 0.0001;
+    });
+    
+    // Ensure combined has at least MIN_POINTS or all available data
+    const combinedFiltered = combined.length <= MIN_POINTS ? combined : 
+      combined.filter((_, index) => index % Math.max(1, Math.floor(combined.length / MIN_POINTS)) === 0);
 
-    // Z: only where Z is nonzero
-    const zFiltered = rawData.filter(entry => Math.abs(Number(entry[3].toFixed(2))) > 0);
-    const stepZ = Math.max(1, Math.floor(zFiltered.length / MAX_POINTS));
-    const zDown = [];
-    for (let i = 0; i < zFiltered.length; i += stepZ) zDown.push(zFiltered[i]);
+    // X: ensure at least MIN_POINTS while covering dates
+    const xFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[1])) > 0.0001);
+    const xDown = xFiltered.length <= MIN_POINTS ? xFiltered : 
+      xFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(xFiltered.length / MIN_POINTS)) === 0);
 
-    return {
+    // Y: ensure at least MIN_POINTS while covering dates
+    const yFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[2])) > 0.0001);
+    const yDown = yFiltered.length <= MIN_POINTS ? yFiltered : 
+      yFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(yFiltered.length / MIN_POINTS)) === 0);
+
+    // Z: ensure at least MIN_POINTS while covering dates
+    const zFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[3])) > 0.0001);
+    const zDown = zFiltered.length <= MIN_POINTS ? zFiltered : 
+      zFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(zFiltered.length / MIN_POINTS)) === 0);
+
+    const result = {
       combined: {
         time: combinedFiltered.map(entry => parseISO(entry[0])),
         x: combinedFiltered.map(entry => entry[1]),
@@ -113,6 +137,8 @@ const Background: React.FC = () => {
         values: zDown.map(entry => entry[3])
       }
     };
+
+    return result;
   }, [rawData]);
 
   useEffect(() => {
@@ -120,6 +146,16 @@ const Background: React.FC = () => {
     console.log('X', processedData.x);
     console.log('Y', processedData.y);
     console.log('Z', processedData.z);
+    console.log('Date-hour-based filtering stats:', {
+      totalRawData: rawData.length,
+      totalProcessedData: processedData.combined.time.length,
+      xDataPoints: processedData.x.time.length,
+      yDataPoints: processedData.y.time.length,
+      zDataPoints: processedData.z.time.length,
+      uniqueDates: new Set(rawData.map(entry => entry[0].split('T')[0])).size,
+      uniqueDateHours: new Set(rawData.map(entry => `${entry[0].split('T')[0]}-${entry[0].split('T')[1]?.split(':')[0]}`)).size,
+      minPointsTarget: 500
+    });
   }, [rawData, processedData]);
 
   useEffect(() => {
@@ -754,9 +790,18 @@ const Background: React.FC = () => {
               {rawData.length > 0 && (
                 <Button 
                   variant="outlined" 
-                  onClick={() => navigate('/vibration-data-table', { 
-                    state: { rawData, fromDate, toDate } 
-                  })}
+                  onClick={() => {
+                    // Convert processed data back to rawData format for the table
+                    const tableData = processedData.combined.time.map((time, index) => [
+                      time.toISOString(),
+                      processedData.combined.x[index],
+                      processedData.combined.y[index],
+                      processedData.combined.z[index]
+                    ]);
+                    navigate('/vibration-data-table', { 
+                      state: { rawData: tableData, fromDate, toDate } 
+                    });
+                  }}
                   sx={{ height: 40 }}
                 >
                   View Data Table
