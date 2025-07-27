@@ -192,11 +192,43 @@ const Tiltmeter143969: React.FC = () => {
       });
 
       toast.success('Reference values updated successfully');
+      
+      // Refresh data to show updated values
+      if (sensorData.length > 0) {
+        await fetchSensorData();
+      }
     } catch (error) {
       console.error('Error saving reference values:', error);
       toast.error('Failed to save reference values');
     } finally {
       setSavingReference(false);
+    }
+  };
+
+  // Save only the enabled/disabled state
+  const saveEnabledState = async (enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('reference_values')
+        .update({ enabled })
+        .eq('instrument_id', 'TILT-143969');
+
+      if (error) throw error;
+
+      // Update local state
+      setReferenceValues(prev => ({ ...prev, enabled }));
+
+      toast.success(`Reference values ${enabled ? 'enabled' : 'disabled'} successfully`);
+      
+      // Refresh data to show updated values
+      if (sensorData.length > 0) {
+        await fetchSensorData();
+      }
+    } catch (error) {
+      console.error('Error saving enabled state:', error);
+      toast.error('Failed to update reference values state');
+      // Revert the checkbox state on error
+      setReferenceValues(prev => ({ ...prev, enabled: !enabled }));
     }
   };
 
@@ -501,9 +533,9 @@ const Tiltmeter143969: React.FC = () => {
               control={
                 <Checkbox
                   checked={referenceValues.enabled}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     if (!isAdmin) return;
-                    setReferenceValues(prev => ({ ...prev, enabled: e.target.checked }));
+                    await saveEnabledState(e.target.checked);
                   }}
                   disabled={!isAdmin}
                 />
