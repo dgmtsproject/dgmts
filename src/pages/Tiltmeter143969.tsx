@@ -387,7 +387,7 @@ const Tiltmeter143969: React.FC = () => {
       y: xValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'X-Axis',
+      name: 'X-Axis(°)',
       line: { color: COLORS.x, width: 1.5 },
       marker: { size: 6, color: COLORS.x },
       hovertemplate: AXIS_HOVERTEMPLATE('X'),
@@ -400,7 +400,7 @@ const Tiltmeter143969: React.FC = () => {
       y: yValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'Y-Axis',
+      name: 'Y-Axis(°)',
       line: { color: COLORS.y, width: 1.5 },
       marker: { size: 6, color: COLORS.y },
       hovertemplate: AXIS_HOVERTEMPLATE('Y'),
@@ -413,7 +413,7 @@ const Tiltmeter143969: React.FC = () => {
       y: zValues,
       type: 'scatter' as const,
       mode: 'lines+markers' as const,
-      name: 'Z-Axis',
+      name: 'Z-Axis(°)',
       line: { color: COLORS.z, width: 1.5 },
       marker: { size: 6, color: COLORS.z },
       hovertemplate: AXIS_HOVERTEMPLATE('Z'),
@@ -622,7 +622,7 @@ const Tiltmeter143969: React.FC = () => {
                   layout={{
                     ...plotlyLayout,
                     title: { text: `X-Axis Tilt - Node ${nodeId}` },
-                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
+                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value (°)', standoff: 15 } },
                     ...getReferenceShapesAndAnnotations('x'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
@@ -642,7 +642,7 @@ const Tiltmeter143969: React.FC = () => {
                   layout={{
                     ...plotlyLayout,
                     title: { text: `Y-Axis Tilt - Node ${nodeId}` },
-                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
+                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value (°)', standoff: 15 } },
                     ...getReferenceShapesAndAnnotations('y'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
@@ -662,7 +662,7 @@ const Tiltmeter143969: React.FC = () => {
                   layout={{
                     ...plotlyLayout,
                     title: { text: `Z-Axis Tilt - Node ${nodeId}` },
-                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
+                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value (°)', standoff: 15 } },
                     ...getReferenceShapesAndAnnotations('z'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
