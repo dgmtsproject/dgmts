@@ -389,7 +389,7 @@ const Tiltmeter: React.FC = () => {
                           hovertemplate: `
                             <b>X-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
-                            Value: %{y:.6f}<extra></extra>
+                            Value: %{y:.6f}°<extra></extra>
                           `,
                           connectgaps: true
                         }
@@ -424,7 +424,7 @@ const Tiltmeter: React.FC = () => {
                         },
                         yaxis: {
                           title: {
-                            text: 'X-Axis Value',
+                            text: 'X-Axis Value (°)',
                             standoff: 15
                           },
                           autorange: true,
@@ -435,7 +435,8 @@ const Tiltmeter: React.FC = () => {
                           zerolinecolor: '#f0f0f0',
                           zerolinewidth: 1,
                           showgrid: true,
-                          fixedrange: false
+                          fixedrange: false,
+                          tickformat: '.6f°'
                         },
                         hovermode: 'x unified',
                         hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
@@ -462,7 +463,7 @@ const Tiltmeter: React.FC = () => {
                           hovertemplate: `
                             <b>Y-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
-                            Value: %{y:.6f}<extra></extra>
+                            Value: %{y:.6f}°<extra></extra>
                           `,
                           connectgaps: true
                         }
@@ -497,7 +498,7 @@ const Tiltmeter: React.FC = () => {
                         },
                         yaxis: {
                           title: {
-                            text: 'Y-Axis Value',
+                            text: 'Y-Axis Value (°)',
                             standoff: 15
                           },
                           autorange: true,
@@ -508,7 +509,8 @@ const Tiltmeter: React.FC = () => {
                           zerolinecolor: '#f0f0f0',
                           zerolinewidth: 1,
                           showgrid: true,
-                          fixedrange: false
+                          fixedrange: false,
+                          tickformat: '.6f°'
                         },
                         hovermode: 'x unified',
                         hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
@@ -535,7 +537,7 @@ const Tiltmeter: React.FC = () => {
                           hovertemplate: `
                             <b>Z-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
-                            Value: %{y:.6f}<extra></extra>
+                            Value: %{y:.6f}°<extra></extra>
                           `,
                           connectgaps: true
                         }
@@ -570,7 +572,7 @@ const Tiltmeter: React.FC = () => {
                         },
                         yaxis: {
                           title: {
-                            text: 'Z-Axis Value',
+                            text: 'Z-Axis Value (°)',
                             standoff: 15
                           },
                           autorange: true,
@@ -581,7 +583,8 @@ const Tiltmeter: React.FC = () => {
                           zerolinecolor: '#f0f0f0',
                           zerolinewidth: 1,
                           showgrid: true,
-                          fixedrange: false
+                          fixedrange: false,
+                          tickformat: '.6f°'
                         },
                         hovermode: 'x unified',
                         hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
@@ -608,7 +611,7 @@ const Tiltmeter: React.FC = () => {
                           hovertemplate: `
                             <b>X-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
-                            Value: %{y:.6f}<extra></extra>
+                            Value: %{y:.6f}°<extra></extra>
                           `,
                           connectgaps: true
                         },
@@ -623,7 +626,7 @@ const Tiltmeter: React.FC = () => {
                           hovertemplate: `
                             <b>Y-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
-                            Value: %{y:.6f}<extra></extra>
+                            Value: %{y:.6f}°<extra></extra>
                           `,
                           connectgaps: true
                         },
@@ -638,7 +641,7 @@ const Tiltmeter: React.FC = () => {
                           hovertemplate: `
                             <b>Z-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
-                            Value: %{y:.6f}<extra></extra>
+                            Value: %{y:.6f}°<extra></extra>
                           `,
                           connectgaps: true
                         }
@@ -673,7 +676,7 @@ const Tiltmeter: React.FC = () => {
                         },
                         yaxis: {
                           title: {
-                            text: 'Axis Values',
+                            text: 'Axis Values (°)',
                             standoff: 15
                           },
                           autorange: true,
@@ -684,7 +687,8 @@ const Tiltmeter: React.FC = () => {
                           zerolinecolor: '#f0f0f0',
                           zerolinewidth: 1,
                           showgrid: true,
-                          fixedrange: false
+                          fixedrange: false,
+                          tickformat: '.6f°'
                         },
                         showlegend: true,
                         legend: {

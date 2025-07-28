@@ -163,9 +163,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
   const addEmailField = () => {
-    if (EmailsForAlert.length < 3) {
-      setEmailsForAlert([...EmailsForAlert, '']);
-    }
+    setEmailsForAlert([...EmailsForAlert, '']);
   };
   
   const removeEmailField = (index: number): void => {
@@ -175,9 +173,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   const addWarnEmailField = () => {
-    if (EmailsForWarning.length < 3) {
-      setEmailsForWarning([...EmailsForWarning, '']);
-    }
+    setEmailsForWarning([...EmailsForWarning, '']);
   };
   
   const removeWarnEmailField = (index: number): void => {
@@ -187,9 +183,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
   
   const addShutEmailField = () => {
-    if (ShutEmailsForAlert.length < 3) {
-      setShutEmailsForAlert([...ShutEmailsForAlert, '']);
-    }
+    setShutEmailsForAlert([...ShutEmailsForAlert, '']);
   };
   
   const removeShutEmailField = (index: number): void => {
@@ -353,11 +347,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </Button>
               </Box>
             ))}
-            {EmailsForAlert.length < 3 && (
-              <Button variant="outlined" onClick={addEmailField}>
-                Add Alert Email
-              </Button>
-            )}
+            <Button variant="outlined" onClick={addEmailField}>
+              Add Alert Email
+            </Button>
           </Box>
         </Box>
       )}
@@ -395,11 +387,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </Button>
               </Box>
             ))}
-            {EmailsForWarning.length < 3 && (
-              <Button variant="outlined" onClick={addWarnEmailField}>
-                Add Warning Email
-              </Button>
-            )}
+            <Button variant="outlined" onClick={addWarnEmailField}>
+              Add Warning Email
+            </Button>
           </Box>
         </Box>
       )}
@@ -437,11 +427,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </Button>
               </Box>
             ))}
-            {ShutEmailsForAlert.length < 3 && (
-              <Button variant="outlined" onClick={addShutEmailField}>
-                Add Shutdown Email
-              </Button>
-            )}
+            <Button variant="outlined" onClick={addShutEmailField}>
+              Add Shutdown Email
+            </Button>
           </Box>
         </Box>
       )}

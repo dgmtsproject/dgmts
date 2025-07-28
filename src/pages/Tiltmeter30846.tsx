@@ -138,7 +138,7 @@ const Tiltmeter30846: React.FC = () => {
   const AXIS_HOVERTEMPLATE = (axis: string) => `
     <b>${axis}-Axis</b><br>
     Time: %{x|%m/%d/%Y %H:%M}<br>
-    Value: %{y:.6f}<extra></extra>
+    Value: %{y:.6f}°<extra></extra>
   `;
 
   const plotlyLayout = {
@@ -169,6 +169,7 @@ const Tiltmeter30846: React.FC = () => {
       zerolinewidth: 1,
       showgrid: true,
       fixedrange: false,
+      tickformat: '.6f°',
     },
     showlegend: true,
     legend: {

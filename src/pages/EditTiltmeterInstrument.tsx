@@ -112,9 +112,7 @@ const EditTiltmeterInstrument: React.FC = () => {
 
   // Email field handlers
   const addEmailField = () => {
-    if (EmailsForAlert.length < 3) {
-      setEmailsForAlert([...EmailsForAlert, '']);
-    }
+    setEmailsForAlert([...EmailsForAlert, '']);
   };
   const removeEmailField = (index: number): void => {
     const updatedEmails = [...EmailsForAlert];
@@ -122,9 +120,7 @@ const EditTiltmeterInstrument: React.FC = () => {
     setEmailsForAlert(updatedEmails);
   };
   const addWarnEmailField = () => {
-    if (EmailsForWarning.length < 3) {
-      setEmailsForWarning([...EmailsForWarning, '']);
-    }
+    setEmailsForWarning([...EmailsForWarning, '']);
   };
   const removeWarnEmailField = (index: number): void => {
     const updatedEmails = [...EmailsForWarning];
@@ -132,9 +128,7 @@ const EditTiltmeterInstrument: React.FC = () => {
     setEmailsForWarning(updatedEmails);
   };
   const addShutEmailField = () => {
-    if (ShutEmailsForAlert.length < 3) {
-      setShutEmailsForAlert([...ShutEmailsForAlert, '']);
-    }
+    setShutEmailsForAlert([...ShutEmailsForAlert, '']);
   };
   const removeShutEmailField = (index: number): void => {
     const updatedEmails = [...ShutEmailsForAlert];
@@ -251,11 +245,9 @@ const EditTiltmeterInstrument: React.FC = () => {
                       </Button>
                     </Box>
                   ))}
-                  {EmailsForAlert.length < 3 && (
-                    <Button variant="outlined" onClick={addEmailField}>
-                      Add Alert Email
-                    </Button>
-                  )}
+                  <Button variant="outlined" onClick={addEmailField}>
+                    Add Alert Email
+                  </Button>
                 </Box>
               </Box>
               {/* Warning Thresholds (Tiltmeter) */}
@@ -309,11 +301,9 @@ const EditTiltmeterInstrument: React.FC = () => {
                       </Button>
                     </Box>
                   ))}
-                  {EmailsForWarning.length < 3 && (
-                    <Button variant="outlined" onClick={addWarnEmailField}>
-                      Add Warning Email
-                    </Button>
-                  )}
+                  <Button variant="outlined" onClick={addWarnEmailField}>
+                    Add Warning Email
+                  </Button>
                 </Box>
               </Box>
               {/* Shutdown Thresholds (Tiltmeter) */}
@@ -367,11 +357,9 @@ const EditTiltmeterInstrument: React.FC = () => {
                       </Button>
                     </Box>
                   ))}
-                  {ShutEmailsForAlert.length < 3 && (
-                    <Button variant="outlined" onClick={addShutEmailField}>
-                      Add Shutdown Email
-                    </Button>
-                  )}
+                  <Button variant="outlined" onClick={addShutEmailField}>
+                    Add Shutdown Email
+                  </Button>
                 </Box>
               </Box>
               
