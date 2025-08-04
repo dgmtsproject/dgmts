@@ -595,73 +595,149 @@ const Smg3Seismograph: React.FC = () => {
 
     return (
       <Plot
+        key="combined-plot"
         data={[
           {
-            x: filtered.map(point => point.t),
-            y: filtered.map(point => point.x),
+            x: combined.time,
+            y: combined.x,
             type: 'scatter',
-            mode: 'lines',
-            name: 'X-Axis',
-            line: { color: 'red' },
-            hovertemplate: 
-              '<b>X-Axis</b><br>' +
-              'Time: %{x}<br>' +
-              'Value: %{y:.6f}<br>' +
-              '<extra></extra>'
+            mode: 'lines+markers',
+            name: 'X [in/s]',
+            line: {
+              color: '#FF6384',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#FF6384'
+            },
+            hovertemplate: `
+              <b>X</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
           },
           {
-            x: filtered.map(point => point.t),
-            y: filtered.map(point => point.y),
+            x: combined.time,
+            y: combined.y,
             type: 'scatter',
-            mode: 'lines',
-            name: 'Y-Axis',
-            line: { color: 'green' },
-            hovertemplate: 
-              '<b>Y-Axis</b><br>' +
-              'Time: %{x}<br>' +
-              'Value: %{y:.6f}<br>' +
-              '<extra></extra>'
+            mode: 'lines+markers',
+            name: 'Y [in/s]',
+            line: {
+              color: '#36A2EB',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#36A2EB'
+            },
+            hovertemplate: `
+              <b>Y</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
           },
           {
-            x: filtered.map(point => point.t),
-            y: filtered.map(point => point.z),
+            x: combined.time,
+            y: combined.z,
             type: 'scatter',
-            mode: 'lines',
-            name: 'Z-Axis',
-            line: { color: 'blue' },
-            hovertemplate: 
-              '<b>Z-Axis</b><br>' +
-              'Time: %{x}<br>' +
-              'Value: %{y:.6f}<br>' +
-              '<extra></extra>'
-          }
+            mode: 'lines+markers',
+            name: 'Z [in/s]',
+            line: {
+              color: '#FFCE56',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#FFCE56'
+            },
+            hovertemplate: `
+              <b>Z</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.6f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          // Add reference line traces for legend
+          ...(instrumentSettings?.alert_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Alert (${instrumentSettings.alert_value} in/s)`,
+            line: { color: 'orange', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.warning_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Warning (${instrumentSettings.warning_value} in/s)`,
+            line: { color: 'red', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.shutdown_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Shutdown (${instrumentSettings.shutdown_value} in/s)`,
+            line: { color: 'darkred', width: 3, dash: 'solid' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : [])
         ]}
         layout={{
-          title: 'Combined Seismograph Data (X, Y, Z Axes)',
-          xaxis: { 
-            title: 'Time',
+          title: { text: 'Combined Vibration Data', font: { size: 14 } },
+          xaxis: {
+            title: { text: 'Time' },
             type: 'date',
-            tickformat: '%Y-%m-%d %H:%M'
+            tickformat: '%m/%d %H:%M',
+            gridcolor: '#f0f0f0',
+            showgrid: true
           },
-          yaxis: { 
-            title: 'Acceleration (g)',
+          yaxis: {
+            title: { text: 'Vibration (in/s)', standoff: 15 },
+            fixedrange: false,
+            gridcolor: '#f0f0f0',
             zeroline: true,
-            zerolinecolor: '#969696',
-            zerolinewidth: 1
+            zerolinecolor: '#f0f0f0'
           },
-          shapes: shapes,
-          annotations: annotations,
-          hovermode: 'closest',
           showlegend: true,
-          height: 500,
-          margin: { l: 60, r: 30, t: 60, b: 60 }
+          legend: {
+            x: 1.05,
+            xanchor: 'left',
+            y: 0.5,
+            yanchor: 'middle',
+            font: { size: 10 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#CCC',
+            borderwidth: 1
+          },
+          height: 400,
+          margin: { t: 40, b: 60, l: 60, r: 200 },
+          hovermode: 'closest',
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          shapes: shapes,
+          annotations: annotations
         }}
         config={{
+          responsive: true,
           displayModeBar: true,
-          displaylogo: false,
-          modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+          scrollZoom: true,
+          displaylogo: false
         }}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: 400 }}
+        useResizeHandler={true}
       />
     );
   };
