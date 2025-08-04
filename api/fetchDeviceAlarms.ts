@@ -1,11 +1,14 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(
-  _req: VercelRequest,
+  req: VercelRequest,
   res: VercelResponse
 ){
     const API_KEY = process.env.SYSCOM_API_KEY;
-    const  id  = 15092; 
+    const { deviceId } = req.query;
+    
+    // Default to the original device ID (15092) if not specified
+    const id = deviceId || '15092';
     
     if (!id) {
         return res.status(400).json({ error: "Device ID is required" });

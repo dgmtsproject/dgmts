@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
 
-    const { start, end } = req.query;
+    const { start, end, instrumentId } = req.query;
     if (!start || !end) {
       return res.status(400).json({ error: 'Both start and end parameters are required' });
     }
@@ -12,7 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DDTHH:MM:SS' });
     }
 
-    const apiUrl = `https://scs.syscom-instruments.com/public-api/v1/records/background/15092/data?start=${start}&end=${end}`;
+    // Default to the original instrument ID (15092) if not specified
+    const id = instrumentId || '15092';
+    
+    const apiUrl = `https://scs.syscom-instruments.com/public-api/v1/records/background/${id}/data?start=${start}&end=${end}`;
     
     const response = await fetch(apiUrl, {
       headers: {

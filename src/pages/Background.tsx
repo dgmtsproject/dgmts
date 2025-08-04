@@ -179,7 +179,7 @@ const Background: React.FC = () => {
 
       const apiUrl = import.meta.env.DEV
         ? `/api/public-api/v1/records/background/15092/data?start=${startParam}&end=${endParam}`
-        : `/api/fetchBackgroundData?start=${startParam}&end=${endParam}`;
+        : `/api/fetchBackgroundData?start=${startParam}&end=${endParam}&instrumentId=15092`;
 
       const response = await fetch(apiUrl, {
         headers: {

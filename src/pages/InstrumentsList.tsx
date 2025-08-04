@@ -333,6 +333,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                               !(
                                 instrument.instrument_id === 'SMG1' ||
                                 instrument.instrument_id === 'SMG-2' ||
+                                instrument.instrument_id === 'SMG-3' ||
                                 instrument.instrument_id === 'AMTS-1' ||
                                 instrument.instrument_id === 'AMTS-2' ||
                                 instrument.instrument_id === 'TILT-142939' ||
@@ -345,6 +346,8 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                 navigate('/background');
                               } else if (instrument.instrument_id === 'SMG-2') {
                                 navigate('/anc-seismograph');
+                              } else if (instrument.instrument_id === 'SMG-3') {
+                                navigate('/smg3-seismograph');
                               } else if (
                                 instrument.instrument_id === 'AMTS-1' ||
                                 instrument.instrument_id === 'AMTS-2'

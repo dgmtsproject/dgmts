@@ -17,7 +17,7 @@ interface InstrumentSettings {
   shutdown_value: number;
 }
 
-const AncSeismograph: React.FC = () => {
+const Smg3Seismograph: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ const AncSeismograph: React.FC = () => {
       const { data, error } = await supabase
         .from('instruments')
         .select('alert_value, warning_value, shutdown_value')
-        .eq('instrument_id', 'SMG-2')
+        .eq('instrument_id', 'SMG-3')
         .single();
 
       if (error) {
@@ -98,72 +98,48 @@ const AncSeismograph: React.FC = () => {
       return x > 0.0001 || y > 0.0001 || z > 0.0001;
     });
     
-    // Ensure combined has at least MIN_POINTS or all available data
-    const combinedFiltered = combined.length <= MIN_POINTS ? combined : 
-      combined.filter((_, index) => index % Math.max(1, Math.floor(combined.length / MIN_POINTS)) === 0);
+    // Individual axes: filter for non-zero values
+    const x = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[1])) > 0.0001);
+    const y = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[2])) > 0.0001);
+    const z = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[3])) > 0.0001);
 
-    // X: ensure at least MIN_POINTS while covering dates
-    const xFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[1])) > 0.0001);
-    const xDown = xFiltered.length <= MIN_POINTS ? xFiltered : 
-      xFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(xFiltered.length / MIN_POINTS)) === 0);
-
-    // Y: ensure at least MIN_POINTS while covering dates
-    const yFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[2])) > 0.0001);
-    const yDown = yFiltered.length <= MIN_POINTS ? yFiltered : 
-      yFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(yFiltered.length / MIN_POINTS)) === 0);
-
-    // Z: ensure at least MIN_POINTS while covering dates
-    const zFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[3])) > 0.0001);
-    const zDown = zFiltered.length <= MIN_POINTS ? zFiltered : 
-      zFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(zFiltered.length / MIN_POINTS)) === 0);
-
-    const result = {
-      combined: {
-        time: combinedFiltered.map(entry => parseISO(entry[0])),
-        x: combinedFiltered.map(entry => entry[1]),
-        y: combinedFiltered.map(entry => entry[2]),
-        z: combinedFiltered.map(entry => entry[3])
-      },
-      x: {
-        time: xDown.map(entry => parseISO(entry[0])),
-        values: xDown.map(entry => entry[1])
-      },
-      y: {
-        time: yDown.map(entry => parseISO(entry[0])),
-        values: yDown.map(entry => entry[2])
-      },
-      z: {
-        time: zDown.map(entry => parseISO(entry[0])),
-        values: zDown.map(entry => entry[3])
+    // If we have enough data, sample to get MIN_POINTS
+    const sampleData = (data: any[], minPoints: number) => {
+      if (data.length <= minPoints) return data;
+      
+      const step = data.length / minPoints;
+      const sampled: any[] = [];
+      for (let i = 0; i < data.length; i += step) {
+        sampled.push(data[Math.floor(i)]);
       }
+      return sampled;
     };
 
-    return result;
-  }, [rawData]);
+    // Process each dataset
+    const processAxisData = (data: any[], axisIndex: number) => {
+      const sampled = sampleData(data, MIN_POINTS);
+      return {
+        time: sampled.map((entry: any) => parseISO(entry[0])),
+        values: sampled.map((entry: any) => Number(entry[axisIndex]))
+      };
+    };
 
-  useEffect(() => {
-    console.log('rawData', rawData.slice(0, 5));
-    console.log('X', processedData.x);
-    console.log('Y', processedData.y);
-    console.log('Z', processedData.z);
-    console.log('Date-hour-based filtering stats:', {
-      totalRawData: rawData.length,
-      totalProcessedData: processedData.combined.time.length,
-      xDataPoints: processedData.x.time.length,
-      yDataPoints: processedData.y.time.length,
-      zDataPoints: processedData.z.time.length,
-      uniqueDates: new Set(rawData.map(entry => entry[0].split('T')[0])).size,
-      uniqueDateHours: new Set(rawData.map(entry => `${entry[0].split('T')[0]}-${entry[0].split('T')[1]?.split(':')[0]}`)).size,
-      minPointsTarget: 500
-    });
-  }, [rawData, processedData]);
+    const processCombinedData = (data: any[]) => {
+      const sampled = sampleData(data, MIN_POINTS);
+      return {
+        time: sampled.map((entry: any) => parseISO(entry[0])),
+        x: sampled.map((entry: any) => Number(entry[1])),
+        y: sampled.map((entry: any) => Number(entry[2])),
+        z: sampled.map((entry: any) => Number(entry[3]))
+      };
+    };
 
-  useEffect(() => {
-    if (rawData.length > 0) {
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 100);
-    }
+    return {
+      combined: processCombinedData(combined),
+      x: processAxisData(x, 1),
+      y: processAxisData(y, 2),
+      z: processAxisData(z, 3)
+    };
   }, [rawData]);
 
   const fetchData = async () => {
@@ -178,8 +154,8 @@ const AncSeismograph: React.FC = () => {
       const endParam = formatDate(toDate);
 
       const apiUrl = import.meta.env.DEV
-        ? `/api/public-api/v1/records/background/15092/data?start=${startParam}&end=${endParam}`
-        : `/api/fetchBackgroundData?start=${startParam}&end=${endParam}&instrumentId=15092`;
+        ? `/api/public-api/v1/records/background/13453/data?start=${startParam}&end=${endParam}`
+        : `/api/fetchBackgroundData?start=${startParam}&end=${endParam}&instrumentId=13453`;
 
       const response = await fetch(apiUrl, {
         headers: {
@@ -268,7 +244,7 @@ const AncSeismograph: React.FC = () => {
         );
       }
 
-      // Warning level (red)
+      // Warning level (yellow)
       if (instrumentSettings.warning_value) {
         shapes.push(
           {
@@ -279,7 +255,7 @@ const AncSeismograph: React.FC = () => {
             y0: instrumentSettings.warning_value,
             x1: 1,
             y1: instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
+            line: { color: 'yellow', width: 2, dash: 'dash' }
           },
           {
             type: 'line',
@@ -289,7 +265,7 @@ const AncSeismograph: React.FC = () => {
             y0: -instrumentSettings.warning_value,
             x1: 1,
             y1: -instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
+            line: { color: 'yellow', width: 2, dash: 'dash' }
           }
         );
         annotations.push(
@@ -301,7 +277,7 @@ const AncSeismograph: React.FC = () => {
             text: 'Warning',
             showarrow: false,
             font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
+            bgcolor: 'rgba(255,255,0,0.8)',
             xanchor: 'left'
           },
           {
@@ -312,13 +288,13 @@ const AncSeismograph: React.FC = () => {
             text: 'Warning',
             showarrow: false,
             font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
+            bgcolor: 'rgba(255,255,0,0.8)',
             xanchor: 'left'
           }
         );
       }
 
-      // Shutdown level (dark red)
+      // Shutdown level (red)
       if (instrumentSettings.shutdown_value) {
         shapes.push(
           {
@@ -329,7 +305,7 @@ const AncSeismograph: React.FC = () => {
             y0: instrumentSettings.shutdown_value,
             x1: 1,
             y1: instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
+            line: { color: 'red', width: 2, dash: 'dash' }
           },
           {
             type: 'line',
@@ -339,7 +315,7 @@ const AncSeismograph: React.FC = () => {
             y0: -instrumentSettings.shutdown_value,
             x1: 1,
             y1: -instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
+            line: { color: 'red', width: 2, dash: 'dash' }
           }
         );
         annotations.push(
@@ -351,7 +327,7 @@ const AncSeismograph: React.FC = () => {
             text: 'Shutdown',
             showarrow: false,
             font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
+            bgcolor: 'rgba(255,0,0,0.8)',
             xanchor: 'left'
           },
           {
@@ -362,7 +338,7 @@ const AncSeismograph: React.FC = () => {
             text: 'Shutdown',
             showarrow: false,
             font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
+            bgcolor: 'rgba(255,0,0,0.8)',
             xanchor: 'left'
           }
         );
@@ -444,7 +420,22 @@ const AncSeismograph: React.FC = () => {
   };
 
   const createCombinedPlot = (combined: { time: Date[]; x: number[]; y: number[]; z: number[] }) => {
-    if (!combined.time.length) return null;
+    // Filter out any invalid data points
+    const filtered = combined.time
+      .map((t, i) => ({ 
+        t, 
+        x: combined.x[i], 
+        y: combined.y[i], 
+        z: combined.z[i] 
+      }))
+      .filter(point => 
+        point.t && 
+        typeof point.x === 'number' && !isNaN(point.x) &&
+        typeof point.y === 'number' && !isNaN(point.y) &&
+        typeof point.z === 'number' && !isNaN(point.z)
+      );
+
+    if (filtered.length === 0) return null;
 
     // Create shapes and annotations for reference lines
     const shapes: any[] = [];
@@ -501,7 +492,7 @@ const AncSeismograph: React.FC = () => {
         );
       }
 
-      // Warning level (red)
+      // Warning level (yellow)
       if (instrumentSettings.warning_value) {
         shapes.push(
           {
@@ -512,7 +503,7 @@ const AncSeismograph: React.FC = () => {
             y0: instrumentSettings.warning_value,
             x1: 1,
             y1: instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
+            line: { color: 'yellow', width: 2, dash: 'dash' }
           },
           {
             type: 'line',
@@ -522,7 +513,7 @@ const AncSeismograph: React.FC = () => {
             y0: -instrumentSettings.warning_value,
             x1: 1,
             y1: -instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
+            line: { color: 'yellow', width: 2, dash: 'dash' }
           }
         );
         annotations.push(
@@ -534,7 +525,7 @@ const AncSeismograph: React.FC = () => {
             text: 'Warning',
             showarrow: false,
             font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
+            bgcolor: 'rgba(255,255,0,0.8)',
             xanchor: 'left'
           },
           {
@@ -545,13 +536,13 @@ const AncSeismograph: React.FC = () => {
             text: 'Warning',
             showarrow: false,
             font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
+            bgcolor: 'rgba(255,255,0,0.8)',
             xanchor: 'left'
           }
         );
       }
 
-      // Shutdown level (dark red)
+      // Shutdown level (red)
       if (instrumentSettings.shutdown_value) {
         shapes.push(
           {
@@ -562,7 +553,7 @@ const AncSeismograph: React.FC = () => {
             y0: instrumentSettings.shutdown_value,
             x1: 1,
             y1: instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
+            line: { color: 'red', width: 2, dash: 'dash' }
           },
           {
             type: 'line',
@@ -572,7 +563,7 @@ const AncSeismograph: React.FC = () => {
             y0: -instrumentSettings.shutdown_value,
             x1: 1,
             y1: -instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
+            line: { color: 'red', width: 2, dash: 'dash' }
           }
         );
         annotations.push(
@@ -584,7 +575,7 @@ const AncSeismograph: React.FC = () => {
             text: 'Shutdown',
             showarrow: false,
             font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
+            bgcolor: 'rgba(255,0,0,0.8)',
             xanchor: 'left'
           },
           {
@@ -595,7 +586,7 @@ const AncSeismograph: React.FC = () => {
             text: 'Shutdown',
             showarrow: false,
             font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
+            bgcolor: 'rgba(255,0,0,0.8)',
             xanchor: 'left'
           }
         );
@@ -604,149 +595,73 @@ const AncSeismograph: React.FC = () => {
 
     return (
       <Plot
-        key="combined-plot"
         data={[
           {
-            x: combined.time,
-            y: combined.x,
+            x: filtered.map(point => point.t),
+            y: filtered.map(point => point.x),
             type: 'scatter',
-            mode: 'lines+markers',
-            name: 'X [in/s]',
-            line: {
-              color: '#FF6384',
-              shape: 'spline',
-              width: 1.2
-            },
-            marker: {
-              size: 5,
-              color: '#FF6384'
-            },
-            hovertemplate: `
-              <b>X</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
-            `,
-            connectgaps: true
+            mode: 'lines',
+            name: 'X-Axis',
+            line: { color: 'red' },
+            hovertemplate: 
+              '<b>X-Axis</b><br>' +
+              'Time: %{x}<br>' +
+              'Value: %{y:.6f}<br>' +
+              '<extra></extra>'
           },
           {
-            x: combined.time,
-            y: combined.y,
+            x: filtered.map(point => point.t),
+            y: filtered.map(point => point.y),
             type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Y [in/s]',
-            line: {
-              color: '#36A2EB',
-              shape: 'spline',
-              width: 1.2
-            },
-            marker: {
-              size: 5,
-              color: '#36A2EB'
-            },
-            hovertemplate: `
-              <b>Y</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
-            `,
-            connectgaps: true
+            mode: 'lines',
+            name: 'Y-Axis',
+            line: { color: 'green' },
+            hovertemplate: 
+              '<b>Y-Axis</b><br>' +
+              'Time: %{x}<br>' +
+              'Value: %{y:.6f}<br>' +
+              '<extra></extra>'
           },
           {
-            x: combined.time,
-            y: combined.z,
+            x: filtered.map(point => point.t),
+            y: filtered.map(point => point.z),
             type: 'scatter',
-            mode: 'lines+markers',
-            name: 'Z [in/s]',
-            line: {
-              color: '#FFCE56',
-              shape: 'spline',
-              width: 1.2
-            },
-            marker: {
-              size: 5,
-              color: '#FFCE56'
-            },
-            hovertemplate: `
-              <b>Z</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
-            `,
-            connectgaps: true
-          },
-          // Add reference line traces for legend
-          ...(instrumentSettings?.alert_value ? [{
-            x: [null],
-            y: [null],
-            type: 'scatter' as const,
-            mode: 'lines' as const,
-            name: `Alert (${instrumentSettings.alert_value} in/s)`,
-            line: { color: 'orange', width: 2, dash: 'dash' as const },
-            showlegend: true,
-            legendgroup: 'reference-lines'
-          }] : []),
-          ...(instrumentSettings?.warning_value ? [{
-            x: [null],
-            y: [null],
-            type: 'scatter' as const,
-            mode: 'lines' as const,
-            name: `Warning (${instrumentSettings.warning_value} in/s)`,
-            line: { color: 'red', width: 2, dash: 'dash' as const },
-            showlegend: true,
-            legendgroup: 'reference-lines'
-          }] : []),
-          ...(instrumentSettings?.shutdown_value ? [{
-            x: [null],
-            y: [null],
-            type: 'scatter' as const,
-            mode: 'lines' as const,
-            name: `Shutdown (${instrumentSettings.shutdown_value} in/s)`,
-            line: { color: 'darkred', width: 3, dash: 'solid' as const },
-            showlegend: true,
-            legendgroup: 'reference-lines'
-          }] : [])
+            mode: 'lines',
+            name: 'Z-Axis',
+            line: { color: 'blue' },
+            hovertemplate: 
+              '<b>Z-Axis</b><br>' +
+              'Time: %{x}<br>' +
+              'Value: %{y:.6f}<br>' +
+              '<extra></extra>'
+          }
         ]}
         layout={{
-          title: { text: 'Combined Vibration Data', font: { size: 14 } },
-          xaxis: {
-            title: { text: 'Time' },
+          title: 'Combined Seismograph Data (X, Y, Z Axes)',
+          xaxis: { 
+            title: 'Time',
             type: 'date',
-            tickformat: '%m/%d %H:%M',
-            gridcolor: '#f0f0f0',
-            showgrid: true
+            tickformat: '%Y-%m-%d %H:%M'
           },
-          yaxis: {
-            title: { text: 'Vibration (in/s)', standoff: 15 },
-            fixedrange: false,
-            gridcolor: '#f0f0f0',
+          yaxis: { 
+            title: 'Acceleration (g)',
             zeroline: true,
-            zerolinecolor: '#f0f0f0'
+            zerolinecolor: '#969696',
+            zerolinewidth: 1
           },
-          showlegend: true,
-          legend: {
-            x: 1.05,
-            xanchor: 'left',
-            y: 0.5,
-            yanchor: 'middle',
-            font: { size: 10 },
-            bgcolor: 'rgba(255,255,255,0.8)',
-            bordercolor: '#CCC',
-            borderwidth: 1
-          },
-          height: 400,
-          margin: { t: 40, b: 60, l: 60, r: 200 },
-          hovermode: 'closest',
-          plot_bgcolor: 'white',
-          paper_bgcolor: 'white',
           shapes: shapes,
-          annotations: annotations
+          annotations: annotations,
+          hovermode: 'closest',
+          showlegend: true,
+          height: 500,
+          margin: { l: 60, r: 30, t: 60, b: 60 }
         }}
         config={{
-          responsive: true,
           displayModeBar: true,
-          scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
         }}
-        style={{ width: '100%', height: 400 }}
-        useResizeHandler={true}
+        style={{ width: '100%', height: '100%' }}
       />
     );
   };
@@ -758,7 +673,7 @@ const AncSeismograph: React.FC = () => {
       <MainContentWrapper>
         <Box p={3}>
           <Typography variant="h4" align="center" sx={{ mb: 3, mt: 2 }}>
-            ANC DAR-BC Seismograph Data Graphs (SMG-2)
+            ANC DAR-BC Seismograph Data Graphs (SMG-3)
           </Typography>
           
           <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -846,7 +761,7 @@ const AncSeismograph: React.FC = () => {
 
           {instrumentSettings && (
             <Box mt={2} p={2} bgcolor="grey.100" borderRadius={1}>
-              <Typography variant="h6" gutterBottom>ANC DAR-BC Seismograph Reference Levels (SMG-2)</Typography>
+              <Typography variant="h6" gutterBottom>ANC DAR-BC Seismograph Reference Levels (SMG-3)</Typography>
               <Stack direction="row" spacing={3}>
                 {instrumentSettings.alert_value && (
                   <Typography variant="body2">
@@ -872,4 +787,4 @@ const AncSeismograph: React.FC = () => {
   );
 };
 
-export default AncSeismograph; 
+export default Smg3Seismograph; 

@@ -344,13 +344,20 @@ useEffect(() => {
                             >
                               <ListItemText primary="Tiltmeter" />
                             </ListItemButton> */}
-                            <ListItemButton
-                              component={Link}
-                              to="/anc-seismograph"
-                              sx={{ pl: 4 }}
-                            >
-                              <ListItemText primary="Seismograph" />
-                            </ListItemButton>
+                                  <ListItemButton
+        component={Link}
+        to="/anc-seismograph"
+        sx={{ pl: 4 }}
+      >
+        <ListItemText primary="Seismograph" />
+      </ListItemButton>
+      <ListItemButton
+        component={Link}
+        to="/smg3-seismograph"
+        sx={{ pl: 4 }}
+      >
+        <ListItemText primary="Seismograph 2 (SMG-3)" />
+      </ListItemButton>
                             <ListItemButton
                               component={Link}
                               to="/tiltmeter-142939"
