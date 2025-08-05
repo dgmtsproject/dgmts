@@ -414,8 +414,20 @@ const Tiltmeter30846: React.FC = () => {
               data={xChartData}
               layout={{
                 ...plotlyLayout,
-                title: { text: `X-Axis Tilt - Node ${selectedNode}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
+                title: { 
+                  text: `X-Axis Tilt - Node ${selectedNode}`,
+                  font: { size: 20, weight: 700, color: '#1f2937' },
+                  x: 0.5,
+                  xanchor: 'center'
+                },
+                yaxis: { 
+                  ...plotlyLayout.yaxis, 
+                  title: { 
+                    text: 'X-Axis Value', 
+                    standoff: 15,
+                    font: { size: 16, weight: 700, color: '#374151' }
+                  } 
+                },
                 shapes: getReferenceShapesAndAnnotations().shapes,
                 annotations: getReferenceShapesAndAnnotations().annotations,
               }}
@@ -435,8 +447,20 @@ const Tiltmeter30846: React.FC = () => {
               data={yChartData}
               layout={{
                 ...plotlyLayout,
-                title: { text: `Y-Axis Tilt - Node ${selectedNode}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
+                title: { 
+                  text: `Y-Axis Tilt - Node ${selectedNode}`,
+                  font: { size: 20, weight: 700, color: '#1f2937' },
+                  x: 0.5,
+                  xanchor: 'center'
+                },
+                yaxis: { 
+                  ...plotlyLayout.yaxis, 
+                  title: { 
+                    text: 'Y-Axis Value', 
+                    standoff: 15,
+                    font: { size: 16, weight: 700, color: '#374151' }
+                  } 
+                },
                 shapes: getReferenceShapesAndAnnotations().shapes,
                 annotations: getReferenceShapesAndAnnotations().annotations,
               }}
@@ -456,8 +480,20 @@ const Tiltmeter30846: React.FC = () => {
               data={zChartData}
               layout={{
                 ...plotlyLayout,
-                title: { text: `Z-Axis Tilt - Node ${selectedNode}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
+                title: { 
+                  text: `Z-Axis Tilt - Node ${selectedNode}`,
+                  font: { size: 20, weight: 700, color: '#1f2937' },
+                  x: 0.5,
+                  xanchor: 'center'
+                },
+                yaxis: { 
+                  ...plotlyLayout.yaxis, 
+                  title: { 
+                    text: 'Z-Axis Value', 
+                    standoff: 15,
+                    font: { size: 16, weight: 700, color: '#374151' }
+                  } 
+                },
                 shapes: getReferenceShapesAndAnnotations().shapes,
                 annotations: getReferenceShapesAndAnnotations().annotations,
               }}
@@ -477,8 +513,20 @@ const Tiltmeter30846: React.FC = () => {
               data={combinedChartData}
               layout={{
                 ...plotlyLayout,
-                title: { text: `Combined Tilt Data - Node ${selectedNode}` },
-                yaxis: { ...plotlyLayout.yaxis, title: { text: 'Axis Values', standoff: 15 } },
+                title: { 
+                  text: `Combined Tilt Data - Node ${selectedNode}`,
+                  font: { size: 20, weight: 700, color: '#1f2937' },
+                  x: 0.5,
+                  xanchor: 'center'
+                },
+                yaxis: { 
+                  ...plotlyLayout.yaxis, 
+                  title: { 
+                    text: 'Axis Values', 
+                    standoff: 15,
+                    font: { size: 16, weight: 700, color: '#374151' }
+                  } 
+                },
                 shapes: getReferenceShapesAndAnnotations().shapes,
                 annotations: getReferenceShapesAndAnnotations().annotations,
               }}

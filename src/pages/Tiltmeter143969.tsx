@@ -637,8 +637,20 @@ const Tiltmeter143969: React.FC = () => {
                   data={xChartData}
                   layout={{
                     ...plotlyLayout,
-                    title: { text: `X-Axis Tilt - Node ${nodeId}` },
-                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value (°)', standoff: 15 } },
+                    title: { 
+                      text: `X-Axis Tilt - Node ${nodeId}`,
+                      font: { size: 20, weight: 700, color: '#1f2937' },
+                      x: 0.5,
+                      xanchor: 'center'
+                    },
+                    yaxis: { 
+                      ...plotlyLayout.yaxis, 
+                      title: { 
+                        text: 'X-Axis Value (°)', 
+                        standoff: 15,
+                        font: { size: 16, weight: 700, color: '#374151' }
+                      } 
+                    },
                     ...getReferenceShapesAndAnnotations('x'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
@@ -657,8 +669,20 @@ const Tiltmeter143969: React.FC = () => {
                   data={yChartData}
                   layout={{
                     ...plotlyLayout,
-                    title: { text: `Y-Axis Tilt - Node ${nodeId}` },
-                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value (°)', standoff: 15 } },
+                    title: { 
+                      text: `Y-Axis Tilt - Node ${nodeId}`,
+                      font: { size: 20, weight: 700, color: '#1f2937' },
+                      x: 0.5,
+                      xanchor: 'center'
+                    },
+                    yaxis: { 
+                      ...plotlyLayout.yaxis, 
+                      title: { 
+                        text: 'Y-Axis Value (°)', 
+                        standoff: 15,
+                        font: { size: 16, weight: 700, color: '#374151' }
+                      } 
+                    },
                     ...getReferenceShapesAndAnnotations('y'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
@@ -677,8 +701,20 @@ const Tiltmeter143969: React.FC = () => {
                   data={zChartData}
                   layout={{
                     ...plotlyLayout,
-                    title: { text: `Z-Axis Tilt - Node ${nodeId}` },
-                    yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value (°)', standoff: 15 } },
+                    title: { 
+                      text: `Z-Axis Tilt - Node ${nodeId}`,
+                      font: { size: 20, weight: 700, color: '#1f2937' },
+                      x: 0.5,
+                      xanchor: 'center'
+                    },
+                    yaxis: { 
+                      ...plotlyLayout.yaxis, 
+                      title: { 
+                        text: 'Z-Axis Value (°)', 
+                        standoff: 15,
+                        font: { size: 16, weight: 700, color: '#374151' }
+                      } 
+                    },
                     ...getReferenceShapesAndAnnotations('z'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
