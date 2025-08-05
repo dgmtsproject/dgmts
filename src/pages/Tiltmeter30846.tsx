@@ -143,47 +143,50 @@ const Tiltmeter30846: React.FC = () => {
 
   const plotlyLayout = {
     autosize: true,
-    height: 500,
-    margin: { l: 60, r: 30, b: 120, t: 30, pad: 4 },
+    height: 600,
+    margin: { t: 60, b: 80, l: 80, r: 200 },
+    title: {
+      font: { size: 20, weight: 700, color: '#1f2937' },
+      x: 0.5,
+      xanchor: 'center'
+    },
     xaxis: {
-      title: { text: 'Time', standoff: 25, font: { size: 12, weight: 600 } },
+      title: { 
+        text: 'Time', 
+        standoff: 20, 
+        font: { size: 16, weight: 700, color: '#374151' } 
+      },
       type: 'date' as const,
-      tickmode: 'auto' as const,
-      nticks: 5,
       tickformat: '%m/%d %H:%M',
-      tickangle: 0,
       gridcolor: '#f0f0f0',
-      gridwidth: 1,
       showgrid: true,
-      automargin: true,
-      autorange: true,
+      tickfont: { size: 14, color: '#374151' },
+      tickangle: 0
     },
     yaxis: {
-      title: { text: 'Tilt (degrees)', standoff: 15 },
-      autorange: true,
-      tickmode: 'auto' as const,
+      title: { 
+        text: 'Tilt (degrees)', 
+        standoff: 25,
+        font: { size: 16, weight: 700, color: '#374151' }
+      },
+      fixedrange: false,
       gridcolor: '#f0f0f0',
-      gridwidth: 1,
       zeroline: true,
       zerolinecolor: '#f0f0f0',
-      zerolinewidth: 1,
-      showgrid: true,
-      fixedrange: false,
-      tickformat: '.6f°',
+      tickfont: { size: 14, color: '#374151' }
     },
     showlegend: true,
     legend: {
-      orientation: 'h' as const,
-      y: -0.2,
-      x: 0.5,
-      xanchor: 'center' as const,
-      font: { size: 12 },
-      bgcolor: 'rgba(255,255,255,0.8)',
+      x: 1.05,
+      xanchor: 'left' as const,
+      y: 0.5,
+      yanchor: 'middle' as const,
+      font: { size: 14, weight: 700 },
+      bgcolor: 'rgba(255,255,255,0.9)',
       bordercolor: '#CCC',
-      borderwidth: 1,
+      borderwidth: 2
     },
-    hovermode: 'x unified' as const,
-    hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } },
+    hovermode: 'closest' as const,
     plot_bgcolor: 'white',
     paper_bgcolor: 'white',
   };
@@ -413,7 +416,8 @@ const Tiltmeter30846: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `X-Axis Tilt - Node ${selectedNode}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'X-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                shapes: getReferenceShapesAndAnnotations().shapes,
+                annotations: getReferenceShapesAndAnnotations().annotations,
               }}
               config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}
@@ -433,7 +437,8 @@ const Tiltmeter30846: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `Y-Axis Tilt - Node ${selectedNode}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'Y-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                shapes: getReferenceShapesAndAnnotations().shapes,
+                annotations: getReferenceShapesAndAnnotations().annotations,
               }}
               config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}
@@ -453,7 +458,8 @@ const Tiltmeter30846: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `Z-Axis Tilt - Node ${selectedNode}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'Z-Axis Value', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                shapes: getReferenceShapesAndAnnotations().shapes,
+                annotations: getReferenceShapesAndAnnotations().annotations,
               }}
               config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}
@@ -473,7 +479,8 @@ const Tiltmeter30846: React.FC = () => {
                 ...plotlyLayout,
                 title: { text: `Combined Tilt Data - Node ${selectedNode}` },
                 yaxis: { ...plotlyLayout.yaxis, title: { text: 'Axis Values', standoff: 15 } },
-                ...getReferenceShapesAndAnnotations(),
+                shapes: getReferenceShapesAndAnnotations().shapes,
+                annotations: getReferenceShapesAndAnnotations().annotations,
               }}
               config={{ responsive: true, displayModeBar: true, displaylogo: false }}
               style={{ width: '100%' }}

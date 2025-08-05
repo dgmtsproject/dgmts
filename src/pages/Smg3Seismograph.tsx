@@ -79,12 +79,30 @@ const Smg3Seismograph: React.FC = () => {
       dataByDateHour.get(dateHourKey)!.push(entry);
     });
 
-    // For each date-hour, keep the last entry (most recent) to ensure date-hour coverage
+    // For each date-hour, keep the entry with the highest value (max of all axes) to ensure date-hour coverage
     const dateHourCoverageData: any[] = [];
     dataByDateHour.forEach((dateHourEntries) => {
-      // Sort by timestamp to get the latest entry for each date-hour
-      const sortedEntries = dateHourEntries.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
-      dateHourCoverageData.push(sortedEntries[sortedEntries.length - 1]); // Get the latest entry
+      // Find the entry with the highest value across all axes
+      let maxEntry = dateHourEntries[0];
+      let maxValue = Math.max(
+        Math.abs(Number(dateHourEntries[0][1])), // X axis
+        Math.abs(Number(dateHourEntries[0][2])), // Y axis
+        Math.abs(Number(dateHourEntries[0][3]))  // Z axis
+      );
+      
+      dateHourEntries.forEach(entry => {
+        const currentMax = Math.max(
+          Math.abs(Number(entry[1])), // X axis
+          Math.abs(Number(entry[2])), // Y axis
+          Math.abs(Number(entry[3]))  // Z axis
+        );
+        if (currentMax > maxValue) {
+          maxValue = currentMax;
+          maxEntry = entry;
+        }
+      });
+      
+      dateHourCoverageData.push(maxEntry); // Get the entry with highest value
     });
 
     // Ensure minimum 500 points per chart while covering all dates
@@ -373,20 +391,36 @@ const Smg3Seismograph: React.FC = () => {
           }
         ]}
         layout={{
-          title: { text: `${axis} Axis Vibration Data`, font: { size: 14 } },
+          title: { 
+            text: `${axis} Axis Vibration Data`, 
+            font: { size: 20, weight: 700, color: '#1f2937' },
+            x: 0.5,
+            xanchor: 'center'
+          },
           xaxis: {
-            title: { text: 'Time' },
+            title: { 
+              text: 'Time', 
+              font: { size: 16, weight: 700, color: '#374151' },
+              standoff: 20
+            },
             type: 'date',
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
-            showgrid: true
+            showgrid: true,
+            tickfont: { size: 14, color: '#374151' },
+            tickangle: 0
           },
           yaxis: {
-            title: { text: 'Vibration (in/s)', standoff: 15 },
+            title: { 
+              text: 'Vibration (in/s)', 
+              font: { size: 16, weight: 700, color: '#374151' },
+              standoff: 25 
+            },
             fixedrange: false,
             gridcolor: '#f0f0f0',
             zeroline: true,
-            zerolinecolor: '#f0f0f0'
+            zerolinecolor: '#f0f0f0',
+            tickfont: { size: 14, color: '#374151' }
           },
           showlegend: true,
           legend: {
@@ -394,13 +428,13 @@ const Smg3Seismograph: React.FC = () => {
             xanchor: 'left',
             y: 0.5,
             yanchor: 'middle',
-            font: { size: 10 },
-            bgcolor: 'rgba(255,255,255,0.8)',
+            font: { size: 14, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.9)',
             bordercolor: '#CCC',
-            borderwidth: 1
+            borderwidth: 2
           },
-          height: 350,
-          margin: { t: 40, b: 60, l: 60, r: 200 },
+          height: 500,
+          margin: { t: 60, b: 80, l: 80, r: 200 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -413,7 +447,7 @@ const Smg3Seismograph: React.FC = () => {
           scrollZoom: true,
           displaylogo: false
         }}
-        style={{ width: '100%', height: 400 }}
+        style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
       />
     );
@@ -696,20 +730,36 @@ const Smg3Seismograph: React.FC = () => {
           }] : [])
         ]}
         layout={{
-          title: { text: 'Combined Vibration Data', font: { size: 14 } },
+          title: { 
+            text: 'Combined Vibration Data', 
+            font: { size: 20, weight: 700, color: '#1f2937' },
+            x: 0.5,
+            xanchor: 'center'
+          },
           xaxis: {
-            title: { text: 'Time' },
+            title: { 
+              text: 'Time', 
+              font: { size: 16, weight: 700, color: '#374151' },
+              standoff: 20
+            },
             type: 'date',
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
-            showgrid: true
+            showgrid: true,
+            tickfont: { size: 14, color: '#374151' },
+            tickangle: 0
           },
           yaxis: {
-            title: { text: 'Vibration (in/s)', standoff: 15 },
+            title: { 
+              text: 'Vibration (in/s)', 
+              font: { size: 16, weight: 700, color: '#374151' },
+              standoff: 25 
+            },
             fixedrange: false,
             gridcolor: '#f0f0f0',
             zeroline: true,
-            zerolinecolor: '#f0f0f0'
+            zerolinecolor: '#f0f0f0',
+            tickfont: { size: 14, color: '#374151' }
           },
           showlegend: true,
           legend: {
@@ -717,13 +767,13 @@ const Smg3Seismograph: React.FC = () => {
             xanchor: 'left',
             y: 0.5,
             yanchor: 'middle',
-            font: { size: 10 },
-            bgcolor: 'rgba(255,255,255,0.8)',
+            font: { size: 14, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.9)',
             bordercolor: '#CCC',
-            borderwidth: 1
+            borderwidth: 2
           },
-          height: 400,
-          margin: { t: 40, b: 60, l: 60, r: 200 },
+          height: 500,
+          margin: { t: 60, b: 80, l: 80, r: 200 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -736,7 +786,7 @@ const Smg3Seismograph: React.FC = () => {
           scrollZoom: true,
           displaylogo: false
         }}
-        style={{ width: '100%', height: 400 }}
+        style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
       />
     );

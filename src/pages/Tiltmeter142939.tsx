@@ -261,22 +261,38 @@ const Tiltmeter142939: React.FC = () => {
 
   const plotlyLayout = {
     autosize: true,
-    height: 350,
-    margin: { l: 60, r: 30, b: 60, t: 40, pad: 4 },
+    height: 600,
+    margin: { t: 60, b: 80, l: 80, r: 200 },
+    title: {
+      font: { size: 20, weight: 700, color: '#1f2937' },
+      x: 0.5,
+      xanchor: 'center'
+    },
     xaxis: {
-      title: { text: 'Time' },
+      title: { 
+        text: 'Time', 
+        font: { size: 16, weight: 700, color: '#374151' },
+        standoff: 20
+      },
       type: 'date' as const,
       tickformat: '%m/%d %H:%M',
       gridcolor: '#f0f0f0',
       showgrid: true,
+      tickfont: { size: 14, color: '#374151' },
+      tickangle: 0
     },
     yaxis: {
-      title: { text: 'Tilt (degrees)', standoff: 15 },
+      title: { 
+        text: 'Tilt (degrees)', 
+        standoff: 25,
+        font: { size: 16, weight: 700, color: '#374151' }
+      },
       fixedrange: false,
       gridcolor: '#f0f0f0',
       zeroline: true,
       zerolinecolor: '#f0f0f0',
-      tickformat: '.6f°',
+
+      tickfont: { size: 14, color: '#374151' }
     },
     showlegend: true,
     legend: {
@@ -284,10 +300,10 @@ const Tiltmeter142939: React.FC = () => {
       xanchor: 'left',
       y: 0.5,
       yanchor: 'middle',
-      font: { size: 10 },
-      bgcolor: 'rgba(255,255,255,0.8)',
+      font: { size: 14, weight: 700 },
+      bgcolor: 'rgba(255,255,255,0.9)',
       bordercolor: '#CCC',
-      borderwidth: 1,
+      borderwidth: 2,
     } as any,
     hovermode: 'closest' as const,
     plot_bgcolor: 'white',

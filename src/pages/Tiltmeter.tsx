@@ -396,50 +396,42 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 500,
-                        margin: {
-                          l: 60,
-                          r: 30,
-                          b: 150,
-                          t: 30,
-                          pad: 4
+                        height: 600,
+                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        title: {
+                          text: `X-Axis Readings (${selectedLocation})`,
+                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          x: 0.5,
+                          xanchor: 'center'
                         },
                         xaxis: {
                           title: {
                             text: 'Time',
-                            standoff: 25,
-                            position: 'bottom right',
-                            font: { size: 12, weight: 600 }
+                            standoff: 20,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickmode: 'auto',
-                          nticks: 5,
                           tickformat: '%m/%d %H:%M',
-                          tickangle: 0,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           showgrid: true,
-                          automargin: true,
-                          autorange: true
+                          tickfont: { size: 14, color: '#374151' },
+                          tickangle: 0
                         },
                         yaxis: {
                           title: {
                             text: 'X-Axis Value (°)',
-                            standoff: 15
+                            standoff: 25,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
-                          autorange: true,
-                          tickmode: 'auto',
+                          fixedrange: false,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          zerolinewidth: 1,
-                          showgrid: true,
-                          fixedrange: false,
-                          tickformat: '.6f°'
+                          tickfont: { size: 14, color: '#374151' }
                         },
-                        hovermode: 'x unified',
-                        hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
+                        hovermode: 'closest',
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
                     />
@@ -470,50 +462,42 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 500,
-                        margin: {
-                          l: 60,
-                          r: 30,
-                          b: 150,
-                          t: 30,
-                          pad: 4
+                        height: 600,
+                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        title: {
+                          text: `Y-Axis Readings (${selectedLocation})`,
+                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          x: 0.5,
+                          xanchor: 'center'
                         },
                         xaxis: {
                           title: {
                             text: 'Time',
-                            standoff: 25,
-                            position: 'bottom right',
-                            font: { size: 12, weight: 600 }
+                            standoff: 20,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickmode: 'auto',
-                          nticks: 5,
                           tickformat: '%m/%d %H:%M',
-                          tickangle: 0,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           showgrid: true,
-                          automargin: true,
-                          autorange: true
+                          tickfont: { size: 14, color: '#374151' },
+                          tickangle: 0
                         },
                         yaxis: {
                           title: {
                             text: 'Y-Axis Value (°)',
-                            standoff: 15
+                            standoff: 25,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
-                          autorange: true,
-                          tickmode: 'auto',
+                          fixedrange: false,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          zerolinewidth: 1,
-                          showgrid: true,
-                          fixedrange: false,
-                          tickformat: '.6f°'
+                          tickfont: { size: 14, color: '#374151' }
                         },
-                        hovermode: 'x unified',
-                        hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
+                        hovermode: 'closest',
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
                     />
@@ -544,50 +528,42 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 500,
-                        margin: {
-                          l: 60,
-                          r: 30,
-                          b: 150,
-                          t: 30,
-                          pad: 4
+                        height: 600,
+                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        title: {
+                          text: `Z-Axis Readings (${selectedLocation})`,
+                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          x: 0.5,
+                          xanchor: 'center'
                         },
                         xaxis: {
                           title: {
                             text: 'Time',
-                            standoff: 25,
-                            position: 'bottom right',
-                            font: { size: 12, weight: 600 }
+                            standoff: 20,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickmode: 'auto',
-                          nticks: 5,
                           tickformat: '%m/%d %H:%M',
-                          tickangle: 0,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           showgrid: true,
-                          automargin: true,
-                          autorange: true
+                          tickfont: { size: 14, color: '#374151' },
+                          tickangle: 0
                         },
                         yaxis: {
                           title: {
                             text: 'Z-Axis Value (°)',
-                            standoff: 15
+                            standoff: 25,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
-                          autorange: true,
-                          tickmode: 'auto',
+                          fixedrange: false,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          zerolinewidth: 1,
-                          showgrid: true,
-                          fixedrange: false,
-                          tickformat: '.6f°'
+                          tickfont: { size: 14, color: '#374151' }
                         },
-                        hovermode: 'x unified',
-                        hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
+                        hovermode: 'closest',
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
                     />
@@ -648,58 +624,53 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 500,
-                        margin: {
-                          l: 60,
-                          r: 30,
-                          b: 150,
-                          t: 30,
-                          pad: 4
+                        height: 600,
+                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        title: {
+                          text: `Combined X, Y, Z Readings (${selectedLocation})`,
+                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          x: 0.5,
+                          xanchor: 'center'
                         },
                         xaxis: {
                           title: {
                             text: 'Time',
-                            standoff: 25,
-                            position: 'bottom right',
-                            font: { size: 12, weight: 600 }
+                            standoff: 20,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickmode: 'auto',
-                          nticks: 5,
                           tickformat: '%m/%d %H:%M',
-                          tickangle: 0,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           showgrid: true,
-                          automargin: true,
-                          autorange: true
+                          tickfont: { size: 14, color: '#374151' },
+                          tickangle: 0
                         },
                         yaxis: {
                           title: {
                             text: 'Axis Values (°)',
-                            standoff: 15
+                            standoff: 25,
+                            font: { size: 16, weight: 700, color: '#374151' }
                           },
-                          autorange: true,
-                          tickmode: 'auto',
+                          fixedrange: false,
                           gridcolor: '#f0f0f0',
-                          gridwidth: 1,
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          zerolinewidth: 1,
-                          showgrid: true,
-                          fixedrange: false,
-                          tickformat: '.6f°'
+                          tickfont: { size: 14, color: '#374151' }
                         },
                         showlegend: true,
                         legend: {
-                          x: 0.02,
-                          y: 0.98,
-                          bgcolor: 'rgba(255, 255, 255, 0.8)',
-                          bordercolor: '#ccc',
-                          borderwidth: 1
+                          x: 1.05,
+                          xanchor: 'left',
+                          y: 0.5,
+                          yanchor: 'middle',
+                          font: { size: 14, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.9)',
+                          bordercolor: '#CCC',
+                          borderwidth: 2
                         },
-                        hovermode: 'x unified',
-                        hoverlabel: { bgcolor: 'white', bordercolor: '#ddd', font: { family: 'Arial', size: 12, color: 'black' } }
+                        hovermode: 'closest',
+                        plot_bgcolor: 'white',
+                        paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
                     />
