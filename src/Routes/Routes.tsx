@@ -48,6 +48,7 @@ import Tiltmeter143969 from "../pages/Tiltmeter143969";
 import PrivateRoute from "../components/PrivateRoute";
 import EditProject from "../pages/EditProject";
 import EditTiltmeterInstrument from "../pages/EditTiltmeterInstrument";
+import EditUsers from "../pages/EditUsers";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -101,6 +102,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/long-bridge-map" element={<LongBridgeMap />} />
         <Route path="/maps" element={<Maps />} />
         <Route path="/edit-project" element={<EditProject />} />
+        <Route path="/edit-users" element={<EditUsers />} />
       </Route>
     </Routes>
   );

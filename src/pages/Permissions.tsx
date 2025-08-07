@@ -4,13 +4,14 @@ import {
   Paper, Button, Box, Typography, Dialog, DialogTitle, DialogContent,
   DialogActions, Checkbox, FormControlLabel, FormGroup
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Person as PersonIcon } from '@mui/icons-material';
 import { supabase } from '../supabase';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { useAdminContext } from '../context/AdminContext';
+import { useNavigate } from 'react-router-dom';
 
 type User = {
   id: string;
@@ -43,8 +44,18 @@ const Permissions: React.FC = () => {
   const [userProjects, setUserProjects] = useState<{ [email: string]: string[] }>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  // Add state for permission update confirmation
+  const [permissionUpdateDialogOpen, setPermissionUpdateDialogOpen] = useState(false);
+  const [originalPermissions, setOriginalPermissions] = useState({
+    access_to_site: false,
+    view_graph: false,
+    download_graph: false,
+    view_data: false,
+    download_data: false
+  });
 
   const { isAdmin, userEmail } = useAdminContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -88,13 +99,15 @@ const Permissions: React.FC = () => {
 
   const handleEditClick = (user: User) => {
     setCurrentUser(user);
-    setPermissions({
+    const userPermissions = {
       access_to_site: user.access_to_site || false,
       view_graph: user.view_graph || false,
       download_graph: user.download_graph || false,
       view_data: user.view_data || false,
       download_data: user.download_data || false
-    });
+    };
+    setPermissions(userPermissions);
+    setOriginalPermissions(userPermissions);
     setEditDialogOpen(true);
   };
 
@@ -106,6 +119,21 @@ const Permissions: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
+    if (!currentUser) return;
+    
+    // Check if permissions have changed
+    const hasChanges = JSON.stringify(permissions) !== JSON.stringify(originalPermissions);
+    
+    if (!hasChanges) {
+      setEditDialogOpen(false);
+      return;
+    }
+    
+    // Show confirmation dialog
+    setPermissionUpdateDialogOpen(true);
+  };
+
+  const confirmPermissionUpdate = async () => {
     if (!currentUser) return;
     
     try {
@@ -121,13 +149,17 @@ const Permissions: React.FC = () => {
       ));
 
       setEditDialogOpen(false);
-    toast.success('Permissions updated successfully for ' + currentUser.username);
+      setPermissionUpdateDialogOpen(false);
+      toast.success('Permissions updated successfully for ' + currentUser.username);
     } catch (error) {
       console.error('Error updating permissions:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast.error('Error updating permissions: ' + errorMessage);
-
     }
+  };
+
+  const handleEditUser = (user: User) => {
+    navigate('/edit-users', { state: { user } });
   };
 
   return (
@@ -190,21 +222,36 @@ const Permissions: React.FC = () => {
                             <EditIcon />
                         </Button>
                       </TableCell>
-                      <TableCell sx={{ border: '1px solid black' }}>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }}
-                          sx={{ 
-                            py: 1, 
-                            fontSize: 14,
-                            minWidth: 'auto',
-                            px: 1
-                          }}
-                        >
-                            <DeleteIcon />
-                        </Button>
-                      </TableCell>
+                                             <TableCell sx={{ border: '1px solid black' }}>
+                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                           <Button
+                             variant="contained"
+                             color="info"
+                             onClick={() => handleEditUser(user)}
+                             sx={{ 
+                               py: 1, 
+                               fontSize: 14,
+                               minWidth: 'auto',
+                               px: 1
+                             }}
+                           >
+                               <PersonIcon />
+                           </Button>
+                           <Button
+                             variant="contained"
+                             color="error"
+                             onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }}
+                             sx={{ 
+                               py: 1, 
+                               fontSize: 14,
+                               minWidth: 'auto',
+                               px: 1
+                             }}
+                           >
+                               <DeleteIcon />
+                           </Button>
+                         </Box>
+                       </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -280,6 +327,25 @@ const Permissions: React.FC = () => {
           <DialogActions>
             <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveChanges} variant="contained" color="primary">
+              Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Permission Update Confirmation Dialog */}
+        <Dialog open={permissionUpdateDialogOpen} onClose={() => setPermissionUpdateDialogOpen(false)}>
+          <DialogTitle>Confirm Permission Update</DialogTitle>
+          <DialogContent>
+            <Typography>
+              These permissions will apply to the user <strong>{currentUser?.username}</strong> ({currentUser?.email}). 
+              Do you want to save the changes?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPermissionUpdateDialogOpen(false)} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={confirmPermissionUpdate} variant="contained" color="primary" autoFocus>
               Save Changes
             </Button>
           </DialogActions>
