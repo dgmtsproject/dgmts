@@ -138,6 +138,11 @@ const EditInstrument: React.FC = () => {
         };
 
         if (instrument) {
+            if (!project) {
+                toast.error('No project selected!');
+                return;
+            }
+            
             const { error } = await supabase
                 .from('instruments')
                 .update({
@@ -164,6 +169,11 @@ const EditInstrument: React.FC = () => {
 
             }
         } else {
+            if (!project) {
+                toast.error('No project selected!');
+                return;
+            }
+            
             const { error } = await supabase.from('instruments').insert([
                 {
                     instrument_id: instrumentId,

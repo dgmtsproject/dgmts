@@ -16,17 +16,6 @@ import {
 import { supabase } from '../supabase';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useAdminContext } from '../context/AdminContext';
-
-type User = {
-  id: string;
-  username: string;
-  email: string;
-  password?: string;
-  Company: string;
-  Position: string;
-  'Phone No': string;
-};
 
 type Project = {
   id: number;
@@ -37,12 +26,10 @@ const EditUsers: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = location.state || {};
-  const { isAdmin } = useAdminContext();
   
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<Project[]>([]);
-  const [currentUserProjects, setCurrentUserProjects] = useState<Project[]>([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -97,7 +84,6 @@ const EditUsers: React.FC = () => {
         console.error('Error fetching user projects:', error);
       } else {
         const userProjs = (data || []).map((item: any) => item.Projects).filter(Boolean);
-        setCurrentUserProjects(userProjs);
         setSelectedProjects(userProjs);
       }
     };
