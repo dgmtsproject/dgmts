@@ -17,6 +17,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SensorData {
   id: number;
@@ -34,12 +35,111 @@ interface InstrumentSettings {
   shutdown_value?: number;
 }
 
+interface Project {
+  id: number;
+  name: string;
+}
+
+interface Instrument {
+  instrument_id: string;
+  instrument_name: string;
+  project_id: number;
+}
+
 const Tiltmeter30846: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedNode, setSelectedNode] = useState<number>(142939);
   const [timeRange, setTimeRange] = useState<string>('24h');
   const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
+  const [project, setProject] = useState<Project | null>(location.state?.project || null);
+  const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
+
+  // Fetch instrument settings and project info on component mount
+  useEffect(() => {
+    fetchInstrumentSettings();
+    if (!location.state?.project) {
+      fetchProjectInfo();
+    } else {
+      // If project is passed from navigation, fetch available instruments for this project
+      fetchAvailableInstruments(location.state.project.id);
+    }
+  }, [location.state?.project]);
+
+  const fetchProjectInfo = async () => {
+    try {
+      // First get the project_id for this tiltmeter (using node_id to find instrument)
+      const { data: instrumentData, error: instrumentError } = await supabase
+        .from('instruments')
+        .select('project_id')
+        .eq('instrument_id', 'TILTMETER-30846')
+        .single();
+
+      if (instrumentError) {
+        console.error('Error fetching instrument project:', instrumentError);
+        return;
+      }
+
+      if (!instrumentData || !instrumentData.project_id) {
+        console.error('No project_id found for instrument TILTMETER-30846');
+        return;
+      }
+
+      // Then get the project details
+      const { data: projectData, error: projectError } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .eq('id', instrumentData.project_id)
+        .single();
+
+      if (projectError) {
+        console.error('Error fetching project details:', projectError);
+        return;
+      }
+
+      setProject(projectData);
+      fetchAvailableInstruments(projectData.id);
+    } catch (err) {
+      console.error('Error fetching project info:', err);
+    }
+  };
+
+  const fetchAvailableInstruments = async (projectId: number) => {
+    try {
+      // Get all instruments for this project that have graph pages
+      const { data, error } = await supabase
+        .from('instruments')
+        .select('instrument_id, instrument_name, project_id')
+        .eq('project_id', projectId)
+        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969'])
+        .order('instrument_id');
+
+      if (error) {
+        console.error('Error fetching available instruments:', error);
+        return;
+      }
+
+      setAvailableInstruments(data || []);
+    } catch (err) {
+      console.error('Error fetching available instruments:', err);
+    }
+  };
+
+  const handleInstrumentChange = (instrumentId: string) => {
+    if (instrumentId === 'SMG1') {
+      navigate('/background', { state: { project } });
+    } else if (instrumentId === 'SMG-2') {
+      navigate('/anc-seismograph', { state: { project } });
+    } else if (instrumentId === 'SMG-3') {
+      navigate('/smg3-seismograph', { state: { project } });
+    } else if (instrumentId === 'TILT-142939') {
+      navigate('/tiltmeter-142939', { state: { project } });
+    } else if (instrumentId === 'TILT-143969') {
+      navigate('/tiltmeter-143969', { state: { project } });
+    }
+  };
 
   const fetchSensorData = async () => {
     setLoading(true);
@@ -347,8 +447,28 @@ const Tiltmeter30846: React.FC = () => {
       <HeaNavLogo />
       <MainContentWrapper>
         <Typography variant="h4" gutterBottom>
-          Tiltmeter (30846) - Sensor Data
+          {project ? `${project.name} - Tiltmeter Data Graphs (Node-30846)` : 'Tiltmeter (30846) - Sensor Data'}
         </Typography>
+
+        {project && (
+          <Box mb={3} display="flex" justifyContent="center">
+            <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
+              <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
+              <Select
+                labelId="instrument-select-label"
+                value="TILTMETER-30846"
+                label="Select Instrument"
+                onChange={(e) => handleInstrumentChange(e.target.value as string)}
+              >
+                {availableInstruments.map((instrument) => (
+                  <MenuItem key={instrument.instrument_id} value={instrument.instrument_id}>
+                    {instrument.instrument_name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        )}
 
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>

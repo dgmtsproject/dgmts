@@ -14,7 +14,10 @@ import {
   Checkbox,
   FormControlLabel,
   TextField,
-  Alert
+  Alert,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -25,6 +28,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useAdminContext } from '../context/AdminContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SensorData {
   id: number;
@@ -52,8 +56,21 @@ interface ReferenceValues {
   reference_z_value: number | null;
 }
 
+interface Project {
+  id: number;
+  name: string;
+}
+
+interface Instrument {
+  instrument_id: string;
+  instrument_name: string;
+  project_id: number;
+}
+
 const Tiltmeter143969: React.FC = () => {
   const { isAdmin } = useAdminContext();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
   const [loading, setLoading] = useState(false);
   const [fromDate, setFromDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
@@ -71,8 +88,94 @@ const Tiltmeter143969: React.FC = () => {
     reference_z_value: ''
   });
   const [savingReference, setSavingReference] = useState(false);
+  const [project, setProject] = useState<Project | null>(location.state?.project || null);
+  const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   const nodeId = 143969; // Hardcoded node ID
   const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
+
+  // Fetch instrument settings and project info on component mount
+  useEffect(() => {
+    fetchInstrumentSettings();
+    if (!location.state?.project) {
+      fetchProjectInfo();
+    } else {
+      // If project is passed from navigation, fetch available instruments for this project
+      fetchAvailableInstruments(location.state.project.id);
+    }
+  }, [location.state?.project]);
+
+  const fetchProjectInfo = async () => {
+    try {
+      // First get the project_id for this tiltmeter (using node_id to find instrument)
+      const { data: instrumentData, error: instrumentError } = await supabase
+        .from('instruments')
+        .select('project_id')
+        .eq('instrument_id', 'TILT-143969')
+        .single();
+
+      if (instrumentError) {
+        console.error('Error fetching instrument project:', instrumentError);
+        return;
+      }
+
+      if (!instrumentData || !instrumentData.project_id) {
+        console.error('No project_id found for instrument TILT-143969');
+        return;
+      }
+
+      // Then get the project details
+      const { data: projectData, error: projectError } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .eq('id', instrumentData.project_id)
+        .single();
+
+      if (projectError) {
+        console.error('Error fetching project details:', projectError);
+        return;
+      }
+
+      setProject(projectData);
+      fetchAvailableInstruments(projectData.id);
+    } catch (err) {
+      console.error('Error fetching project info:', err);
+    }
+  };
+
+  const fetchAvailableInstruments = async (projectId: number) => {
+    try {
+      // Get all instruments for this project that have graph pages
+      const { data, error } = await supabase
+        .from('instruments')
+        .select('instrument_id, instrument_name, project_id')
+        .eq('project_id', projectId)
+        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969'])
+        .order('instrument_id');
+
+      if (error) {
+        console.error('Error fetching available instruments:', error);
+        return;
+      }
+
+      setAvailableInstruments(data || []);
+    } catch (err) {
+      console.error('Error fetching available instruments:', err);
+    }
+  };
+
+  const handleInstrumentChange = (instrumentId: string) => {
+    if (instrumentId === 'SMG1') {
+      navigate('/background', { state: { project } });
+    } else if (instrumentId === 'SMG-2') {
+      navigate('/anc-seismograph', { state: { project } });
+    } else if (instrumentId === 'SMG-3') {
+      navigate('/smg3-seismograph', { state: { project } });
+    } else if (instrumentId === 'TILT-142939') {
+      navigate('/tiltmeter-142939', { state: { project } });
+    } else if (instrumentId === 'TILT-143969') {
+      navigate('/tiltmeter-143969', { state: { project } });
+    }
+  };
 
   const fetchSensorData = async () => {
     if (!fromDate || !toDate) return;
@@ -470,8 +573,28 @@ const Tiltmeter143969: React.FC = () => {
       <MainContentWrapper>
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Typography variant="h4" gutterBottom>
-          Tiltmeter-Node-143969 - Data Graphs
+          {project ? `${project.name} - Tiltmeter Data Graphs (Node-143969)` : 'Tiltmeter-Node-143969 - Data Graphs'}
         </Typography>
+
+        {project && (
+          <Box mb={3} display="flex" justifyContent="center">
+            <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
+              <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
+              <Select
+                labelId="instrument-select-label"
+                value="TILT-143969"
+                label="Select Instrument"
+                onChange={(e) => handleInstrumentChange(e.target.value as string)}
+              >
+                {availableInstruments.map((instrument) => (
+                  <MenuItem key={instrument.instrument_id} value={instrument.instrument_id}>
+                    {instrument.instrument_name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        )}
 
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>

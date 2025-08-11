@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import HeaNavLogo from '../components/HeaNavLogo';
-import { Button, TextField, Box, Typography } from '@mui/material';
+import { Button, TextField, Box, Typography, FormControl, InputLabel, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { supabase } from '../supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
@@ -15,9 +15,11 @@ const EditProject: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const project = location.state?.project;
+  const availableStatuses = ['In Progress', 'Planning','Not Started', 'Completed'];
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [formValues, setFormValues] = useState({
     name: '',
     client: '',
@@ -25,6 +27,7 @@ const EditProject: React.FC = () => {
     email: '',
     phone: '',
     pocName: '',
+    status: '',
   });
   const [formErrors, setFormErrors] = useState({ endDate: false });
 
@@ -37,6 +40,7 @@ const EditProject: React.FC = () => {
         email: project.Email || '',
         phone: project.Phone || '',
         pocName: project['POC Name'] || '',
+        status: project.Status || '',
       });
       setStartDate(project.Start_Date ? parseISO(project.Start_Date) : null);
       setEndDate(project.End_Date ? parseISO(project.End_Date) : null);
@@ -47,13 +51,24 @@ const EditProject: React.FC = () => {
     setFormValues({ ...formValues, [e.target.name]: e.target.value });
   };
 
-  const handleUpdateProject = async (event: React.FormEvent) => {
+  const handleStatusChange = (e: any) => {
+    setFormValues({ ...formValues, status: e.target.value });
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (endDate && startDate && endDate <= startDate) {
       setFormErrors({ ...formErrors, endDate: true });
       toast.error('End date must be after start date');
       return;
     }
+    // Show confirmation dialog
+    setConfirmDialogOpen(true);
+  };
+
+  const confirmUpdateProject = async () => {
+    setConfirmDialogOpen(false);
+    
     const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : null;
     const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : null;
     const { error } = await supabase
@@ -67,6 +82,7 @@ const EditProject: React.FC = () => {
         'POC Name': formValues.pocName,
         Start_Date: formattedStartDate,
         End_Date: formattedEndDate,
+        status: formValues.status,
       })
       .eq('id', project.id);
     if (error) {
@@ -93,7 +109,7 @@ const EditProject: React.FC = () => {
             Back to Projects
           </Button>
         </Box>
-        <Box component="form" onSubmit={handleUpdateProject} sx={{
+        <Box component="form" onSubmit={handleSubmit} sx={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -165,6 +181,22 @@ const EditProject: React.FC = () => {
             fullWidth
             margin="normal"
           />
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="status-select-label">Status</InputLabel>
+            <Select
+              labelId="status-select-label"
+              value={formValues.status}
+              onChange={handleStatusChange}
+              label="Status"
+              required
+            >
+              {availableStatuses.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box sx={{ width: '100%', mt: 2 }}>
               <DatePicker
@@ -207,6 +239,25 @@ const EditProject: React.FC = () => {
             Update Project
           </Button>
         </Box>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+          <DialogTitle>Confirm Project Update</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to update the project <strong>{formValues.name}</strong>? 
+              This will modify the project information.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={confirmUpdateProject} variant="contained" color="primary" autoFocus>
+              Update Project
+            </Button>
+          </DialogActions>
+        </Dialog>
       </MainContentWrapper>
     </>
   );

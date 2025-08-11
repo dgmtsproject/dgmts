@@ -8,6 +8,10 @@ import {
   TextField,
   Typography,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import logo from '../assets/logo.jpg';
 import HeaNavLogo from '../components/HeaNavLogo';
@@ -26,6 +30,7 @@ const EditTiltmeterInstrument: React.FC = () => {
   const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
   const [instrumentSno, setInstrumentSno] = useState(instrument?.sno || '');
   const [project, _setProject] = useState({ id: instrument?.project_id, name: instrument?.project_name || '' });
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   // XYZ threshold values
   const [xyzAlertValues, setXyzAlertValues] = useState({
@@ -65,6 +70,13 @@ const EditTiltmeterInstrument: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Show confirmation dialog
+    setConfirmDialogOpen(true);
+  };
+
+  const confirmUpdate = async () => {
+    setConfirmDialogOpen(false);
+    
     // Filter out empty emails
     const filteredAlertEmails = EmailsForAlert.filter(email => email.trim() !== '');
     const filteredWarningEmails = EmailsForWarning.filter(email => email.trim() !== '');
@@ -377,6 +389,25 @@ const EditTiltmeterInstrument: React.FC = () => {
             © 2025 DGMTS. All rights reserved.
           </Box>
         </Container>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+          <DialogTitle>Confirm Tiltmeter Instrument Update</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to update the tiltmeter instrument <strong>{instrumentName}</strong>? 
+              This will modify the instrument information and thresholds.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={confirmUpdate} variant="contained" color="primary" autoFocus>
+              Update Instrument
+            </Button>
+          </DialogActions>
+        </Dialog>
       </MainContentWrapper>
     </>
   );

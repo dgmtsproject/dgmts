@@ -10,7 +10,11 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem
+    MenuItem,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import logo from '../assets/logo.jpg';
 import HeaNavLogo from '../components/HeaNavLogo';
@@ -33,6 +37,7 @@ const EditInstrument: React.FC = () => {
     const [project, setProject] = useState<Project | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     const [loadingProjects, setLoadingProjects] = useState(false);
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
     const parseEmails = (emails: any) => {
         if (Array.isArray(emails)) return emails;
@@ -113,6 +118,13 @@ const EditInstrument: React.FC = () => {
             toast.error('Please select a project first');
             return;
         }
+
+        // Show confirmation dialog
+        setConfirmDialogOpen(true);
+    };
+
+    const confirmUpdate = async () => {
+        setConfirmDialogOpen(false);
 
         // Filter out empty emails
         const filteredAlertEmails = EmailsForAlert.filter(email => email.trim() !== '');
@@ -447,6 +459,25 @@ const EditInstrument: React.FC = () => {
                         © 2025 DGMTS. All rights reserved.
                     </Box>
                 </Container>
+
+                {/* Confirmation Dialog */}
+                <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+                    <DialogTitle>Confirm Instrument Update</DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to {instrument ? 'update' : 'add'} the instrument <strong>{instrumentName}</strong>? 
+                            This will {instrument ? 'modify' : 'create'} the instrument information.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={confirmUpdate} variant="contained" color="primary" autoFocus>
+                            {instrument ? 'Update' : 'Add'} Instrument
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </MainContentWrapper>
         </>
     );

@@ -305,65 +305,69 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                           })()}
                         </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
-                          {isAdmin && (
-                            <>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
                               <Button
                                 variant="contained"
-                                color="primary"
-                                onClick={() => handleEditInstrument(instrument)}
+                                color="info"
                                 sx={{ py: 1, fontSize: 14 }}
+                                disabled={
+                                  !(
+                                    instrument.instrument_id === 'SMG1' ||
+                                    instrument.instrument_id === 'SMG-2' ||
+                                    instrument.instrument_id === 'SMG-3' ||
+                                    instrument.instrument_id === 'AMTS-1' ||
+                                    instrument.instrument_id === 'AMTS-2' ||
+                                    instrument.instrument_id === 'TILT-142939' ||
+                                    instrument.instrument_id === 'TILT-143969' ||
+                                    instrument.instrument_name === 'Tiltmeter'
+                                  )
+                                }
+                                onClick={() => {
+                                  if (instrument.instrument_id === 'SMG1') {
+                                    navigate('/background', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'SMG-2') {
+                                    navigate('/anc-seismograph', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'SMG-3') {
+                                    navigate('/smg3-seismograph', { state: { project: selectedProject } });
+                                  } else if (
+                                    instrument.instrument_id === 'AMTS-1' ||
+                                    instrument.instrument_id === 'AMTS-2'
+                                  ) {
+                                    navigate('/single-prism-with-time', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'TILT-142939') {
+                                    navigate('/tiltmeter-142939', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'TILT-143969') {
+                                    navigate('/tiltmeter-143969', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_name === 'Tiltmeter') {
+                                    navigate('/tiltmeter', { state: { project: selectedProject } });
+                                  }
+                                }}
                               >
-                                Edit
+                                View
                               </Button>
+                              {isAdmin && (
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  onClick={() => handleEditInstrument(instrument)}
+                                  sx={{ py: 1, fontSize: 14 }}
+                                >
+                                  Edit
+                                </Button>
+                              )}
+                            </Box>
+                            {isAdmin && (
                               <Button
                                 variant="contained"
                                 color="error"
                                 onClick={() => setOpenDialogId(instrument.instrument_id)}
-                                sx={{ py: 1, fontSize: 14, ml: 1 }}
+                                sx={{ py: 1, fontSize: 14 }}
                               >
                                 <DeleteIcon />
                               </Button>
-                            </>
-                          )}
-                          <Button
-                            variant="contained"
-                            color="info"
-                            sx={{ py: 1, fontSize: 14, ml: isAdmin ? 1 : 0 }}
-                            disabled={
-                              !(
-                                instrument.instrument_id === 'SMG1' ||
-                                instrument.instrument_id === 'SMG-2' ||
-                                instrument.instrument_id === 'SMG-3' ||
-                                instrument.instrument_id === 'AMTS-1' ||
-                                instrument.instrument_id === 'AMTS-2' ||
-                                instrument.instrument_id === 'TILT-142939' ||
-                                instrument.instrument_id === 'TILT-143969' ||
-                                instrument.instrument_name === 'Tiltmeter'
-                              )
-                            }
-                            onClick={() => {
-                              if (instrument.instrument_id === 'SMG1') {
-                                navigate('/background');
-                              } else if (instrument.instrument_id === 'SMG-2') {
-                                navigate('/anc-seismograph');
-                              } else if (instrument.instrument_id === 'SMG-3') {
-                                navigate('/smg3-seismograph');
-                              } else if (
-                                instrument.instrument_id === 'AMTS-1' ||
-                                instrument.instrument_id === 'AMTS-2'
-                              ) {
-                                navigate('/single-prism-with-time');
-                              } else if (instrument.instrument_id === 'TILT-142939') {
-                                navigate('/tiltmeter-142939');
-                              } else if (instrument.instrument_id === 'TILT-143969') {
-                                navigate('/tiltmeter-143969');
-                              } else if (instrument.instrument_name === 'Tiltmeter') {
-                                navigate('/tiltmeter');
-                              }
-                            }}
-                          >
-                            View
-                          </Button>
+                            )}
+                          </Box>
 
                           {isAdmin && (
                             <Dialog

@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
-import { Box, Typography, CircularProgress, Button, Stack } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 // const MAX_POINTS = 1000;
@@ -17,21 +17,41 @@ interface InstrumentSettings {
   shutdown_value: number;
 }
 
+interface Project {
+  id: number;
+  name: string;
+}
+
+interface Instrument {
+  instrument_id: string;
+  instrument_name: string;
+  project_id: number;
+}
+
 const Background: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rawData, setRawData] = useState<any[]>([]);
   const [fromDate, setFromDate] = useState<Date | null>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [toDate, setToDate] = useState<Date | null>(new Date());
   const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
+  const [project, setProject] = useState<Project | null>(location.state?.project || null);
+  const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   
   // Separate data structures for each plot
 
-  // Fetch instrument settings on component mount
+  // Fetch instrument settings and project info on component mount
   useEffect(() => {
     fetchInstrumentSettings();
-  }, []);
+    if (!location.state?.project) {
+      fetchProjectInfo();
+    } else {
+      // If project is passed from navigation, fetch available instruments for this project
+      fetchAvailableInstruments(location.state.project.id);
+    }
+  }, [location.state?.project]);
 
   const fetchInstrumentSettings = async () => {
     try {
@@ -49,6 +69,86 @@ const Background: React.FC = () => {
       setInstrumentSettings(data);
     } catch (err) {
       console.error('Error fetching instrument settings:', err);
+    }
+  };
+
+  const fetchProjectInfo = async () => {
+    try {
+      // First get the project_id for SMG1
+      const { data: instrumentData, error: instrumentError } = await supabase
+        .from('instruments')
+        .select('project_id')
+        .eq('instrument_id', 'SMG1')
+        .single();
+
+      if (instrumentError) {
+        console.error('Error fetching instrument project:', instrumentError);
+        return;
+      }
+
+      // Then get the project details
+      const { data: projectData, error: projectError } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .eq('id', instrumentData.project_id)
+        .single();
+
+      if (projectError) {
+        console.error('Error fetching project details:', projectError);
+        return;
+      }
+
+      setProject(projectData);
+      fetchAvailableInstruments(projectData.id);
+    } catch (err) {
+      console.error('Error fetching project info:', err);
+    }
+  };
+
+  const fetchAvailableInstruments = async (projectId: number) => {
+    try {
+      // Fetch all instruments for this project that have graphs
+      const { data: instrumentsData, error: instrumentsError } = await supabase
+        .from('instruments')
+        .select('instrument_id, instrument_name, project_id')
+        .eq('project_id', projectId)
+        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'AMTS-1', 'AMTS-2', 'TILT-142939', 'TILT-143969'])
+        .order('instrument_id');
+
+      if (instrumentsError) {
+        console.error('Error fetching available instruments:', instrumentsError);
+        return;
+      }
+
+      setAvailableInstruments(instrumentsData);
+    } catch (err) {
+      console.error('Error fetching available instruments:', err);
+    }
+  };
+
+  const handleInstrumentChange = (instrumentId: string) => {
+    switch (instrumentId) {
+      case 'SMG1':
+        navigate('/background');
+        break;
+      case 'SMG-2':
+        navigate('/anc-seismograph');
+        break;
+      case 'SMG-3':
+        navigate('/smg3-seismograph');
+        break;
+      case 'AMTS-1':
+      case 'AMTS-2':
+        navigate('/single-prism-with-time');
+        break;
+      case 'TILT-142939':
+        navigate('/tiltmeter-142939');
+        break;
+      case 'TILT-143969':
+        navigate('/tiltmeter-143969');
+        break;
+      default:
+        break;
     }
   };
 
@@ -809,8 +909,28 @@ const Background: React.FC = () => {
       <MainContentWrapper>
         <Box p={3}>
           <Typography variant="h4" align="center" sx={{ mb: 3, mt: 2 }}>
-            Seismograph Data Graphs
+            {project ? `${project.name} - Seismograph Data Graphs (SMG1)` : 'Seismograph Data Graphs (SMG1)'}
           </Typography>
+          
+          {project && (
+            <Box mb={3} display="flex" justifyContent="center">
+              <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
+                <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
+                <Select
+                  labelId="instrument-select-label"
+                  value="SMG1"
+                  label="Select Instrument"
+                  onChange={(e) => handleInstrumentChange(e.target.value as string)}
+                >
+                  {availableInstruments.map((instrument) => (
+                    <MenuItem key={instrument.instrument_id} value={instrument.instrument_id}>
+                      {instrument.instrument_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
           
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Stack direction="row" spacing={2} sx={{ mb: 4 }} alignItems="center">
@@ -897,7 +1017,7 @@ const Background: React.FC = () => {
 
           {instrumentSettings && (
             <Box mt={2} p={2} bgcolor="grey.100" borderRadius={1}>
-              <Typography variant="h6" gutterBottom>Seismograph Reference Levels</Typography>
+              <Typography variant="h6" gutterBottom>{project ? `${project.name} - Seismograph Reference Levels (SMG1)` : 'Seismograph Reference Levels (SMG1)'}</Typography>
               <Stack direction="row" spacing={3}>
                 {instrumentSettings.alert_value && (
                   <Typography variant="body2">
