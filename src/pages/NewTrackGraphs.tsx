@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from '../components/Back';
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import TrackMerger from "../components/MergeTracks";
@@ -384,6 +385,7 @@ console.log(selectedTrackOptions);
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
       <TrackMerger onMergeSave={handleMergeClick} />
       <div
         style={{

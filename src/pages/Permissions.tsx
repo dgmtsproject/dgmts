@@ -7,6 +7,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon, Person as PersonIcon } from '@mui/icons-material';
 import { supabase } from '../supabase';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
@@ -102,9 +103,9 @@ const Permissions: React.FC = () => {
     const userPermissions = {
       access_to_site: user.access_to_site || false,
       view_graph: user.view_graph || false,
-      download_graph: user.download_graph || false,
+      download_graph: user.download_graph || false, // Allow user's current permission
       view_data: user.view_data || false,
-      download_data: user.download_data || false
+      download_data: false // Always false
     };
     setPermissions(userPermissions);
     setOriginalPermissions(userPermissions);
@@ -112,6 +113,11 @@ const Permissions: React.FC = () => {
   };
 
   const handlePermissionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent changes to download_data permission only
+    if (e.target.name === 'download_data') {
+      return;
+    }
+    
     setPermissions({
       ...permissions,
       [e.target.name]: e.target.checked
@@ -137,15 +143,21 @@ const Permissions: React.FC = () => {
     if (!currentUser) return;
     
     try {
+      // Ensure download_data is always false, but allow download_graph to be user-defined
+      const permissionsToSave = {
+        ...permissions,
+        download_data: false // Always false
+      };
+      
       const { error } = await supabase
         .from('users')
-        .update(permissions)
+        .update(permissionsToSave)
         .eq('id', currentUser.id);
 
       if (error) throw error;
 
       setUsers(users.map(user => 
-        user.id === currentUser.id ? { ...user, ...permissions } : user
+        user.id === currentUser.id ? { ...user, ...permissionsToSave } : user
       ));
 
       setEditDialogOpen(false);
@@ -166,6 +178,7 @@ const Permissions: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <Box sx={{ p: 3 }}>
           <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
             User Permissions
@@ -309,16 +322,6 @@ const Permissions: React.FC = () => {
                       />
                     }
                     label="View Data"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={permissions.download_data}
-                        onChange={handlePermissionChange}
-                        name="download_data"
-                      />
-                    }
-                    label="Download Data"
                   />
                 </FormGroup>
               </Box>

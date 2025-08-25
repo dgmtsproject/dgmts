@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 import { 
   TextField, 
   Button, 
@@ -101,6 +102,7 @@ const AddUsers: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <ToastContainer position="top-right" autoClose={3000} />
         <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
           <Typography variant="h4" gutterBottom>Add New User</Typography>

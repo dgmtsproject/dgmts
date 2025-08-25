@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import {
@@ -74,6 +75,7 @@ const Projectslist: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
       
       
         <div style={{ fontFamily: 'Arial, sans-serif', padding: '0px' }}>

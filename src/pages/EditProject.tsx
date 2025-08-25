@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -103,6 +104,7 @@ const EditProject: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <ToastContainer position="top-right" autoClose={3000} />
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <Button variant="contained" color="primary" onClick={() => navigate('/projects-list')}>

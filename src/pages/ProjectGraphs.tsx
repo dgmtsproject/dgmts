@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from "../components/Back";
 import MainContentWrapper from "../components/MainContentWrapper";
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -30,7 +31,7 @@ interface GraphOption {
 
 const ProjectGraphs: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin, userEmail } = useAdminContext();
+  const { isAdmin, userEmail, permissions } = useAdminContext();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -105,6 +106,9 @@ const ProjectGraphs: React.FC = () => {
   };
 
   const handleGraphSelect = (path: string) => {
+    if (!permissions.view_graph) {
+      return;
+    }
     navigate(path);
   };
 
@@ -112,12 +116,17 @@ const ProjectGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4, p: 3 }}>
           <Typography variant="h5" align="center" gutterBottom>
             Project Graphs
           </Typography>
 
-          {loadingProjects ? (
+          {!permissions.view_graph ? (
+            <Typography align="center" color="error" sx={{ mt: 4 }}>
+              You don't have permission to view graphs. Please contact your administrator.
+            </Typography>
+          ) : loadingProjects ? (
             <Typography align="center">Loading projects...</Typography>
           ) : accessibleProjects.length === 0 ? (
             <Typography align="center" color="error">

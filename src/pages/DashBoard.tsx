@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <HeaNavLogo />
-      <MainContentWrapper>
+      <MainContentWrapper>        
         <Box sx={{ 
           textAlign: 'center', 
           mb: 4,

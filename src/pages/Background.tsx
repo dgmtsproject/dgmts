@@ -2,12 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { useAdminContext } from '../context/AdminContext';
 
 // const MAX_POINTS = 1000;
 
@@ -31,6 +33,7 @@ interface Instrument {
 const Background: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { permissions } = useAdminContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rawData, setRawData] = useState<any[]>([]);
@@ -44,6 +47,12 @@ const Background: React.FC = () => {
 
   // Fetch instrument settings and project info on component mount
   useEffect(() => {
+    // Check if user has permission to view graphs
+    if (!permissions.view_graph) {
+      navigate('/dashboard');
+      return;
+    }
+    
     fetchInstrumentSettings();
     if (!location.state?.project) {
       fetchProjectInfo();
@@ -51,7 +60,7 @@ const Background: React.FC = () => {
       // If project is passed from navigation, fetch available instruments for this project
       fetchAvailableInstruments(location.state.project.id);
     }
-  }, [location.state?.project]);
+  }, [location.state?.project, permissions.view_graph, navigate]);
 
   const fetchInstrumentSettings = async () => {
     try {
@@ -907,6 +916,7 @@ const Background: React.FC = () => {
       <HeaNavLogo />
             
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <Box p={3}>
           <Typography variant="h4" align="center" sx={{ mb: 3, mt: 2 }}>
             {project ? `${project.name} - Seismograph Data Graphs (SMG1)` : 'Seismograph Data Graphs (SMG1)'}

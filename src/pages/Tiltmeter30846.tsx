@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { 
   Typography, 
@@ -446,6 +447,7 @@ const Tiltmeter30846: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <Typography variant="h4" gutterBottom>
           {project ? `${project.name} - Tiltmeter Data Graphs (Node-30846)` : 'Tiltmeter (30846) - Sensor Data'}
         </Typography>

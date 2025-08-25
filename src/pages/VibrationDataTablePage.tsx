@@ -2,15 +2,20 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 import VibrationDataTable from '../components/VibrationDataTable';
 import { Box, Typography, Button, Stack, Alert } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { format } from 'date-fns';
+import { useAdminContext } from '../context/AdminContext';
 
 const VibrationDataTablePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { permissions } = useAdminContext();
   const { rawData, fromDate, toDate } = location.state || {};
+
+
 
   const handleBackToCharts = () => {
     navigate('/background');
@@ -21,6 +26,7 @@ const VibrationDataTablePage: React.FC = () => {
       <>
         <HeaNavLogo />
         <MainContentWrapper>
+          <BackButton to="/dashboard" />
           <Box p={3}>
             <Alert severity="error">
               No data available. Please load vibration data from the charts view first.
@@ -42,6 +48,7 @@ const VibrationDataTablePage: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <Box p={3}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
             <Box>
@@ -63,7 +70,7 @@ const VibrationDataTablePage: React.FC = () => {
             </Button>
           </Stack>
 
-          <VibrationDataTable rawData={rawData} loading={false} />
+          <VibrationDataTable rawData={rawData} loading={false} permissions={permissions} />
         </Box>
       </MainContentWrapper>
     </>

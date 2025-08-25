@@ -48,7 +48,8 @@ const SignIn: React.FC = () => {
       setIsAdmin(data.user.role === "admin");
       setUserEmail(data.user.email);
       setPermissions({
-        ...data.user.permissions
+        ...data.user.permissions,
+        download_data: false   // Always false
       });
 
       toast.success(`${data.user.role === "admin" ? "Admin" : "User"} login successful!`);

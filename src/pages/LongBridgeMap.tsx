@@ -3,6 +3,7 @@ import React from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import MainContentWrapper from '../components/MainContentWrapper';
 
 const LongBridgeMap: React.FC = () => {
@@ -19,6 +20,7 @@ const LongBridgeMap: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <div style={{ width: '100%', height: 'calc(100vh - 64px)' }}>
           <MapContainer
             center={position}

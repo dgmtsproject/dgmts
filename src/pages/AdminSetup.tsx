@@ -2,9 +2,9 @@ import React from 'react';
 import HeaNavLogo from '../components/HeaNavLogo';
 // import { useAdminContext } from '../context/AdminContext';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/Back';
 import { Button } from '@mui/material';
 import MainContentWrapper from '../components/MainContentWrapper';
-
 
 
 const AdminSetup: React.FC = () => {
@@ -25,6 +25,7 @@ const AdminSetup: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
+            <BackButton to="/dashboard" />
                 <h1>Admin Setup</h1>
                 <div style={{ 
                     display: 'flex', 

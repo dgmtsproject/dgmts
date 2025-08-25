@@ -10,6 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
+import BackButton from '../components/Back';
 const AddProjects: React.FC = () => {
     const navigate = useNavigate();
     const [startDate, setStartDate] = useState<Date | null>(null);
@@ -70,6 +71,7 @@ const AddProjects: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
+                <BackButton to="/dashboard" />
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <Button variant="contained" color="primary" onClick={() => navigate('/projects-list')}>

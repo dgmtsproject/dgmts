@@ -1,8 +1,16 @@
-// import React from 'react'
+import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
+import MainContentWrapper from '../components/MainContentWrapper';
 
 const Converter = () => {
   return (
-    <div>Converter</div>
+    <>
+      <HeaNavLogo />
+      <MainContentWrapper>
+      <BackButton to="/dashboard" />
+        <div>Converter</div>
+      </MainContentWrapper>
+    </>
   )
 }
 

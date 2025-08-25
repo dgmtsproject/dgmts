@@ -4,6 +4,7 @@ import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import Plot, { PlotParams } from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 import EventReportGenerator from '../components/EventReportGenerator';
 
 interface ChartData {
@@ -203,6 +204,7 @@ const EventGraph: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
+                    <BackButton to="/dashboard" />
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
                         <CircularProgress />
                     </Box>
@@ -216,6 +218,7 @@ const EventGraph: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
+                    <BackButton to="/dashboard" />
                     <Box p={3}>
                         <Typography color="error">{error}</Typography>
                         <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
@@ -232,6 +235,7 @@ const EventGraph: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
+                    <BackButton to="/dashboard" />
                     <Box p={3}>
                         <Typography>No chart data available</Typography>
                         <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
@@ -247,6 +251,7 @@ const EventGraph: React.FC = () => {
 <>
             <HeaNavLogo />
             <MainContentWrapper>
+                <BackButton to="/dashboard" />
                 <Box p={3}>
                     <Typography variant="h4" gutterBottom>
                         Event #{id} - Axis Graphs

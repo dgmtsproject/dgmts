@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import * as XLSX from "xlsx";
 import MainContentWrapper from '../components/MainContentWrapper';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import excelFile from '../assets/files/track-files-and-amts.xlsx?url';
 import TrackMerger from '../components/MergeATMSTracks';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -642,8 +643,8 @@ const LongBridgeDataSummary: React.FC = () => {
     return (
         <>
             <HeaNavLogo />
-
             <MainContentWrapper>
+            <BackButton to="/dashboard" />
                 <TrackMerger onMergeSave={handleMergeClick} />
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
                     Data Summary

@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button,
   FormControl, InputLabel, Select, MenuItem,
-  Typography, Box
+  Typography, Box, IconButton, Tooltip
 } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -18,6 +18,9 @@ import MainContentWrapper from '../components/MainContentWrapper';
 import { useAdminContext } from '../context/AdminContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import BackButton from '../components/Back';
+import { Edit as EditIcon } from '@mui/icons-material';
+import { useProjectContext } from '../context/ProjectContext';
 type Instrument = {
   id: number;
   instrument_id: string;
@@ -45,7 +48,7 @@ const InstrumentsList: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [instrumentsData, setInstrumentsData] = useState<Instrument[]>([]);
-  const { isAdmin, userEmail } = useAdminContext();
+  const { isAdmin, userEmail, permissions } = useAdminContext();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(location.state?.project || null);
   const [loading, setLoading] = useState(false);
@@ -201,6 +204,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
       <>
         <HeaNavLogo />
         <MainContentWrapper>
+          <BackButton to="/dashboard" />
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button variant="contained" onClick={() => navigate('/projects-list')}>
               Back to Projects
@@ -240,6 +244,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 2 }}>
           <Button variant="contained" onClick={() => navigate('/projects-list')}>
             Back to Projects
@@ -312,6 +317,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                 color="info"
                                 sx={{ py: 1, fontSize: 14 }}
                                 disabled={
+                                  !permissions.view_graph ||
                                   !(
                                     instrument.instrument_id === 'SMG1' ||
                                     instrument.instrument_id === 'SMG-2' ||

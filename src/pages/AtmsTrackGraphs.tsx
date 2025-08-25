@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from '../components/Back';
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import TrackMerger from "../components/MergeATMSTracks";
@@ -959,6 +960,7 @@ const AtmsTrackGraphs: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
+            <BackButton to="/dashboard" />
                 <TrackMerger onMergeSave={handleMergeClick} />
                 <div
                     style={{

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import * as XLSX from "xlsx";
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -372,6 +373,7 @@ const downloadSelectedColumns = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
+            <BackButton to="/dashboard" />
                 <h1>Reading Tables - Long Bridge North</h1>
                 <TrackMerger onMergeSave={handleMergeClick} />
 

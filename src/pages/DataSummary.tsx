@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from "../components/Back";
 import MainContentWrapper from "../components/MainContentWrapper";
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -87,6 +88,7 @@ const DataSummary: React.FC = () => {
     <>
       <HeaNavLogo/>
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <ToastContainer />
         <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
           <Typography variant="h5" align="center" gutterBottom>

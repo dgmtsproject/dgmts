@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from "../components/Back";
 import MainContentWrapper from "../components/MainContentWrapper";
 import { useAdminContext } from "../context/AdminContext";
 import logo from "../assets/logo.jpg";
@@ -207,6 +208,7 @@ const fetchAlarms = async () => {
   <>
     <HeaNavLogo />
     <MainContentWrapper>
+    <BackButton />
       <div className="page">
         <div className="content" style={{ padding: "2rem" }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

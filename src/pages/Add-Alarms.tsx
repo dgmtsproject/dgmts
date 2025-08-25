@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from "../components/Back";
 import MainContentWrapper from "../components/MainContentWrapper";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -143,9 +144,10 @@ const AddAlarms: React.FC = () => {
   };
 
   return (
-    <MainContentWrapper>
+    <>
       <HeaNavLogo />
-      <Box sx={{ padding: 3 }}>
+      <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <Paper elevation={3} sx={{ padding: 3, maxWidth: 800, margin: "0 auto" }}>
           <Typography variant="h4" gutterBottom>
             Add New Alarm
@@ -266,8 +268,8 @@ const AddAlarms: React.FC = () => {
             </Box>
           </form>
         </Paper>
-      </Box>
-    </MainContentWrapper>
+      </MainContentWrapper>
+    </>
   );
 };
 

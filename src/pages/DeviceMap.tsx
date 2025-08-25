@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { Box, Typography } from '@mui/material';
 import { LatLngTuple } from 'leaflet';
@@ -18,6 +19,7 @@ const DeviceMap = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <Box p={3}>
           <Typography variant="h4" gutterBottom>Device Location</Typography>
           

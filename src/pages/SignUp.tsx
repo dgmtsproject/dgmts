@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
+import MainContentWrapper from '../components/MainContentWrapper';
 
 import logo from "../assets/logo.jpg";
 import { toast, ToastContainer } from "react-toastify";
@@ -51,7 +54,9 @@ const SignUp: React.FC = () => {
       <ToastContainer />
       <Header />
       {/* <Navbar /> */}
-      <div className="content">
+      <HeaNavLogo />
+      <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <h2>Sign Up</h2>
         <div className="form-container">
           <input
@@ -99,7 +104,7 @@ const SignUp: React.FC = () => {
             }}
           />
         </div>
-      </div>
+      </MainContentWrapper>
       <footer>© 2025 DGMTS. All rights reserved.</footer>
     </div>
   );

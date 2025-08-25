@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 
 interface FileData {
   eventId: number;
@@ -108,6 +109,7 @@ useEffect(() => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <Typography variant="h4" gutterBottom>
           Event Files (Random 5 Samples)
         </Typography>

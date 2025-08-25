@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import Plot from "react-plotly.js";
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { 
   Typography, 
@@ -10,6 +11,8 @@ import {
 } from '@mui/material';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAdminContext } from '../context/AdminContext';
+import { useNavigate } from 'react-router-dom';
 
 interface TiltmeterData {
   time: string;
@@ -19,6 +22,8 @@ interface TiltmeterData {
 }
 
 const Tiltmeter: React.FC = () => {
+  const { permissions } = useAdminContext();
+  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<TiltmeterData[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -183,10 +188,18 @@ const Tiltmeter: React.FC = () => {
 
   const graphData = createGraphData();
 
+  useEffect(() => {
+    if (permissions && !permissions.view_graph) {
+      toast.error("You do not have permission to view graphs.");
+      navigate("/");
+    }
+  }, [permissions, navigate]);
+
   return (
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <Typography variant="h4" gutterBottom>
           Tiltmeter - ANC DAR-BC Vibration Monitoring
         </Typography>

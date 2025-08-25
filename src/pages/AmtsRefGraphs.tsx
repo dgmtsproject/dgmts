@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from '../components/Back';
 import TrackMerger from "../components/MergeAmtsRefTracks";
 import html2canvas from "html2canvas";
 import Plot from "react-plotly.js";
@@ -279,6 +280,7 @@ const AmtsRefGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <TrackMerger onMergeSave={handleMergeClick} />
 
 

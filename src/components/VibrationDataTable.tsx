@@ -21,6 +21,9 @@ import * as XLSX from 'xlsx';
 interface VibrationDataTableProps {
   rawData: any[];
   loading: boolean;
+  permissions?: {
+    download_graph?: boolean;
+  };
 }
 
 interface TableRow {
@@ -30,7 +33,7 @@ interface TableRow {
   z: number;
 }
 
-const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loading }) => {
+const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loading, permissions }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
 
@@ -117,14 +120,16 @@ const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loadin
         <Typography variant="h6">
           Vibration Data Table ({tableData.length} records)
         </Typography>
-        <Button
-          variant="contained"
-          onClick={exportToExcel}
-          disabled={!tableData.length}
-          sx={{ minWidth: 120 }}
-        >
-          Export to Excel
-        </Button>
+        {permissions?.download_graph && (
+          <Button
+            variant="contained"
+            onClick={exportToExcel}
+            disabled={!tableData.length}
+            sx={{ minWidth: 120 }}
+          >
+            Export to Excel
+          </Button>
+        )}
       </Stack>
 
       <TableContainer component={Paper} sx={{ maxHeight: 600 }}>

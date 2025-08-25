@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { 
   Typography, 
@@ -68,7 +69,7 @@ interface Instrument {
 }
 
 const Tiltmeter142939: React.FC = () => {
-  const { isAdmin } = useAdminContext();
+  const { isAdmin, permissions } = useAdminContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
@@ -571,6 +572,7 @@ const Tiltmeter142939: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Typography variant="h4" gutterBottom>
           {project ? `${project.name} - Tiltmeter Data Graphs (Node-142939)` : 'Tiltmeter-Node-142939 - Data Graphs'}
@@ -626,36 +628,40 @@ const Tiltmeter142939: React.FC = () => {
           </LocalizationProvider>
 
           {/* Download Excel Section */}
-          <Box sx={{ mb: 2 }}>
-            <Button
-              variant="outlined"
-              id="download-excel-button"
-              aria-controls="download-excel-menu"
-              aria-haspopup="true"
-              onClick={(e) => setDownloadMenuAnchor(e.currentTarget)}
-              sx={{ mr: 2 }}
-            >
-              Download Excel
-            </Button>
-            <Menu
-              id="download-excel-menu"
-              anchorEl={downloadMenuAnchor}
-              open={Boolean(downloadMenuAnchor)}
-              onClose={() => setDownloadMenuAnchor(null)}
-            >
-              <MenuItem onClick={() => { handleDownloadExcel('raw'); setDownloadMenuAnchor(null); }}>
-                Raw Data
-              </MenuItem>
-              <MenuItem disabled={!referenceValues.enabled} onClick={() => { handleDownloadExcel('calibrated'); setDownloadMenuAnchor(null); }}>
-                Calibrated Data
-                {!referenceValues.enabled && (
-                  <Typography variant="caption" color="error" sx={{ ml: 1 }}>
-                    (Enable and add reference values to get calibrated data)
-                  </Typography>
+          {permissions.download_graph && (
+            <Box sx={{ mb: 2 }}>
+              <Button
+                variant="outlined"
+                id="download-excel-button"
+                aria-controls="download-excel-menu"
+                aria-haspopup="true"
+                onClick={(e) => setDownloadMenuAnchor(e.currentTarget)}
+                sx={{ mr: 2 }}
+              >
+                Download Excel
+              </Button>
+              <Menu
+                id="download-excel-menu"
+                anchorEl={downloadMenuAnchor}
+                open={Boolean(downloadMenuAnchor)}
+                onClose={() => setDownloadMenuAnchor(null)}
+              >
+                <MenuItem onClick={() => { handleDownloadExcel('raw'); setDownloadMenuAnchor(null); }}>
+                  Raw Data
+                </MenuItem>
+                {permissions.download_graph && (
+                  <MenuItem disabled={!referenceValues.enabled} onClick={() => { handleDownloadExcel('calibrated'); setDownloadMenuAnchor(null); }}>
+                    Calibrated Data
+                    {!referenceValues.enabled && (
+                      <Typography variant="caption" color="error" sx={{ ml: 1 }}>
+                        (Enable and add reference values to get calibrated data)
+                      </Typography>
+                    )}
+                  </MenuItem>
                 )}
-              </MenuItem>
-            </Menu>
-          </Box>
+              </Menu>
+            </Box>
+          )}
           
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             <strong>Data Points:</strong> {sensorData.length} | 

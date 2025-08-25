@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MainContentWrapper from '../components/MainContentWrapper';
+import BackButton from '../components/Back';
 import {
   Box,
   Button,
@@ -152,6 +153,7 @@ const EditTiltmeterInstrument: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+        <BackButton to="/dashboard" />
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Container maxWidth="lg">
           <Box mt={4} position="relative">

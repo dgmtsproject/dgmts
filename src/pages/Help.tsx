@@ -3,13 +3,18 @@ import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import logo from '../assets/logo.jpg';
 import helpTopics from '../data/helpTopics.json';
+import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from "../components/Back";
+import MainContentWrapper from "../components/MainContentWrapper";
 
 const Help: React.FC = () => {
   return (
     <div className="page">
       <Header />
       <Navbar />
-      <div className="content">
+      <HeaNavLogo/>
+      <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <h2>Help</h2>
         <div className="data-list">
           <h3>Help Topics</h3>
@@ -37,7 +42,7 @@ const Help: React.FC = () => {
             }}
           />
         </div>
-      </div>
+      </MainContentWrapper>
       <footer>© 2025 DGMTS. All rights reserved.</footer>
     </div>
   );

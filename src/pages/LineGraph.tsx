@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import HeaNavLogo from '../components/HeaNavLogo';
+import BackButton from '../components/Back';
 import {
   LineChart,
   Line,
@@ -105,7 +107,9 @@ const LineGraph = () => {
 
   return (
     <>
+      <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
         <div>
           <ToastContainer />
           <div style={{ marginBottom: '1rem', textAlign: 'center' }}>

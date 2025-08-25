@@ -16,7 +16,9 @@ import "react-toastify/dist/ReactToastify.css";
 import logo from "../assets/logo.jpg";
 import fullData from "../data/customGraphData.json";
 import HeaNavLogo from "../components/HeaNavLogo";
+import BackButton from "../components/Back";
 import MainContentWrapper from "../components/MainContentWrapper";
+import { useAdminContext } from "../context/AdminContext";
 
 interface GraphData {
   time: string;
@@ -30,6 +32,7 @@ const sensorOptions = ["temperature", "humidity", "pressure"] as const;
 type SensorType = (typeof sensorOptions)[number];
 
 const ViewCustomGraphs: React.FC = () => {
+  const { permissions } = useAdminContext();
   const [startDate, setStartDate] = useState("2025-04-01");
   const [endDate, setEndDate] = useState("2025-04-09");
   const [selectedSensor, setSelectedSensor] =
@@ -123,6 +126,7 @@ const ViewCustomGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
+      <BackButton to="/dashboard" />
 
       <div
         style={{
@@ -205,12 +209,14 @@ const ViewCustomGraphs: React.FC = () => {
           >
             📷 Download Image
           </button>
-          <button
-            onClick={exportToExcel}
-            style={{ ...buttonStyle, backgroundColor: "#17a2b8" }}
-          >
-            📁 Export to Excel
-          </button>
+          {permissions?.download_graph && (
+            <button
+              onClick={exportToExcel}
+              style={{ ...buttonStyle, backgroundColor: "#17a2b8" }}
+            >
+              📁 Export to Excel
+            </button>
+          )}
         </div>
 
         <div
