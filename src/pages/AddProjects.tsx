@@ -43,6 +43,7 @@ const AddProjects: React.FC = () => {
             .from('Projects')
             .insert([{
                 id: projectId,
+                project_id_second: projectId, // Set both id and project_id_second to the same value
                 name: projectName,
                 client: client,
                 location: location,
@@ -55,8 +56,19 @@ const AddProjects: React.FC = () => {
             }]);
 
         if (error) {
-            console.error("Error adding project:", error.message);
-            toast.error("Error adding project: " + error.message);
+            console.error("Error adding project:", error);
+            // Handle unique constraint violations
+            if (error.code === '23505') {
+                if (error.message.includes('project_id_second')) {
+                    toast.error("Project ID already exists. Please choose a different Project ID.");
+                } else if (error.message.includes('pkey') || error.message.includes('Projects_pkey')) {
+                    toast.error("Project ID already exists. Please choose a different Project ID.");
+                } else {
+                    toast.error("A project with this information already exists. Please check your input.");
+                }
+            } else {
+                toast.error("Error adding project: " + error.message);
+            }
         } else {
             console.log("Project added successfully:", data);
             toast.success("Project added successfully!");

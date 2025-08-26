@@ -13,6 +13,7 @@ import { useAdminContext } from '../context/AdminContext';
 
 type Project = {
   id: number;
+  project_id_second?: string;
   name: string;
   status: string;
   startDate: string;
@@ -103,7 +104,7 @@ const Projectslist: React.FC = () => {
                 <TableBody>
                   {projectsData.map((project) => (
                     <TableRow key={project.id} style={{ backgroundColor: '#fff', borderBottom: '1px solid #ddd' }}>
-                      <TableCell style={{ border: '1px solid black' }}>{project.id}</TableCell>
+                      <TableCell style={{ border: '1px solid black' }}>{project.project_id_second || project.id}</TableCell>
                       <TableCell style={{ border: '1px solid black' }}>{project.name}</TableCell>
                       <TableCell style={{ border: '1px solid black' }}>{project.client || "Unknown Client"}</TableCell>
                       <TableCell style={{ border: '1px solid black' }}>

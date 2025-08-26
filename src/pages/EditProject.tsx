@@ -29,6 +29,7 @@ const EditProject: React.FC = () => {
     phone: '',
     pocName: '',
     status: '',
+    projectIdSecond: '',
   });
   const [formErrors, setFormErrors] = useState({ endDate: false });
 
@@ -42,6 +43,7 @@ const EditProject: React.FC = () => {
         phone: project.Phone || '',
         pocName: project['POC Name'] || '',
         status: project.Status || '',
+        projectIdSecond: project.project_id_second || project.id || '',
       });
       setStartDate(project.Start_Date ? parseISO(project.Start_Date) : null);
       setEndDate(project.End_Date ? parseISO(project.End_Date) : null);
@@ -84,10 +86,17 @@ const EditProject: React.FC = () => {
         Start_Date: formattedStartDate,
         End_Date: formattedEndDate,
         status: formValues.status,
+        project_id_second: formValues.projectIdSecond,
       })
       .eq('id', project.id);
     if (error) {
-      toast.error('Error updating project: ' + error.message);
+      console.error('Error updating project:', error);
+      // Handle unique constraint violation for project_id_second
+      if (error.code === '23505' && error.message.includes('project_id_second')) {
+        toast.error('Project ID already exists. Please choose a different Project ID.');
+      } else {
+        toast.error('Error updating project: ' + error.message);
+      }
     } else {
       toast.success('Project updated successfully!');
       setTimeout(() => {
@@ -124,10 +133,11 @@ const EditProject: React.FC = () => {
         }}>
           <Typography variant="h5" sx={{ mb: 3 }}>Edit Project</Typography>
           <TextField
-            name="projectId"
+            name="projectIdSecond"
             label="Project ID"
-            value={project.id}
-            disabled
+            value={formValues.projectIdSecond}
+            onChange={handleChange}
+            required
             fullWidth
             margin="normal"
           />
