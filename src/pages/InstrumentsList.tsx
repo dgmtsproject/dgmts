@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button,
   FormControl, InputLabel, Select, MenuItem,
-  Typography, Box, IconButton, Tooltip
+  Typography, Box
 } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -19,8 +19,8 @@ import { useAdminContext } from '../context/AdminContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BackButton from '../components/Back';
-import { Edit as EditIcon } from '@mui/icons-material';
-import { useProjectContext } from '../context/ProjectContext';
+
+
 type Instrument = {
   id: number;
   instrument_id: string;
