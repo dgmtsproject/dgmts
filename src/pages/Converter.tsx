@@ -7,7 +7,7 @@ const Converter = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <div>Converter</div>
       </MainContentWrapper>
     </>

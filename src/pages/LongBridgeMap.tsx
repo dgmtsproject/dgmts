@@ -20,7 +20,7 @@ const LongBridgeMap: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton/>
         <div style={{ width: '100%', height: 'calc(100vh - 64px)' }}>
           <MapContainer
             center={position}

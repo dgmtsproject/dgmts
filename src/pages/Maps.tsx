@@ -88,7 +88,7 @@ const Maps: React.FC = () => {
     <>
       <HeaNavLogo/>
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton  />
         <ToastContainer />
         <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 3 }}>
           <Typography variant="h5" align="center" gutterBottom>

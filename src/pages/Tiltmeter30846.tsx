@@ -447,7 +447,7 @@ const Tiltmeter30846: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <Typography variant="h4" gutterBottom>
           {project ? `${project.name} - Tiltmeter Data Graphs (Node-30846)` : 'Tiltmeter (30846) - Sensor Data'}
         </Typography>

@@ -204,7 +204,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
       <>
         <HeaNavLogo />
         <MainContentWrapper>
-          <BackButton to="/dashboard" />
+          <BackButton  />
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button variant="contained" onClick={() => navigate('/projects-list')}>
               Back to Projects
@@ -244,7 +244,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-        <BackButton to="/dashboard" />
+        <BackButton  />
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 2 }}>
           <Button variant="contained" onClick={() => navigate('/projects-list')}>
             Back to Projects

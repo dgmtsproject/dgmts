@@ -109,7 +109,7 @@ const LineGraph = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton/>
         <div>
           <ToastContainer />
           <div style={{ marginBottom: '1rem', textAlign: 'center' }}>

@@ -178,7 +178,7 @@ const Permissions: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton  />
         <Box sx={{ p: 3 }}>
           <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
             User Permissions

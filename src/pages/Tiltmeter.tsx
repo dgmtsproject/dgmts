@@ -199,7 +199,7 @@ const Tiltmeter: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <Typography variant="h4" gutterBottom>
           Tiltmeter - ANC DAR-BC Vibration Monitoring
         </Typography>

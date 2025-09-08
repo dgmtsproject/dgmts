@@ -235,7 +235,7 @@ const EditInstrument: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
-                    <BackButton to="/dashboard" />
+                    <BackButton  />
                     <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
                     <Container maxWidth="lg">
                         <Box mt={4} position="relative">
@@ -297,7 +297,7 @@ const EditInstrument: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-                <BackButton to="/dashboard" />
+                <BackButton  />
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
                 <Container maxWidth="lg">
                     <Box mt={4} position="relative">

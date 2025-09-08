@@ -95,7 +95,7 @@ const ProjectForm: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton/>
       <div style={styles.formContainer}>
         <ToastContainer />
         <h2 style={styles.heading}>Project Form</h2>

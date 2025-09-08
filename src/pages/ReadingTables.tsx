@@ -373,7 +373,7 @@ const downloadSelectedColumns = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-            <BackButton to="/dashboard" />
+            <BackButton />
                 <h1>Reading Tables - Long Bridge North</h1>
                 <TrackMerger onMergeSave={handleMergeClick} />
 

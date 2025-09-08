@@ -572,7 +572,7 @@ const Tiltmeter142939: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton  />
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Typography variant="h4" gutterBottom>
           {project ? `${project.name} - Tiltmeter Data Graphs (Node-142939)` : 'Tiltmeter-Node-142939 - Data Graphs'}

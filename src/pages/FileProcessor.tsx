@@ -109,7 +109,7 @@ useEffect(() => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-        <BackButton to="/dashboard" />
+        <BackButton  />
         <Typography variant="h4" gutterBottom>
           Event Files (Random 5 Samples)
         </Typography>

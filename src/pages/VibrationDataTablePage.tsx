@@ -26,7 +26,7 @@ const VibrationDataTablePage: React.FC = () => {
       <>
         <HeaNavLogo />
         <MainContentWrapper>
-          <BackButton to="/dashboard" />
+          <BackButton  />
           <Box p={3}>
             <Alert severity="error">
               No data available. Please load vibration data from the charts view first.

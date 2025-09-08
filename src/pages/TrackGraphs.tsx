@@ -580,7 +580,7 @@ const TrackGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <TrackMerger onMergeSave={handleMergeClick} />
         <div
           style={{

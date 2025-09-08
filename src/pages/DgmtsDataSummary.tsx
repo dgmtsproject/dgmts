@@ -9,7 +9,7 @@ const DgmtsDataSummary: React.FC = () => {
         <>
         <HeaNavLogo/>
         <MainContentWrapper>
-        <BackButton to="/dashboard" />
+        <BackButton  />
             <h1>DGMTS Data Summary</h1>
             <p>This page will provide a summary of the DGMTS Testing Reporting data.</p>
             {/* Add more content or components as needed */}

@@ -83,7 +83,7 @@ const AddProjects: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-                <BackButton to="/dashboard" />
+                <BackButton />      
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <Button variant="contained" color="primary" onClick={() => navigate('/projects-list')}>

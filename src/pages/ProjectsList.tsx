@@ -76,7 +76,7 @@ const Projectslist: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton  />
       
       
         <div style={{ fontFamily: 'Arial, sans-serif', padding: '0px' }}>

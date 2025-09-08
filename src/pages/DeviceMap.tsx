@@ -19,7 +19,7 @@ const DeviceMap = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <Box p={3}>
           <Typography variant="h4" gutterBottom>Device Location</Typography>
           

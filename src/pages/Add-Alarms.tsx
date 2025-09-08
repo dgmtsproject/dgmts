@@ -147,7 +147,7 @@ const AddAlarms: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <Paper elevation={3} sx={{ padding: 3, maxWidth: 800, margin: "0 auto" }}>
           <Typography variant="h4" gutterBottom>
             Add New Alarm

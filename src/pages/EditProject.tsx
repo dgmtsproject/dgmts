@@ -113,7 +113,7 @@ const EditProject: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-        <BackButton to="/dashboard" />
+        <BackButton  />
         <ToastContainer position="top-right" autoClose={3000} />
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <Button variant="contained" color="primary" onClick={() => navigate('/projects-list')}>

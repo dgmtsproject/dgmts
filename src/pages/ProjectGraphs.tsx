@@ -116,7 +116,7 @@ const ProjectGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton  />
         <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4, p: 3 }}>
           <Typography variant="h5" align="center" gutterBottom>
             Project Graphs

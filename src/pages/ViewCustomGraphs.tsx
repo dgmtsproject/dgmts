@@ -126,7 +126,7 @@ const ViewCustomGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
 
       <div
         style={{

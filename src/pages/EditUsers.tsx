@@ -172,7 +172,7 @@ const EditUsers: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-        <BackButton to="/dashboard" />
+        <BackButton />
         <ToastContainer position="top-right" autoClose={3000} />
         <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
           <Typography variant="h4" gutterBottom>Edit User</Typography>

@@ -204,7 +204,7 @@ const EventGraph: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
-                    <BackButton to="/dashboard" />
+                    <BackButton  />
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
                         <CircularProgress />
                     </Box>
@@ -218,7 +218,7 @@ const EventGraph: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
-                    <BackButton to="/dashboard" />
+                    <BackButton />
                     <Box p={3}>
                         <Typography color="error">{error}</Typography>
                         <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
@@ -235,7 +235,7 @@ const EventGraph: React.FC = () => {
             <>
                 <HeaNavLogo />
                 <MainContentWrapper>
-                    <BackButton to="/dashboard" />
+                    <BackButton />
                     <Box p={3}>
                         <Typography>No chart data available</Typography>
                         <Button variant="contained" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
@@ -251,7 +251,7 @@ const EventGraph: React.FC = () => {
 <>
             <HeaNavLogo />
             <MainContentWrapper>
-                <BackButton to="/dashboard" />
+                <BackButton  />
                 <Box p={3}>
                     <Typography variant="h4" gutterBottom>
                         Event #{id} - Axis Graphs

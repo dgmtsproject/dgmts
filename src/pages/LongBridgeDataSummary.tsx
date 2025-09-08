@@ -644,7 +644,7 @@ const LongBridgeDataSummary: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-            <BackButton to="/dashboard" />
+            <BackButton  />
                 <TrackMerger onMergeSave={handleMergeClick} />
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
                     Data Summary

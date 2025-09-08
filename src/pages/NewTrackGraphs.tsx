@@ -385,7 +385,7 @@ console.log(selectedTrackOptions);
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
       <TrackMerger onMergeSave={handleMergeClick} />
       <div
         style={{

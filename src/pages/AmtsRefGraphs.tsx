@@ -280,7 +280,7 @@ const AmtsRefGraphs: React.FC = () => {
     <>
       <HeaNavLogo />
       <MainContentWrapper>
-      <BackButton to="/dashboard" />
+      <BackButton />
         <TrackMerger onMergeSave={handleMergeClick} />
 
 

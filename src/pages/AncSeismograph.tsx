@@ -915,7 +915,7 @@ const AncSeismograph: React.FC = () => {
       <HeaNavLogo />
             
       <MainContentWrapper>
-        <BackButton to="/dashboard" />
+        <BackButton />  
         <Box p={3}>
           <Typography variant="h4" align="center" sx={{ mb: 3, mt: 2 }}>
             {project ? `${project.name} - Seismograph Data Graphs (SMG-2)` : 'Seismograph Data Graphs (SMG-2)'}

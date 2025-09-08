@@ -25,7 +25,7 @@ const AdminSetup: React.FC = () => {
         <>
             <HeaNavLogo />
             <MainContentWrapper>
-            <BackButton to="/dashboard" />
+            <BackButton />
                 <h1>Admin Setup</h1>
                 <div style={{ 
                     display: 'flex', 
