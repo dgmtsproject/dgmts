@@ -161,7 +161,11 @@ const EditInstrument: React.FC = () => {
 
             if (error) {
                 console.error('Error updating instrument:', error.message);
-                toast.error('Error updating instrument!');
+                if (error.code === '23505' || error.message.includes('duplicate key value violates unique constraint')) {
+                    toast.error('Instrument ID already exists! Please use a different ID.');
+                } else {
+                    toast.error('Error updating instrument!');
+                }
             } else {
                 toast.success('Instrument updated successfully!');
                 setTimeout(() => {
@@ -191,7 +195,11 @@ const EditInstrument: React.FC = () => {
 
             if (error) {
                 console.error('Error adding instrument:', error.message);
-                toast.error('Error adding instrument!');
+                if (error.code === '23505' || error.message.includes('duplicate key value violates unique constraint')) {
+                    toast.error('Instrument ID already exists! Please use a different ID.');
+                } else {
+                    toast.error('Error adding instrument!');
+                }
             } else {
                 toast.success('Instrument added successfully!');
                 navigate('/instruments', { state: { project } });

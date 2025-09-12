@@ -322,6 +322,8 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                     instrument.instrument_id === 'SMG1' ||
                                     instrument.instrument_id === 'SMG-2' ||
                                     instrument.instrument_id === 'SMG-3' ||
+                                    instrument.instrument_id === 'ROCKSMG-1' ||
+                                    instrument.instrument_id === 'ROCKSMG-2' ||
                                     instrument.instrument_id === 'AMTS-1' ||
                                     instrument.instrument_id === 'AMTS-2' ||
                                     instrument.instrument_id === 'TILT-142939' ||
@@ -336,6 +338,10 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                     navigate('/anc-seismograph', { state: { project: selectedProject } });
                                   } else if (instrument.instrument_id === 'SMG-3') {
                                     navigate('/smg3-seismograph', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'ROCKSMG-1') {
+                                    navigate('/rocksmg1-seismograph', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'ROCKSMG-2') {
+                                    navigate('/rocksmg2-seismograph', { state: { project: selectedProject } });
                                   } else if (
                                     instrument.instrument_id === 'AMTS-1' ||
                                     instrument.instrument_id === 'AMTS-2'

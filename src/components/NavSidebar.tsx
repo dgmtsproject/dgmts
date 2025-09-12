@@ -39,13 +39,16 @@ const NavSidebar: React.FC = () => {
   const [openProject, setOpenProject] = useState(false);
   const [opensecondProject, setOpenSecondProject] = useState(false);
   const [openThirdProject, setOpenThirdProject] = useState(false);
+  const [openFourthProject, setOpenFourthProject] = useState(false);
   const [hasLongBridgeAccess, setHasLongBridgeAccess] = useState(false);
   const [hasDgmtsTestingAccess, setHasDgmtsTestingAccess] = useState(false);
   const [hasAncDarBcAccess, setHasAncDarBcAccess] = useState(false);
+  const [hasYellowLineAncAccess, setHasYellowLineAncAccess] = useState(false);
   const [projectNames, setProjectNames] = useState({
     longBridge: 'Long Bridge North',
     dgmtsTesting: 'DGMTS Testing',
-    ancDarBc: 'ANC DAR-BC'
+    ancDarBc: 'ANC DAR-BC',
+    yellowLineAnc: 'Yellow Line ANC'
   });
   const { isAdmin, setIsAdmin, userEmail, permissions } = useAdminContext();
 
@@ -114,12 +117,33 @@ useEffect(() => {
     }
   };
 
+  const checkYellowLineAncAccess = async () => {
+    if (!userEmail) return;
+    try {
+      // Check access for Yellow Line ANC (ID: 25304)
+      const { data, error } = await supabase
+        .from('ProjectUsers')
+        .select('*')
+        .eq('user_email', userEmail)
+        .eq('project_id', 25304);
+      
+      setHasYellowLineAncAccess(Boolean(isAdmin || (data && data.length > 0)));
+      
+      if (error) {
+        console.error('Error checking Yellow Line ANC access:', error);
+      }
+    } catch (err) {
+      console.error('Unexpected error checking Yellow Line ANC access:', err);
+      setHasYellowLineAncAccess(false);
+    }
+  };
+
   const fetchProjectNames = async () => {
     try {
       const { data, error } = await supabase
         .from('Projects')
         .select('id, name')
-        .in('id', [24637, 20151, 24429]);
+        .in('id', [24637, 20151, 24429, 25304]);
       
       if (error) {
         console.error('Error fetching project names:', error);
@@ -130,7 +154,8 @@ useEffect(() => {
         const names = {
           longBridge: data.find(p => p.id === 24637)?.name || 'Long Bridge North',
           dgmtsTesting: data.find(p => p.id === 20151)?.name || 'DGMTS Testing',
-          ancDarBc: data.find(p => p.id === 24429)?.name || 'ANC DAR-BC'
+          ancDarBc: data.find(p => p.id === 24429)?.name || 'ANC DAR-BC',
+          yellowLineAnc: data.find(p => p.id === 25304)?.name || 'Yellow Line ANC'
         };
         setProjectNames(names);
       }
@@ -142,6 +167,7 @@ useEffect(() => {
   checkProjectAccess();
   checkDgmtsTestingAccess();
   checkAncDarBcAccess();
+  checkYellowLineAncAccess();
   fetchProjectNames();
 }, [userEmail, isAdmin]);
 
@@ -157,6 +183,9 @@ useEffect(() => {
   };
   const handleThirdProjectClick = () => {
     setOpenThirdProject(!openThirdProject);
+  };
+  const handleFourthProjectClick = () => {
+    setOpenFourthProject(!openFourthProject);
   };
 
   const handleLogout = async () => {
@@ -374,6 +403,35 @@ useEffect(() => {
                             </ListItemButton>
                           </List>
                         </Collapse>
+                    </>
+                  )}
+                  {(isAdmin || hasYellowLineAncAccess) && (
+                    <>
+                      <ListItemButton onClick={handleFourthProjectClick} sx={{ pl: 4 }}>
+                        <ListItemIcon sx={{ color: 'inherit', minWidth: '36px' }}>
+                          <ProjectIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary={projectNames.yellowLineAnc} />
+                        {openFourthProject ? <ExpandLess /> : <ExpandMore />}
+                      </ListItemButton>
+                      <Collapse in={openFourthProject} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding sx={{ bgcolor: '#002366' }}>
+                          <ListItemButton
+                            component={Link}
+                            to="/rocksmg1-seismograph"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Rock Seismograph 1 (ROCKSMG-1)" />
+                          </ListItemButton>
+                          <ListItemButton
+                            component={Link}
+                            to="/rocksmg2-seismograph"
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary="Rock Seismograph 2 (ROCKSMG-2)" />
+                          </ListItemButton>
+                        </List>
+                      </Collapse>
                     </>
                   )}
                 </List>
