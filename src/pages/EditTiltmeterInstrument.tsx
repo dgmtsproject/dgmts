@@ -185,7 +185,7 @@ const EditTiltmeterInstrument: React.FC = () => {
               padding="20px"
               onSubmit={handleSubmit}
             >
-              <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+              <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} width="100%" mb={2}>
                 <TextField
                   label="Instrument ID"
                   required
@@ -201,11 +201,11 @@ const EditTiltmeterInstrument: React.FC = () => {
                   fullWidth
                 />
                 <TextField
-                  label="Instrument SNo."
-                  type="number"
+                  label="Serial Number"
+                  required
                   value={instrumentSno}
                   onChange={(e) => setInstrumentSno(e.target.value)}
-                  style={{ width: '100%' }}
+                  fullWidth
                 />
               </Box>
               {/* Alert Thresholds (Tiltmeter) */}
