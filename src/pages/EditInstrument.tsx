@@ -59,6 +59,7 @@ const EditInstrument: React.FC = () => {
     );
     const [instrumentId, setInstrumentId] = useState(instrument?.instrument_id || '');
     const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
+    const [serialNumber, setSerialNumber] = useState(instrument?.sno || '');
     const [alertValue, setAlertValue] = useState<number | string>(instrument?.alert_value || '');
     const [warningValue, setWarningValue] = useState<number | string>(instrument?.warning_value || '');
     const [shutdownValue, setShutdownValue] = useState<number | string>(instrument?.shutdown_value || '');
@@ -79,6 +80,7 @@ const EditInstrument: React.FC = () => {
             setShutEmailsForAlert(parseEmails(instrument.shutdown_emails));
             setInstrumentId(instrument.instrument_id || '');
             setInstrumentName(instrument.instrument_name || '');
+            setSerialNumber(instrument.sno || '');
             setAlertValue(instrument.alert_value || '');
             setWarningValue(instrument.warning_value || '');
             setShutdownValue(instrument.shutdown_value || '');
@@ -149,6 +151,7 @@ const EditInstrument: React.FC = () => {
                 .update({
                     instrument_id: instrumentId,
                     instrument_name: instrumentName,
+                    sno: serialNumber,
                     project_id: project.id,
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
@@ -183,6 +186,7 @@ const EditInstrument: React.FC = () => {
                 {
                     instrument_id: instrumentId,
                     instrument_name: instrumentName,
+                    sno: serialNumber,
                     alert_value: alertValue ? Number(alertValue) : null,
                     warning_value: warningValue ? Number(warningValue) : null,
                     shutdown_value: shutdownValue ? Number(shutdownValue) : null,
@@ -339,7 +343,7 @@ const EditInstrument: React.FC = () => {
                             onSubmit={handleSubmit}
                         >
                             {/* Instrument Info */}
-                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+                            <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
                                     label="Instrument ID"
                                     required
@@ -352,6 +356,13 @@ const EditInstrument: React.FC = () => {
                                     required
                                     value={instrumentName}
                                     onChange={(e) => setInstrumentName(e.target.value)}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Serial Number"
+                                    required
+                                    value={serialNumber}
+                                    onChange={(e) => setSerialNumber(e.target.value)}
                                     fullWidth
                                 />
                             </Box>

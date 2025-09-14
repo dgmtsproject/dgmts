@@ -920,7 +920,7 @@ const RockSmg1Seismograph: React.FC = () => {
                 >
                   {availableInstruments.map((instrument) => (
                     <MenuItem key={instrument.instrument_id} value={instrument.instrument_id}>
-                      {instrument.instrument_name}
+                      {instrument.instrument_id} - {instrument.instrument_name}
                     </MenuItem>
                   ))}
                 </Select>
