@@ -553,7 +553,8 @@ const AncSeismograph: React.FC = () => {
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151' }
+            tickfont: { size: 14, color: '#374151' },
+            tickformat: '.4f'
           },
           showlegend: true,
           legend: {
@@ -877,7 +878,8 @@ const AncSeismograph: React.FC = () => {
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151' }
+            tickfont: { size: 14, color: '#374151' },
+            tickformat: '.4f'
           },
           showlegend: true,
           legend: {
