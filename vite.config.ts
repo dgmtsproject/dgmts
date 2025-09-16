@@ -12,6 +12,11 @@ export default defineConfig({
         target: 'https://scs.syscom-instruments.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/micromate-api': {
+        target: 'https://imsite.dullesgeotechnical.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/micromate-api/, '/api'),
       }
     }
   }

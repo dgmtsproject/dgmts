@@ -37,6 +37,7 @@ import AncSeismograph from "../pages/AncSeismograph";
 import Smg3Seismograph from "../pages/Smg3Seismograph";
 import RockSmg1Seismograph from "../pages/RockSmg1Seismograph";
 import RockSmg2Seismograph from "../pages/RockSmg2Seismograph";
+import Instantel1Seismograph from "../pages/Instantel1Seismograph";
 import VibrationDataTablePage from "../pages/VibrationDataTablePage";
 import DeviceMap from "../pages/DeviceMap";
 import Maps from "../pages/Maps";
@@ -97,6 +98,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/smg3-seismograph" element={<Smg3Seismograph />} />
         <Route path="/rocksmg1-seismograph" element={<RockSmg1Seismograph />} />
         <Route path="/rocksmg2-seismograph" element={<RockSmg2Seismograph />} />
+        <Route path="/instantel1-seismograph" element={<Instantel1Seismograph />} />
         <Route path="/tiltmeter" element={<Tiltmeter />} />
         <Route path="/tiltmeter-30846" element={<Tiltmeter30846 />} />
         <Route path="/tiltmeter-142939" element={<Tiltmeter142939 />} />

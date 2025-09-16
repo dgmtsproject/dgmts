@@ -1,8 +1,16 @@
 {
   "rewrites": [
+        {
+          "source": "/api/fetchMicromateReadings",
+          "destination": "/api/fetchMicromateReadings.ts"
+        },
     {
       "source": "/api/(.*)",
       "destination": "https://scs.syscom-instruments.com/public-api/v1/$1"
+    },
+    {
+      "source": "/micromate-api/(.*)",
+      "destination": "https://imsite.dullesgeotechnical.com/api/$1"
     },
     {
       "source": "/(.*)",
