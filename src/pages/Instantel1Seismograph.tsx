@@ -57,7 +57,7 @@ interface Instrument {
   project_id: number;
 }
 
-type DataType = 'readings' | 'frequency' | 'metric';
+type DataType = 'ppv' | 'frequency' | 'metric';
 
 const Instantel1Seismograph: React.FC = () => {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ const Instantel1Seismograph: React.FC = () => {
   const [instrumentSettings, setInstrumentSettings] = useState<InstrumentSettings | null>(null);
   const [project, setProject] = useState<Project | null>(location.state?.project || null);
   const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
-  const [dataType, setDataType] = useState<DataType>('readings');
+  const [dataType, setDataType] = useState<DataType>('ppv');
 
   // Fetch instrument settings and project info on component mount
   useEffect(() => {
@@ -192,7 +192,7 @@ const Instantel1Seismograph: React.FC = () => {
     // Get data based on selected type
     const getDataValue = (reading: MicromateReading, axis: 'Longitudinal' | 'Transverse' | 'Vertical') => {
       switch (dataType) {
-        case 'readings':
+        case 'ppv':
           return reading[axis];
         case 'frequency':
           return reading[`${axis}Frequency`];
@@ -205,14 +205,14 @@ const Instantel1Seismograph: React.FC = () => {
 
     const getUnit = () => {
       switch (dataType) {
-        case 'readings':
-          return 'mm/s';
+        case 'ppv':
+          return 'in/s';
         case 'frequency':
           return 'Hz';
         case 'metric':
-          return 'mm/s²';
+          return 'in/s';
         default:
-          return 'mm/s';
+          return 'in/s';
       }
     };
 
@@ -519,7 +519,7 @@ const Instantel1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${axis} Axis Micromate Data (${dataType})`, 
+            text: `${axis} Axis PPV Data (${dataType})`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -843,7 +843,7 @@ const Instantel1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `Combined Micromate Data (${dataType})`, 
+            text: `Combined PPV Data (${dataType})`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -912,7 +912,7 @@ const Instantel1Seismograph: React.FC = () => {
         <BackButton />  
         <Box p={3}>
           <Typography variant="h4" align="center" sx={{ mb: 3, mt: 2 }}>
-            {project ? `${project.name} - Micromate Data Graphs (Instantel 1)` : 'Micromate Data Graphs (Instantel 1)'}
+            {project ? `${project.name} - PPV Data Graphs (Instantel 1)` : 'PPV Data Graphs (Instantel 1)'}
           </Typography>
           
           {project && (
@@ -960,7 +960,7 @@ const Instantel1Seismograph: React.FC = () => {
                   label="Data Type"
                   onChange={(e) => setDataType(e.target.value as DataType)}
                 >
-                  <MenuItem value="readings">Readings</MenuItem>
+                  <MenuItem value="ppv">PPV</MenuItem>
                   <MenuItem value="frequency">Frequency</MenuItem>
                   <MenuItem value="metric">Metric</MenuItem>
                 </Select>
@@ -1027,14 +1027,14 @@ const Instantel1Seismograph: React.FC = () => {
 
           {!loading && (!rawData || rawData.MicromateReadings.length === 0) && !error && (
             <Typography variant="body1" color="textSecondary">
-              Click "Load Data" to view micromate data.
+              Click "Load Data" to view PPV data.
             </Typography>
           )}
 
           {instrumentSettings && (
             <Box mt={2} p={2} bgcolor="grey.100" borderRadius={1}>
               <Typography variant="h6" gutterBottom>
-                {project ? `${project.name} - Micromate Reference Levels (Instantel 1)` : 'Micromate Reference Levels (Instantel 1)'}
+                {project ? `${project.name} - PPV Reference Levels (Instantel 1)` : 'PPV Reference Levels (Instantel 1)'}
               </Typography>
               <Stack direction="row" spacing={3}>
                 {instrumentSettings.alert_value && (
