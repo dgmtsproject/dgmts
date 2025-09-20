@@ -4,18 +4,24 @@ import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import BackButton from '../components/Back';
 import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 
-// Utility function to format UTC time in 12-hour format
-const formatUTCTime = (utcTimeString: string): Date => {
-  const utcDate = parseISO(utcTimeString);
-  // Return the UTC date as-is, just formatted for display
-  return utcDate;
+// Utility function to format time without timezone conversion
+const formatUTCTime = (timeString: string): Date => {
+  // Parse the time string as-is without timezone conversion
+  // Split the string to extract date and time parts
+  const [datePart, timePart] = timeString.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [time, milliseconds] = timePart.split('.');
+  const [hours, minutes, seconds] = time.split(':').map(Number);
+  
+  // Create date in local timezone without conversion
+  const date = new Date(year, month - 1, day, hours, minutes, seconds, milliseconds ? parseInt(milliseconds) : 0);
+  return date;
 };
 
 interface MicromateReading {
@@ -518,7 +524,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>${axis}</b><br>
-              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -533,7 +539,7 @@ const Instantel1Seismograph: React.FC = () => {
           },
           xaxis: {
             title: { 
-              text: 'Time (UTC)', 
+              text: 'Time', 
               font: { size: 16, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -767,7 +773,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>X</b><br>
-              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -789,7 +795,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>Y</b><br>
-              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -811,7 +817,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>Z</b><br>
-              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -857,7 +863,7 @@ const Instantel1Seismograph: React.FC = () => {
           },
           xaxis: {
             title: { 
-              text: 'Time (UTC)', 
+              text: 'Time', 
               font: { size: 16, weight: 700, color: '#374151' },
               standoff: 20
             },
