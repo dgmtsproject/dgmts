@@ -11,6 +11,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 
+// Utility function to format UTC time in 12-hour format
+const formatUTCTime = (utcTimeString: string): Date => {
+  const utcDate = parseISO(utcTimeString);
+  // Return the UTC date as-is, just formatted for display
+  return utcDate;
+};
+
 interface MicromateReading {
   Duration: number;
   Longitudinal: number;
@@ -185,7 +192,7 @@ const Instantel1Seismograph: React.FC = () => {
 
     // Filter data by date range
     const filteredReadings = rawData.MicromateReadings.filter(reading => {
-      const readingTime = parseISO(reading.Time);
+      const readingTime = formatUTCTime(reading.Time);
       return (!fromDate || readingTime >= fromDate) && (!toDate || readingTime <= toDate);
     });
 
@@ -218,17 +225,17 @@ const Instantel1Seismograph: React.FC = () => {
 
     // Process data for each axis
     const xData = filteredReadings.map(reading => ({
-      time: parseISO(reading.Time),
+      time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Longitudinal')
     }));
 
     const yData = filteredReadings.map(reading => ({
-      time: parseISO(reading.Time),
+      time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Transverse')
     }));
 
     const zData = filteredReadings.map(reading => ({
-      time: parseISO(reading.Time),
+      time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Vertical')
     }));
 
@@ -248,7 +255,7 @@ const Instantel1Seismograph: React.FC = () => {
     // Create combined data (all axes with same timestamps)
     const combinedData = filteredReadings
       .map(reading => ({
-        time: parseISO(reading.Time),
+        time: formatUTCTime(reading.Time),
         x: getDataValue(reading, 'Longitudinal'),
         y: getDataValue(reading, 'Transverse'),
         z: getDataValue(reading, 'Vertical')
@@ -511,7 +518,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>${axis}</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -526,12 +533,12 @@ const Instantel1Seismograph: React.FC = () => {
           },
           xaxis: {
             title: { 
-              text: 'Time', 
+              text: 'Time (UTC)', 
               font: { size: 16, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
-            tickformat: '%m/%d %H:%M',
+            tickformat: '%m/%d %I:%M %p',
             gridcolor: '#f0f0f0',
             showgrid: true,
             tickfont: { size: 14, color: '#374151' },
@@ -760,7 +767,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>X</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -782,7 +789,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>Y</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -804,7 +811,7 @@ const Instantel1Seismograph: React.FC = () => {
             },
             hovertemplate: `
               <b>Z</b><br>
-              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Time (UTC): %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
@@ -850,12 +857,12 @@ const Instantel1Seismograph: React.FC = () => {
           },
           xaxis: {
             title: { 
-              text: 'Time', 
+              text: 'Time (UTC)', 
               font: { size: 16, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
-            tickformat: '%m/%d %H:%M',
+            tickformat: '%m/%d %I:%M %p',
             gridcolor: '#f0f0f0',
             showgrid: true,
             tickfont: { size: 14, color: '#374151' },
