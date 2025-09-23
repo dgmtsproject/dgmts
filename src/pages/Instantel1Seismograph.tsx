@@ -540,27 +540,27 @@ const Instantel1Seismograph: React.FC = () => {
           xaxis: {
             title: { 
               text: 'Time', 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
             tickformat: '%m/%d %I:%M %p',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 14, color: '#374151' },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
             title: { 
               text: `${dataType.charAt(0).toUpperCase() + dataType.slice(1)} (${processedData.unit})`, 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 25 
             },
             fixedrange: false,
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151' }
+            tickfont: { size: 14, color: '#374151', weight: 700 }
           },
           showlegend: true,
           legend: {
@@ -864,27 +864,27 @@ const Instantel1Seismograph: React.FC = () => {
           xaxis: {
             title: { 
               text: 'Time', 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
             tickformat: '%m/%d %I:%M %p',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 14, color: '#374151' },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
             title: { 
               text: `${dataType.charAt(0).toUpperCase() + dataType.slice(1)} (${processedData.unit})`, 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 25 
             },
             fixedrange: false,
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151' }
+            tickfont: { size: 14, color: '#374151', weight: 700 }
           },
           showlegend: true,
           legend: {

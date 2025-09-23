@@ -533,27 +533,27 @@ const AncSeismograph: React.FC = () => {
           xaxis: {
             title: { 
               text: 'Time', 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 14, color: '#374151' },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
             title: { 
               text: 'Vibration (in/s)', 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 25 
             },
             fixedrange: false,
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151' },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickformat: '.4f'
           },
           showlegend: true,
@@ -579,7 +579,14 @@ const AncSeismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: 'seismograph_data',
+            height: 1200,
+            width: 1600,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 400 }}
         useResizeHandler={true}
@@ -858,27 +865,27 @@ const AncSeismograph: React.FC = () => {
           xaxis: {
             title: { 
               text: 'Time', 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 14, color: '#374151' },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
             title: { 
               text: 'Vibration (in/s)', 
-              font: { size: 16, weight: 700, color: '#374151' },
+              font: { size: 18, weight: 700, color: '#374151' },
               standoff: 25 
             },
             fixedrange: false,
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151' },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickformat: '.4f'
           },
           showlegend: true,
@@ -904,7 +911,14 @@ const AncSeismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: 'combined_seismograph_data',
+            height: 1200,
+            width: 1600,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
