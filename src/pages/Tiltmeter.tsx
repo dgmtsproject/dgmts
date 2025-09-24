@@ -385,7 +385,7 @@ const Tiltmeter: React.FC = () => {
               <div id="chartContainer" style={{ marginTop: "1rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                   {/* X-Axis Chart */}
-                  <div style={{ width: '100%', overflowX: 'auto' }}>
+                  <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                       X-Axis Readings ({selectedLocation})
                     </h3>
@@ -410,7 +410,7 @@ const Tiltmeter: React.FC = () => {
                       layout={{
                         autosize: true,
                         height: 600,
-                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        margin: { t: 60, b: 100, l: 110, r: 100 },
                         title: {
                           text: `X-Axis Readings (${selectedLocation})`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
@@ -427,7 +427,7 @@ const Tiltmeter: React.FC = () => {
                           tickformat: '%m/%d %H:%M',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 14, color: '#374151' },
+                          tickfont: { size: 18, color: '#374151', weight: 700 },
                           tickangle: 0
                         },
                         yaxis: {
@@ -440,7 +440,7 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 14, color: '#374151' }
+                          tickfont: { size: 18, color: '#374151', weight: 700 }
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
@@ -451,7 +451,7 @@ const Tiltmeter: React.FC = () => {
                   </div>
 
                   {/* Y-Axis Chart */}
-                  <div style={{ width: '100%', overflowX: 'auto' }}>
+                  <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                       Y-Axis Readings ({selectedLocation})
                     </h3>
@@ -476,7 +476,7 @@ const Tiltmeter: React.FC = () => {
                       layout={{
                         autosize: true,
                         height: 600,
-                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        margin: { t: 60, b: 100, l: 110, r: 100 },
                         title: {
                           text: `Y-Axis Readings (${selectedLocation})`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
@@ -493,7 +493,7 @@ const Tiltmeter: React.FC = () => {
                           tickformat: '%m/%d %H:%M',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 14, color: '#374151' },
+                          tickfont: { size: 18, color: '#374151', weight: 700 },
                           tickangle: 0
                         },
                         yaxis: {
@@ -506,7 +506,7 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 14, color: '#374151' }
+                          tickfont: { size: 18, color: '#374151', weight: 700 }
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
@@ -517,7 +517,7 @@ const Tiltmeter: React.FC = () => {
                   </div>
 
                   {/* Z-Axis Chart */}
-                  <div style={{ width: '100%', overflowX: 'auto' }}>
+                  <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                       Z-Axis Readings ({selectedLocation})
                     </h3>
@@ -542,7 +542,7 @@ const Tiltmeter: React.FC = () => {
                       layout={{
                         autosize: true,
                         height: 600,
-                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        margin: { t: 60, b: 100, l: 110, r: 100 },
                         title: {
                           text: `Z-Axis Readings (${selectedLocation})`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
@@ -559,7 +559,7 @@ const Tiltmeter: React.FC = () => {
                           tickformat: '%m/%d %H:%M',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 14, color: '#374151' },
+                          tickfont: { size: 18, color: '#374151', weight: 700 },
                           tickangle: 0
                         },
                         yaxis: {
@@ -572,7 +572,7 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 14, color: '#374151' }
+                          tickfont: { size: 18, color: '#374151', weight: 700 }
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
@@ -583,7 +583,7 @@ const Tiltmeter: React.FC = () => {
                   </div>
 
                   {/* Combined Chart */}
-                  <div style={{ width: '100%', overflowX: 'auto' }}>
+                  <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
                       Combined X, Y, Z Readings ({selectedLocation})
                     </h3>
@@ -638,7 +638,7 @@ const Tiltmeter: React.FC = () => {
                       layout={{
                         autosize: true,
                         height: 600,
-                        margin: { t: 60, b: 80, l: 80, r: 200 },
+                        margin: { t: 60, b: 100, l: 110, r: 100 },
                         title: {
                           text: `Combined X, Y, Z Readings (${selectedLocation})`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
@@ -655,7 +655,7 @@ const Tiltmeter: React.FC = () => {
                           tickformat: '%m/%d %H:%M',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 14, color: '#374151' },
+                          tickfont: { size: 18, color: '#374151', weight: 700 },
                           tickangle: 0
                         },
                         yaxis: {
@@ -668,7 +668,7 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 14, color: '#374151' }
+                          tickfont: { size: 18, color: '#374151', weight: 700 }
                         },
                         showlegend: true,
                         legend: {

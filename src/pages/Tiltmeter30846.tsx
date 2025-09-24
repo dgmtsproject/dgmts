@@ -245,7 +245,7 @@ const Tiltmeter30846: React.FC = () => {
   const plotlyLayout = {
     autosize: true,
     height: 600,
-    margin: { t: 60, b: 80, l: 80, r: 200 },
+    margin: { t: 60, b: 100, l: 110, r: 100 },
     title: {
       font: { size: 20, weight: 700, color: '#1f2937' },
       x: 0.5,
@@ -261,7 +261,7 @@ const Tiltmeter30846: React.FC = () => {
       tickformat: '%m/%d %H:%M',
       gridcolor: '#f0f0f0',
       showgrid: true,
-      tickfont: { size: 14, color: '#374151' },
+      tickfont: { size: 18, color: '#374151', weight: 700 },
       tickangle: 0
     },
     yaxis: {
@@ -274,7 +274,7 @@ const Tiltmeter30846: React.FC = () => {
       gridcolor: '#f0f0f0',
       zeroline: true,
       zerolinecolor: '#f0f0f0',
-      tickfont: { size: 14, color: '#374151' }
+      tickfont: { size: 18, color: '#374151', weight: 700 }
     },
     showlegend: true,
     legend: {
@@ -472,7 +472,7 @@ const Tiltmeter30846: React.FC = () => {
           </Box>
         )}
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
           <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
             <FormControl sx={{ minWidth: 120 }}>
               <InputLabel>Node</InputLabel>
@@ -527,7 +527,7 @@ const Tiltmeter30846: React.FC = () => {
 
         {/* Individual Charts in order: X, Y, Z */}
         {/* X-Axis Chart */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
           <Typography variant="h6" gutterBottom>
             X-Axis Tilt (Channel 0)
           </Typography>
@@ -560,7 +560,7 @@ const Tiltmeter30846: React.FC = () => {
           </div>
         </Paper>
         {/* Y-Axis Chart */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
           <Typography variant="h6" gutterBottom>
             Y-Axis Tilt (Channel 1)
           </Typography>
@@ -593,7 +593,7 @@ const Tiltmeter30846: React.FC = () => {
           </div>
         </Paper>
         {/* Z-Axis Chart */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
           <Typography variant="h6" gutterBottom>
             Z-Axis Tilt (Channel 2)
           </Typography>
