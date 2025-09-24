@@ -584,7 +584,7 @@ const Tiltmeter142939: React.FC = () => {
               <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
               <Select
                 labelId="instrument-select-label"
-                value="TILTMETER-142939"
+                value="TILT-142939"
                 label="Select Instrument"
                 onChange={(e) => handleInstrumentChange(e.target.value as string)}
               >
