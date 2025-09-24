@@ -508,7 +508,38 @@ const RockSmg2Seismograph: React.FC = () => {
               Value: %{y:.6f}<extra></extra>
             `,
             connectgaps: true
-          }
+          },
+          // Add reference line traces for legend
+          ...(instrumentSettings?.alert_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Alert (${instrumentSettings.alert_value} in/s)`,
+            line: { color: 'orange', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.warning_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Warning (${instrumentSettings.warning_value} in/s)`,
+            line: { color: 'red', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.shutdown_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Shutdown (${instrumentSettings.shutdown_value} in/s)`,
+            line: { color: 'darkred', width: 3, dash: 'solid' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : [])
         ]}
         layout={{
           title: { 
@@ -527,7 +558,7 @@ const RockSmg2Seismograph: React.FC = () => {
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 16, color: '#374151', weight: 700 },
+            tickfont: { size: 18, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
@@ -851,7 +882,7 @@ const RockSmg2Seismograph: React.FC = () => {
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 16, color: '#374151', weight: 700 },
+            tickfont: { size: 18, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
