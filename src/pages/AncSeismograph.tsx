@@ -579,14 +579,7 @@ const AncSeismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false,
-          toImageButtonOptions: {
-            format: 'png',
-            filename: 'seismograph_data',
-            height: 1200,
-            width: 1600,
-            scale: 2
-          }
+          displaylogo: false
         }}
         style={{ width: '100%', height: 400 }}
         useResizeHandler={true}
@@ -911,14 +904,7 @@ const AncSeismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false,
-          toImageButtonOptions: {
-            format: 'png',
-            filename: 'combined_seismograph_data',
-            height: 1200,
-            width: 1600,
-            scale: 2
-          }
+          displaylogo: false
         }}
         style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
