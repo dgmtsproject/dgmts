@@ -527,7 +527,7 @@ const RockSmg1Seismograph: React.FC = () => {
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickfont: { size: 16, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
@@ -553,8 +553,8 @@ const RockSmg1Seismograph: React.FC = () => {
             bordercolor: '#CCC',
             borderwidth: 2
           },
-          height: 500,
-          margin: { t: 60, b: 80, l: 80, r: 200 },
+          height: 600,
+          margin: { t: 60, b: 100, l: 110, r: 100 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -567,7 +567,7 @@ const RockSmg1Seismograph: React.FC = () => {
           scrollZoom: true,
           displaylogo: false
         }}
-        style={{ width: '100%', height: 400 }}
+        style={{ width: '100%', height: 500 }}
         useResizeHandler={true}
       />
     );
@@ -851,7 +851,7 @@ const RockSmg1Seismograph: React.FC = () => {
             tickformat: '%m/%d %H:%M',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickfont: { size: 16, color: '#374151', weight: 700 },
             tickangle: 0
           },
           yaxis: {
@@ -877,8 +877,8 @@ const RockSmg1Seismograph: React.FC = () => {
             bordercolor: '#CCC',
             borderwidth: 2
           },
-          height: 500,
-          margin: { t: 60, b: 80, l: 80, r: 200 },
+          height: 600,
+          margin: { t: 60, b: 100, l: 110, r: 100 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -891,7 +891,7 @@ const RockSmg1Seismograph: React.FC = () => {
           scrollZoom: true,
           displaylogo: false
         }}
-        style={{ width: '100%', height: 550 }}
+        style={{ width: '100%', height: 650 }}
         useResizeHandler={true}
       />
     );
@@ -985,17 +985,17 @@ const RockSmg1Seismograph: React.FC = () => {
           {rawData.length > 0 && (
             <>
               {processedData.x.values.length > 0 && (
-                <Box mb={4} width="100%">
+                <Box mb={10} width="100%">
                   {createSinglePlot(processedData.x, 'X', '#FF6384')}
                 </Box>
               )}
               {processedData.y.values.length > 0 && (
-                <Box mb={4} width="100%">
+                <Box mb={10} width="100%">
                   {createSinglePlot(processedData.y, 'Y', '#36A2EB')}
                 </Box>
               )}
               {processedData.z.values.length > 0 && (
-                <Box mb={4} width="100%">
+                <Box mb={10} width="100%">
                   {createSinglePlot(processedData.z, 'Z', '#FFCE56')}
                 </Box>
               )}
