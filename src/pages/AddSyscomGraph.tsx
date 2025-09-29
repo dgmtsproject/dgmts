@@ -132,8 +132,6 @@ const AddSyscomGraph: React.FC = () => {
       
       // Generate the seismograph page content
       const pageContent = generateSeismographPageContent(
-        project.name,
-        instrumentName,
         instrumentId,
         syscomDeviceId,
         alertValue,
@@ -161,8 +159,6 @@ const AddSyscomGraph: React.FC = () => {
   };
 
   const generateSeismographPageContent = (
-    projectName: string,
-    instrumentName: string,
     instrumentId: string,
     syscomDeviceId: string,
     alertValue: string,
