@@ -21,6 +21,9 @@ const AdminSetup: React.FC = () => {
     const handlePermissions = () => {
         navigate('/permissions');
     }
+    const handleAddSyscomGraph = () => {
+        navigate('/add-syscom-graph');
+    }
     return (
         <>
             <HeaNavLogo />
@@ -45,6 +48,9 @@ const AdminSetup: React.FC = () => {
                     </Button>
                     <Button variant="contained" color="primary" onClick={handlePermissions} style={{ marginBottom: '10px' }}>
                         Users and Permissions
+                    </Button>
+                    <Button variant="contained" color="primary" onClick={handleAddSyscomGraph} style={{ marginBottom: '10px' }}>
+                        Add Syscom Graph from API
                     </Button>
                 </div>
             </MainContentWrapper>

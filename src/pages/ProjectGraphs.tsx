@@ -27,6 +27,7 @@ interface GraphOption {
   name: string;
   path: string;
   description?: string;
+  instrument_id?: string;
 }
 
 const ProjectGraphs: React.FC = () => {
@@ -37,22 +38,82 @@ const ProjectGraphs: React.FC = () => {
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [accessibleProjects, setAccessibleProjects] = useState<Project[]>([]);
   const [graphOptions, setGraphOptions] = useState<GraphOption[]>([]);
+  const [projectGraphs, setProjectGraphs] = useState<Record<number, GraphOption[]>>({});
 
-  const projectGraphs: Record<number, GraphOption[]> = {
+  // Static graph mappings for non-instrument graphs
+  const staticGraphs: Record<number, GraphOption[]> = {
     24637: [ // Long Bridge North
       { name: 'Single Prism', path: '/single-prism-with-time', description: 'View data for a single prism' },
       { name: 'Multiple Prisms', path: '/multi-prisms-with-time', description: 'Compare multiple prisms' },
       { name: 'AMTS Track', path: '/amts-track-graphs', description: 'AMTS track monitoring graphs' },
       { name: 'AMTS Ref', path: '/amts-ref-graphs', description: 'AMTS reference graphs' }
-    ],
-    20151: [ // DGMTS Testing
-      { name: 'Seismograph', path: '/background', description: 'Seismograph event graphs' },
-    ],
-    24429: [ // ANC DAR-BC
-      { name: 'Seismograph', path: '/anc-seismograph', description: 'ANC DAR-BC Seismograph graphs' },
-      { name: 'Tiltmeter-142939', path: '/tiltmeter-142939', description: 'Tiltmeter Node 142939' },
-      { name: 'Tiltmeter-143969', path: '/tiltmeter-143969', description: 'Tiltmeter Node 143969' },
     ]
+  };
+
+  const fetchInstrumentsAndBuildGraphs = async () => {
+    try {
+      // Fetch all instruments with their project information
+      const { data: instruments, error: instrumentsError } = await supabase
+        .from('instruments')
+        .select('instrument_id, instrument_name, project_id, syscom_device_id');
+
+      if (instrumentsError) throw instrumentsError;
+
+      // Build dynamic graph options based on instruments
+      const dynamicGraphs: Record<number, GraphOption[]> = {};
+      
+      instruments?.forEach(instrument => {
+        const projectId = instrument.project_id;
+        if (!dynamicGraphs[projectId]) {
+          dynamicGraphs[projectId] = [];
+        }
+
+        // Create graph option based on instrument type
+        let graphOption: GraphOption;
+        
+        if (instrument.syscom_device_id) {
+          // Seismograph instrument with syscom_device_id - use dynamic page
+          graphOption = {
+            name: instrument.instrument_name,
+            path: `/dynamic-seismograph?instrument=${instrument.instrument_id}`,
+            description: `${instrument.instrument_name} seismograph graphs`,
+            instrument_id: instrument.instrument_id
+          };
+        } else if (instrument.instrument_id.includes('TILT')) {
+          // Tiltmeter instrument
+          graphOption = {
+            name: instrument.instrument_name,
+            path: `/tiltmeter-${instrument.instrument_id.split('-')[1]}`,
+            description: `${instrument.instrument_name} tiltmeter graphs`,
+            instrument_id: instrument.instrument_id
+          };
+        } else {
+          // Default case
+          graphOption = {
+            name: instrument.instrument_name,
+            path: `/${instrument.instrument_id.toLowerCase()}`,
+            description: `${instrument.instrument_name} graphs`,
+            instrument_id: instrument.instrument_id
+          };
+        }
+
+        dynamicGraphs[projectId].push(graphOption);
+      });
+
+      // Merge static and dynamic graphs
+      const mergedGraphs = { ...staticGraphs };
+      Object.keys(dynamicGraphs).forEach(projectId => {
+        const pid = parseInt(projectId);
+        mergedGraphs[pid] = [
+          ...(mergedGraphs[pid] || []),
+          ...dynamicGraphs[pid]
+        ];
+      });
+
+      setProjectGraphs(mergedGraphs);
+    } catch (error) {
+      console.error("Error fetching instruments:", error);
+    }
   };
 
   useEffect(() => {
@@ -96,6 +157,7 @@ const ProjectGraphs: React.FC = () => {
     };
 
     fetchProjects();
+    fetchInstrumentsAndBuildGraphs();
   }, [isAdmin, userEmail]);
 
   const handleProjectSelect = (projectId: number) => {

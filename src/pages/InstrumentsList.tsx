@@ -34,6 +34,7 @@ type Instrument = {
   project_id: number;
   project_name?: string;
   sno: string;
+  syscom_device_id?: number;
   alert_emails?: string[];
   warning_emails?: string[];
   shutdown_emails?: string[];
@@ -121,6 +122,7 @@ const InstrumentsList: React.FC = () => {
           x_y_z_shutdown_values,
           project_id,
           sno,
+          syscom_device_id,
           alert_emails,
           warning_emails,
           shutdown_emails
@@ -329,7 +331,9 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                     instrument.instrument_id === 'TILT-142939' ||
                                     instrument.instrument_id === 'TILT-143969' ||
                                     instrument.instrument_id === 'Instantel 1' ||
-                                    instrument.instrument_name === 'Tiltmeter'
+                                    instrument.instrument_name === 'Tiltmeter' ||
+                                    // Enable for any seismograph instrument with syscom_device_id
+                                    instrument.syscom_device_id
                                   )
                                 }
                                 onClick={() => {
@@ -356,6 +360,11 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                     navigate('/instantel1-seismograph', { state: { project: selectedProject } });
                                   } else if (instrument.instrument_name === 'Tiltmeter') {
                                     navigate('/tiltmeter', { state: { project: selectedProject } });
+                                  } else if (instrument.syscom_device_id) {
+                                    // Route seismograph instruments with syscom_device_id to dynamic page
+                                    navigate(`/dynamic-seismograph?instrument=${instrument.instrument_id}`, { 
+                                      state: { project: selectedProject, instrumentId: instrument.instrument_id } 
+                                    });
                                   }
                                 }}
                               >

@@ -52,6 +52,8 @@ import PrivateRoute from "../components/PrivateRoute";
 import EditProject from "../pages/EditProject";
 import EditTiltmeterInstrument from "../pages/EditTiltmeterInstrument";
 import EditUsers from "../pages/EditUsers";
+import AddSyscomGraph from "../pages/AddSyscomGraph";
+import DynamicSeismograph from "../pages/DynamicSeismograph";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -109,6 +111,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/maps" element={<Maps />} />
         <Route path="/edit-project" element={<EditProject />} />
         <Route path="/edit-users" element={<EditUsers />} />
+        <Route path="/add-syscom-graph" element={<AddSyscomGraph />} />
+        <Route path="/dynamic-seismograph" element={<DynamicSeismograph />} />
       </Route>
     </Routes>
   );
