@@ -17,12 +17,50 @@ import {
   Card,
   CardContent,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Autocomplete,
+  Tooltip,
+  IconButton
 } from '@mui/material';
+import { InfoOutlined } from '@mui/icons-material';
 
 interface Project {
   id: number;
   name: string;
+}
+
+interface SyscomDevice {
+  id: number;
+  name: string;
+  serialNumber: number;
+  active: boolean;
+  lastCommunication: string;
+  lastActiveStateChange: string;
+  lastRecordPushed: string;
+  firmwareVersion: string;
+  model: string;
+}
+
+interface DeviceUsage {
+  deviceId: number;
+  deviceName: string;
+  instruments: Array<{
+    instrumentId: string;
+    instrumentName: string;
+    projectName: string;
+  }>;
 }
 
 const AddSyscomGraph: React.FC = () => {
@@ -40,6 +78,13 @@ const AddSyscomGraph: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Device-related state
+  const [devices, setDevices] = useState<SyscomDevice[]>([]);
+  const [deviceUsage, setDeviceUsage] = useState<DeviceUsage[]>([]);
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+  const [allDevicesLinked, setAllDevicesLinked] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -47,6 +92,7 @@ const AddSyscomGraph: React.FC = () => {
       return;
     }
     fetchProjects();
+    fetchDevicesAndUsage();
   }, [isAdmin, navigate]);
 
   const fetchProjects = async () => {
@@ -61,6 +107,116 @@ const AddSyscomGraph: React.FC = () => {
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError('Failed to fetch projects');
+    }
+  };
+
+  const fetchDevicesAndUsage = async () => {
+    try {
+      setDevicesLoading(true);
+      
+      // Fetch devices from Syscom API
+      const apiUrl = import.meta.env.DEV
+        ? '/api/public-api/v1/devices'
+        : '/api/getDevices';
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          ...(import.meta.env.DEV && {
+            "x-scs-api-key": import.meta.env.VITE_SYSCOM_API_KEY
+          }),
+          "Accept": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch devices: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const allDevices = data.devices || data; // Handle both response formats
+      
+      // Filter only devices with model "rock" (case-insensitive)
+      const rockDevices = allDevices.filter((device: SyscomDevice) => 
+        device.model && device.model.toLowerCase() === 'rock'
+      );
+      
+      // Debug: Log available models if provided
+      if (data.allModels) {
+        console.log('Available device models:', data.allModels);
+      } else {
+        // Log models from client-side filtering
+        const allModels = [...new Set(allDevices.map((device: SyscomDevice) => device.model))];
+        console.log('Available device models:', allModels);
+        console.log(`Found ${rockDevices.length} rock devices out of ${allDevices.length} total devices`);
+      }
+      
+      setDevices(rockDevices);
+      
+      if (rockDevices.length === 0) {
+        console.warn('No devices with model "rock" found. Available models:', data.allModels || 'Unknown');
+      }
+
+      // Fetch existing instrument usage
+      const { data: instruments, error } = await supabase
+        .from('instruments')
+        .select('instrument_id, instrument_name, syscom_device_id, project_id')
+        .not('syscom_device_id', 'is', null);
+
+      if (error) throw error;
+
+      // Get project names
+      const projectIds = [...new Set(instruments?.map(i => i.project_id) || [])];
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .in('id', projectIds);
+
+      if (projectsError) throw projectsError;
+
+      const projectMap = new Map(projectsData?.map(p => [p.id, p.name]) || []);
+
+      // Create device usage map
+      const usageMap = new Map<number, DeviceUsage>();
+      
+      instruments?.forEach(instrument => {
+        const deviceId = instrument.syscom_device_id;
+        if (!usageMap.has(deviceId)) {
+          const device = rockDevices.find((d: SyscomDevice) => d.id === deviceId);
+          usageMap.set(deviceId, {
+            deviceId,
+            deviceName: device?.name || `Device ${deviceId}`,
+            instruments: []
+          });
+        }
+        
+        usageMap.get(deviceId)?.instruments.push({
+          instrumentId: instrument.instrument_id,
+          instrumentName: instrument.instrument_name,
+          projectName: projectMap.get(instrument.project_id) || 'Unknown Project'
+        });
+      });
+
+      const usageArray = Array.from(usageMap.values());
+      setDeviceUsage(usageArray);
+
+      // Check if all devices are linked
+      const linkedDeviceIds = new Set(instruments?.map(i => i.syscom_device_id) || []);
+      const allLinked = rockDevices.every((device: SyscomDevice) => linkedDeviceIds.has(device.id));
+      setAllDevicesLinked(allLinked);
+
+    } catch (err) {
+      console.error('Error fetching devices and usage:', err);
+      setError('Failed to fetch device information');
+    } finally {
+      setDevicesLoading(false);
+    }
+  };
+
+  const handleDeviceSelect = (device: SyscomDevice | null) => {
+    if (device) {
+      setSyscomDeviceId(device.id.toString());
+      setInstrumentName(device.name);
+      // Don't auto-fill serial number as it's different from our config
     }
   };
 
@@ -481,15 +637,84 @@ export default ${componentName}Seismograph;`;
                     helperText="Unique serial number for this instrument"
                   />
 
-                  <TextField
-                    fullWidth
-                    required
-                    label="Syscom Device ID"
-                    value={syscomDeviceId}
-                    onChange={(e) => setSyscomDeviceId(e.target.value)}
-                    placeholder="e.g., 15092, 15093"
-                    helperText="Device ID used for background data API calls"
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Autocomplete
+                      fullWidth
+                      options={devices}
+                      getOptionLabel={(option) => `${option.name} (ID: ${option.id})`}
+                      value={devices.find(d => d.id.toString() === syscomDeviceId) || null}
+                      onChange={(_, newValue) => handleDeviceSelect(newValue)}
+                      loading={devicesLoading}
+                      disabled={devices.length === 0 && !devicesLoading}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          required
+                          label="Syscom Device"
+                          placeholder={devices.length === 0 ? "No Rock devices found" : "Select a device or type to search"}
+                          helperText={devices.length === 0 ? "No devices with model 'rock' found in the API" : "Device used for background data API calls"}
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {devicesLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props}>
+                          <Box>
+                            <Typography variant="body1">{option.name}</Typography>
+                            <Typography variant="caption" color="textSecondary">
+                              ID: {option.id} | Serial: {option.serialNumber} | 
+                              Status: {option.active ? 'Active' : 'Inactive'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                    />
+                    <Tooltip title="View device usage across instruments">
+                      <IconButton 
+                        onClick={() => setShowDeviceModal(true)}
+                        color="primary"
+                        size="small"
+                      >
+                        <InfoOutlined />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+
+                  {devices.length === 0 && !devicesLoading && (
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      <Typography variant="body2">
+                        No devices with model "rock" found. The API may only contain devices with other models (like "mr3000").
+                        Check the console for available device models.
+                      </Typography>
+                    </Alert>
+                  )}
+
+                  {allDevicesLinked && (
+                    <Alert 
+                      severity="warning" 
+                      sx={{ 
+                        mt: 1,
+                        backgroundColor: '#fff9c4', // Light yellow background
+                        color: '#8a6914', // Darker yellow text for better contrast
+                        border: '1px solid #fdd835',
+                        '& .MuiAlert-icon': {
+                          color: '#f57f17'
+                        }
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        ⚠️ All Syscom device IDs are already linked with at least one instrument. 
+                        You can still create a new instrument with an existing device.
+                      </Typography>
+                    </Alert>
+                  )}
 
                   <Typography variant="h6" sx={{ mt: 2 }}>
                     Alert Thresholds (Optional)
@@ -501,8 +726,12 @@ export default ${componentName}Seismograph;`;
                     type="number"
                     value={alertValue}
                     onChange={(e) => setAlertValue(e.target.value)}
-                    placeholder="e.g., 0.1"
+                    placeholder="e.g., 0.005"
                     helperText="Alert threshold in in/s"
+                    inputProps={{
+                      step: "0.001",
+                      min: "0"
+                    }}
                   />
 
                   <TextField
@@ -511,8 +740,12 @@ export default ${componentName}Seismograph;`;
                     type="number"
                     value={warningValue}
                     onChange={(e) => setWarningValue(e.target.value)}
-                    placeholder="e.g., 0.2"
+                    placeholder="e.g., 1.02"
                     helperText="Warning threshold in in/s"
+                    inputProps={{
+                      step: "0.001",
+                      min: "0"
+                    }}
                   />
 
                   <TextField
@@ -521,8 +754,12 @@ export default ${componentName}Seismograph;`;
                     type="number"
                     value={shutdownValue}
                     onChange={(e) => setShutdownValue(e.target.value)}
-                    placeholder="e.g., 0.5"
+                    placeholder="e.g., 1.5"
                     helperText="Shutdown threshold in in/s"
+                    inputProps={{
+                      step: "0.001",
+                      min: "0"
+                    }}
                   />
 
                   {error && (
@@ -546,6 +783,68 @@ export default ${componentName}Seismograph;`;
               </form>
             </CardContent>
           </Card>
+
+          {/* Device Usage Modal */}
+          <Dialog 
+            open={showDeviceModal} 
+            onClose={() => setShowDeviceModal(false)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>
+              Syscom Device Usage Across Instruments
+            </DialogTitle>
+            <DialogContent>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                This table shows which instruments are currently using each Syscom device.
+                Devices can be used by multiple instruments.
+              </Typography>
+              
+              {deviceUsage.length === 0 ? (
+                <Typography variant="body1" color="textSecondary" align="center" sx={{ py: 4 }}>
+                  No devices are currently linked to instruments.
+                </Typography>
+              ) : (
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Device ID</TableCell>
+                        <TableCell>Device Name</TableCell>
+                        <TableCell>Used By Instruments</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {deviceUsage.map((usage) => (
+                        <TableRow key={usage.deviceId}>
+                          <TableCell>{usage.deviceId}</TableCell>
+                          <TableCell>{usage.deviceName}</TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                              {usage.instruments.map((instrument, index) => (
+                                <Chip
+                                  key={index}
+                                  label={`${instrument.instrumentName} (${instrument.projectName})`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              ))}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowDeviceModal(false)}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </MainContentWrapper>
     </>
