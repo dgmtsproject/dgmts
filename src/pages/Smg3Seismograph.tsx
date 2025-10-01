@@ -532,7 +532,7 @@ const Smg3Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data`, 
+            text: `${project?.name || 'Project'} - Combined Vibration Data`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
