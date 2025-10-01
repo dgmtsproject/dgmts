@@ -1,0 +1,130 @@
+{
+  "deviceTypes": {
+    "syscom": {
+      "description": "Syscom API devices for seismograph data collection",
+      "source": "api",
+      "models": ["rock", "mr3000"],
+      "devices": []
+    },
+    "instantel": {
+      "description": "Instantel Micromate devices",
+      "source": "json",
+      "models": ["Micromate_IseeStd"],
+      "devices": [
+        {
+          "deviceId": "UM15783",
+          "serialNumber": "UM15783",
+          "manufacturer": "Instantel",
+          "modelType": "Micromate_IseeStd",
+          "modelName": "MM/ISEE/S",
+          "version": "0BB",
+          "release": "11",
+          "operatorName": "Operator",
+          "calibrationDate": "2024-11-22T00:00:00+00:00",
+          "calibrationCompany": "Instantel",
+          "setupFileName": "lincolnlewis.mmb",
+          "internal_10": 381,
+          "internal_11": "OK",
+          "notes": {
+            "note1": "",
+            "note2": "",
+            "note3": "",
+            "note4": "",
+            "extendedNote1": "Extended Notes: ",
+            "extendedNote1Text": "",
+            "extendedNote2": ": "
+          },
+          "gpsLocation": {
+            "latitude": {
+              "degrees": 0,
+              "minutes": 0,
+              "direction": 24
+            },
+            "longitude": {
+              "degrees": 0,
+              "minutes": 0,
+              "direction": 24
+            }
+          },
+          "status": "active",
+          "lastSeen": null,
+          "instruments": []
+        }
+      ]
+    },
+    "tiltmeter": {
+      "description": "Tiltmeter devices with IDs extracted from instrument names",
+      "source": "database",
+      "models": ["TILT"],
+      "devices": [
+        {
+          "deviceId": 142939,
+          "instrumentId": "TILT-142939",
+          "deviceName": "Tiltmeter 142939",
+          "status": "active",
+          "lastSeen": null,
+          "instruments": []
+        },
+        {
+          "deviceId": 143969,
+          "instrumentId": "TILT-143969", 
+          "deviceName": "Tiltmeter 143969",
+          "status": "active",
+          "lastSeen": null,
+          "instruments": []
+        },
+        {
+          "deviceId": 30846,
+          "instrumentId": "TILTMETER-30846",
+          "deviceName": "Tiltmeter 30846", 
+          "status": "active",
+          "lastSeen": null,
+          "instruments": []
+        }
+      ]
+    },
+    "other": {
+      "description": "Other instruments and devices",
+      "source": "database",
+      "models": ["SMG", "AMTS"],
+      "devices": []
+    }
+  },
+  "deviceMapping": {
+    "byInstrumentId": {
+      "TILT-142939": {
+        "deviceType": "tiltmeter",
+        "deviceId": 142939
+      },
+      "TILT-143969": {
+        "deviceType": "tiltmeter", 
+        "deviceId": 143969
+      },
+      "TILTMETER-30846": {
+        "deviceType": "tiltmeter",
+        "deviceId": 30846
+      },
+      "INSTANTEL-1": {
+        "deviceType": "instantel",
+        "deviceId": "UM15783"
+      }
+    },
+    "bySerialNumber": {
+      "UM15783": {
+        "deviceType": "instantel",
+        "deviceId": "UM15783"
+      }
+    }
+  },
+  "metadata": {
+    "lastUpdated": "2024-12-19T00:00:00Z",
+    "version": "1.0",
+    "totalDevices": 4,
+    "deviceTypeCounts": {
+      "syscom": 0,
+      "instantel": 1,
+      "tiltmeter": 3,
+      "other": 0
+    }
+  }
+}

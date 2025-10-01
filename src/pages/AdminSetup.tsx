@@ -24,6 +24,9 @@ const AdminSetup: React.FC = () => {
     const handleAddSyscomGraph = () => {
         navigate('/add-syscom-graph');
     }
+    const handleDeviceManagement = () => {
+        navigate('/device-management');
+    }
     return (
         <>
             <HeaNavLogo />
@@ -51,6 +54,9 @@ const AdminSetup: React.FC = () => {
                     </Button>
                     <Button variant="contained" color="primary" onClick={handleAddSyscomGraph} style={{ marginBottom: '10px' }}>
                         Add Syscom Graph from API
+                    </Button>
+                    <Button variant="contained" color="primary" onClick={handleDeviceManagement} style={{ marginBottom: '10px' }}>
+                        Device Management
                     </Button>
                 </div>
             </MainContentWrapper>

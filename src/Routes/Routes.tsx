@@ -54,6 +54,7 @@ import EditTiltmeterInstrument from "../pages/EditTiltmeterInstrument";
 import EditUsers from "../pages/EditUsers";
 import AddSyscomGraph from "../pages/AddSyscomGraph";
 import DynamicSeismograph from "../pages/DynamicSeismograph";
+import DeviceManagement from "../pages/DeviceManagement";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -113,6 +114,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/edit-users" element={<EditUsers />} />
         <Route path="/add-syscom-graph" element={<AddSyscomGraph />} />
         <Route path="/dynamic-seismograph" element={<DynamicSeismograph />} />
+        <Route path="/device-management" element={<DeviceManagement />} />
       </Route>
     </Routes>
   );
