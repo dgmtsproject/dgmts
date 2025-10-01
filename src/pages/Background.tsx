@@ -612,7 +612,7 @@ const Background: React.FC = () => {
           displaylogo: false,
           toImageButtonOptions: {
             format: 'png',
-            filename: `${project?.name || 'Project'}_${axis}_Axis_${new Date().toISOString().split('T')[0]}`,
+            filename: `${project?.name || 'Project'}_Combined_${new Date().toISOString().split('T')[0]}`,
             height: 600,
             width: 1200,
             scale: 2
@@ -943,7 +943,7 @@ const Background: React.FC = () => {
           displaylogo: false,
           toImageButtonOptions: {
             format: 'png',
-            filename: `${project?.name || 'Project'}_${axis}_Axis_${new Date().toISOString().split('T')[0]}`,
+            filename: `${project?.name || 'Project'}_Combined_${new Date().toISOString().split('T')[0]}`,
             height: 600,
             width: 1200,
             scale: 2
