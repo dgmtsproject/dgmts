@@ -25,8 +25,6 @@ import {
   Tab,
   TextField,
   InputAdornment,
-  Grid,
-  Divider,
   Tooltip,
   IconButton
 } from '@mui/material';
@@ -257,15 +255,25 @@ const DeviceManagement: React.FC = () => {
           project_id, 
           syscom_device_id,
           sno,
-          Projects!inner(name)
+          Projects(name)
         `);
 
       if (error) throw error;
 
-      const instrumentsWithProjectNames = instruments?.map(instrument => ({
-        ...instrument,
-        project_name: instrument.Projects?.name || 'Unknown Project'
-      })) || [];
+      const instrumentsWithProjectNames = instruments?.map(instrument => {
+        let projectName = 'Unknown Project';
+        if (instrument.Projects) {
+          if (Array.isArray(instrument.Projects) && instrument.Projects.length > 0) {
+            projectName = instrument.Projects[0].name || 'Unknown Project';
+          } else if (typeof instrument.Projects === 'object' && 'name' in instrument.Projects) {
+            projectName = (instrument.Projects as any).name || 'Unknown Project';
+          }
+        }
+        return {
+          ...instrument,
+          project_name: projectName
+        };
+      }) || [];
 
       console.log('Fetched instruments:', instrumentsWithProjectNames);
       setAllInstruments(instrumentsWithProjectNames);
@@ -398,20 +406,20 @@ const DeviceManagement: React.FC = () => {
   };
 
   const getDeviceStatusColor = (device: DeviceUsage) => {
-    if (device.deviceType === 'syscom' && device.deviceInfo) {
+    if (device.deviceType === 'syscom' && device.deviceInfo && 'active' in device.deviceInfo) {
       return device.deviceInfo.active ? 'success' : 'error';
     }
-    if (device.deviceType === 'instantel' && device.deviceInfo) {
+    if (device.deviceType === 'instantel' && device.deviceInfo && 'status' in device.deviceInfo) {
       return device.deviceInfo.status === 'active' ? 'success' : 'error';
     }
     return 'default';
   };
 
   const getDeviceStatusText = (device: DeviceUsage) => {
-    if (device.deviceType === 'syscom' && device.deviceInfo) {
+    if (device.deviceType === 'syscom' && device.deviceInfo && 'active' in device.deviceInfo) {
       return device.deviceInfo.active ? 'Active' : 'Inactive';
     }
-    if (device.deviceType === 'instantel' && device.deviceInfo) {
+    if (device.deviceType === 'instantel' && device.deviceInfo && 'status' in device.deviceInfo) {
       return device.deviceInfo.status === 'active' ? 'Active' : 'Inactive';
     }
     return 'Unknown';
@@ -430,7 +438,7 @@ const DeviceManagement: React.FC = () => {
     );
   };
 
-  const renderDeviceTable = (devices: DeviceUsage[], deviceType: string) => (
+  const renderDeviceTable = (devices: DeviceUsage[]) => (
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
@@ -475,7 +483,7 @@ const DeviceManagement: React.FC = () => {
               <TableCell>
                 {device.deviceInfo ? (
                   <Box>
-                    {device.deviceType === 'syscom' ? (
+                    {device.deviceType === 'syscom' && 'model' in device.deviceInfo ? (
                       <>
                         <Typography variant="caption" display="block">
                           Model: {device.deviceInfo.model}
@@ -484,7 +492,7 @@ const DeviceManagement: React.FC = () => {
                           Firmware: {device.deviceInfo.firmwareVersion}
                         </Typography>
                       </>
-                    ) : device.deviceType === 'instantel' ? (
+                    ) : device.deviceType === 'instantel' && 'modelType' in device.deviceInfo ? (
                       <>
                         <Typography variant="caption" display="block">
                           Model: {device.deviceInfo.modelType}
@@ -529,7 +537,7 @@ const DeviceManagement: React.FC = () => {
                 </Box>
               </TableCell>
               <TableCell>
-                {device.deviceInfo?.lastCommunication ? (
+                {device.deviceInfo && 'lastCommunication' in device.deviceInfo && device.deviceInfo.lastCommunication ? (
                   <Typography variant="caption">
                     {new Date(device.deviceInfo.lastCommunication).toLocaleString()}
                   </Typography>
@@ -546,7 +554,7 @@ const DeviceManagement: React.FC = () => {
     </TableContainer>
   );
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -601,48 +609,40 @@ const DeviceManagement: React.FC = () => {
                 />
               </Box>
               
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={3}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
-                    <Typography variant="h4" color="primary.contrastText">
-                      {deviceUsage.length}
-                    </Typography>
-                    <Typography variant="body2" color="primary.contrastText">
-                      Syscom Devices
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'secondary.light', borderRadius: 1 }}>
-                    <Typography variant="h4" color="secondary.contrastText">
-                      {tiltmeterDevices.length}
-                    </Typography>
-                    <Typography variant="body2" color="secondary.contrastText">
-                      Tiltmeter Devices
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
-                    <Typography variant="h4" color="success.contrastText">
-                      {instantelDevices.length}
-                    </Typography>
-                    <Typography variant="body2" color="success.contrastText">
-                      Instantel Devices
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'grey.300', borderRadius: 1 }}>
-                    <Typography variant="h4" color="text.primary">
-                      {otherDevices.length}
-                    </Typography>
-                    <Typography variant="body2" color="text.primary">
-                      Other Devices
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                  <Typography variant="h4" color="primary.contrastText">
+                    {deviceUsage.length}
+                  </Typography>
+                  <Typography variant="body2" color="primary.contrastText">
+                    Syscom Devices
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'secondary.light', borderRadius: 1 }}>
+                  <Typography variant="h4" color="secondary.contrastText">
+                    {tiltmeterDevices.length}
+                  </Typography>
+                  <Typography variant="body2" color="secondary.contrastText">
+                    Tiltmeter Devices
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                  <Typography variant="h4" color="success.contrastText">
+                    {instantelDevices.length}
+                  </Typography>
+                  <Typography variant="body2" color="success.contrastText">
+                    Instantel Devices
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'grey.300', borderRadius: 1 }}>
+                  <Typography variant="h4" color="text.primary">
+                    {otherDevices.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.primary">
+                    Other Devices
+                  </Typography>
+                </Box>
+              </Box>
             </CardContent>
           </Card>
 
@@ -692,7 +692,7 @@ const DeviceManagement: React.FC = () => {
                   <CircularProgress />
                 </Box>
               ) : (
-                renderDeviceTable(deviceUsage, 'syscom')
+                renderDeviceTable(deviceUsage)
               )}
             </TabPanel>
 
@@ -710,7 +710,7 @@ const DeviceManagement: React.FC = () => {
                   <CircularProgress />
                 </Box>
               ) : (
-                renderDeviceTable(tiltmeterDevices, 'tiltmeter')
+                renderDeviceTable(tiltmeterDevices)
               )}
             </TabPanel>
 
@@ -728,7 +728,7 @@ const DeviceManagement: React.FC = () => {
                   <CircularProgress />
                 </Box>
               ) : (
-                renderDeviceTable(instantelDevices, 'instantel')
+                renderDeviceTable(instantelDevices)
               )}
             </TabPanel>
 
@@ -746,7 +746,7 @@ const DeviceManagement: React.FC = () => {
                   <CircularProgress />
                 </Box>
               ) : (
-                renderDeviceTable(otherDevices, 'other')
+                renderDeviceTable(otherDevices)
               )}
             </TabPanel>
           </Card>
