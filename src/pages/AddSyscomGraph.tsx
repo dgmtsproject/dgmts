@@ -441,21 +441,21 @@ const ${componentName}Seismograph: React.FC = () => {
     return {
       combined: {
         time: combined.map(entry => parseISO(entry[0])),
-        x: combined.map(entry => entry[1]),
-        y: combined.map(entry => entry[2]),
-        z: combined.map(entry => entry[3])
+        x: combined.map(entry => parseFloat(Number(entry[1]).toFixed(3))),
+        y: combined.map(entry => parseFloat(Number(entry[2]).toFixed(3))),
+        z: combined.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       },
       x: {
         time: combined.map(entry => parseISO(entry[0])),
-        values: combined.map(entry => entry[1])
+        values: combined.map(entry => parseFloat(Number(entry[1]).toFixed(3)))
       },
       y: {
         time: combined.map(entry => parseISO(entry[0])),
-        values: combined.map(entry => entry[2])
+        values: combined.map(entry => parseFloat(Number(entry[2]).toFixed(3)))
       },
       z: {
         time: combined.map(entry => parseISO(entry[0])),
-        values: combined.map(entry => entry[3])
+        values: combined.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       }
     };
   }, [rawData]);

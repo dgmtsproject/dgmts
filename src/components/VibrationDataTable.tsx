@@ -42,9 +42,9 @@ const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loadin
 
     return rawData.map(entry => ({
       timestamp: entry[0],
-      x: Number(entry[1].toFixed(6)),
-      y: Number(entry[2].toFixed(6)),
-      z: Number(entry[3].toFixed(6))
+      x: parseFloat(Number(entry[1]).toFixed(3)),
+      y: parseFloat(Number(entry[2]).toFixed(3)),
+      z: parseFloat(Number(entry[3]).toFixed(3))
     }));
   }, [rawData]);
 
@@ -96,6 +96,10 @@ const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loadin
     const absValue = Math.abs(value);
     if (absValue >= 0.5) return '#ffebee'; // Light red background
     return 'inherit';
+  };
+
+  const formatNumber = (value: number) => {
+    return parseFloat(value.toFixed(3)).toString();
   };
 
   if (loading) {
@@ -164,7 +168,7 @@ const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loadin
                       fontWeight: Math.abs(row.x) >= 0.5 ? 'bold' : 'normal'
                     }}
                   >
-                    {row.x.toFixed(6)}
+                    {formatNumber(row.x)}
                   </TableCell>
                   <TableCell 
                     sx={{ 
@@ -172,7 +176,7 @@ const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loadin
                       fontWeight: Math.abs(row.y) >= 0.5 ? 'bold' : 'normal'
                     }}
                   >
-                    {row.y.toFixed(6)}
+                    {formatNumber(row.y)}
                   </TableCell>
                   <TableCell 
                     sx={{ 
@@ -180,7 +184,7 @@ const VibrationDataTable: React.FC<VibrationDataTableProps> = ({ rawData, loadin
                       fontWeight: Math.abs(row.z) >= 0.5 ? 'bold' : 'normal'
                     }}
                   >
-                    {row.z.toFixed(6)}
+                    {formatNumber(row.z)}
                   </TableCell>
                 </TableRow>
               ))}

@@ -247,7 +247,7 @@ const Smg3Seismograph: React.FC = () => {
       const sampled = sampleData(data, MIN_POINTS);
       return {
         time: sampled.map((entry: any) => parseISO(entry[0])),
-        values: sampled.map((entry: any) => Number(entry[axisIndex]))
+        values: sampled.map((entry: any) => parseFloat(Number(entry[axisIndex]).toFixed(3)))
       };
     };
 
@@ -255,9 +255,9 @@ const Smg3Seismograph: React.FC = () => {
       const sampled = sampleData(data, MIN_POINTS);
       return {
         time: sampled.map((entry: any) => parseISO(entry[0])),
-        x: sampled.map((entry: any) => Number(entry[1])),
-        y: sampled.map((entry: any) => Number(entry[2])),
-        z: sampled.map((entry: any) => Number(entry[3]))
+        x: sampled.map((entry: any) => parseFloat(Number(entry[1]).toFixed(3))),
+        y: sampled.map((entry: any) => parseFloat(Number(entry[2]).toFixed(3))),
+        z: sampled.map((entry: any) => parseFloat(Number(entry[3]).toFixed(3)))
       };
     };
 
@@ -494,7 +494,7 @@ const Smg3Seismograph: React.FC = () => {
             hovertemplate: `
               <b>${axis}</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -532,7 +532,7 @@ const Smg3Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${axis} Axis Vibration Data`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -585,7 +585,14 @@ const Smg3Seismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_${axis}_Axis_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 650 }}
         useResizeHandler={true}
@@ -789,7 +796,7 @@ const Smg3Seismograph: React.FC = () => {
             hovertemplate: `
               <b>X</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -811,7 +818,7 @@ const Smg3Seismograph: React.FC = () => {
             hovertemplate: `
               <b>Y</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -833,7 +840,7 @@ const Smg3Seismograph: React.FC = () => {
             hovertemplate: `
               <b>Z</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -924,7 +931,14 @@ const Smg3Seismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_${axis}_Axis_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 650 }}
         useResizeHandler={true}

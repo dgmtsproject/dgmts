@@ -276,21 +276,21 @@ const Instantel1Seismograph: React.FC = () => {
     return {
       combined: {
         time: combinedData.map(point => point.time),
-        x: combinedData.map(point => point.x),
-        y: combinedData.map(point => point.y),
-        z: combinedData.map(point => point.z)
+        x: combinedData.map(point => parseFloat(point.x.toFixed(3))),
+        y: combinedData.map(point => parseFloat(point.y.toFixed(3))),
+        z: combinedData.map(point => parseFloat(point.z.toFixed(3)))
       },
       x: {
         time: validXData.map(point => point.time),
-        values: validXData.map(point => point.value)
+        values: validXData.map(point => parseFloat(point.value.toFixed(3)))
       },
       y: {
         time: validYData.map(point => point.time),
-        values: validYData.map(point => point.value)
+        values: validYData.map(point => parseFloat(point.value.toFixed(3)))
       },
       z: {
         time: validZData.map(point => point.time),
-        values: validZData.map(point => point.value)
+        values: validZData.map(point => parseFloat(point.value.toFixed(3)))
       },
       unit: getUnit()
     };
@@ -511,21 +511,17 @@ const Instantel1Seismograph: React.FC = () => {
             x: filtered.map(pair => pair.t),
             y: filtered.map(pair => pair.v),
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: `${axis} [${processedData.unit}]`,
             line: {
               color: color,
-              shape: 'spline',
+              shape: 'linear',
               width: 1.5
-            },
-            marker: {
-              size: 6,
-              color: color
             },
             hovertemplate: `
               <b>${axis}</b><br>
               Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -563,7 +559,7 @@ const Instantel1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${axis} Axis PPV Data (${dataType})`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis PPV Data (${dataType})`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -616,7 +612,14 @@ const Instantel1Seismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_${axis}_Axis_${dataType}_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 500 }}
         useResizeHandler={true}
@@ -791,21 +794,17 @@ const Instantel1Seismograph: React.FC = () => {
             x: combined.time,
             y: combined.x,
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: `X [${processedData.unit}]`,
             line: {
               color: '#FF6384',
-              shape: 'spline',
+              shape: 'linear',
               width: 1.2
-            },
-            marker: {
-              size: 5,
-              color: '#FF6384'
             },
             hovertemplate: `
               <b>X</b><br>
               Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -813,21 +812,17 @@ const Instantel1Seismograph: React.FC = () => {
             x: combined.time,
             y: combined.y,
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: `Y [${processedData.unit}]`,
             line: {
               color: '#36A2EB',
-              shape: 'spline',
+              shape: 'linear',
               width: 1.2
-            },
-            marker: {
-              size: 5,
-              color: '#36A2EB'
             },
             hovertemplate: `
               <b>Y</b><br>
               Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -835,21 +830,17 @@ const Instantel1Seismograph: React.FC = () => {
             x: combined.time,
             y: combined.z,
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: `Z [${processedData.unit}]`,
             line: {
               color: '#FFCE56',
-              shape: 'spline',
+              shape: 'linear',
               width: 1.2
-            },
-            marker: {
-              size: 5,
-              color: '#FFCE56'
             },
             hovertemplate: `
               <b>Z</b><br>
               Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -887,7 +878,7 @@ const Instantel1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `Combined PPV Data (${dataType})`, 
+            text: `${project?.name || 'Project'} - Combined PPV Data (${dataType})`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -940,7 +931,14 @@ const Instantel1Seismograph: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_Combined_${dataType}_${new Date().toISOString().split('T')[0]}`,
+            height: 650,
+            width: 1200,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 650 }}
         useResizeHandler={true}

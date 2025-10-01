@@ -247,21 +247,21 @@ const Background: React.FC = () => {
     const result = {
       combined: {
         time: combinedFiltered.map(entry => parseISO(entry[0])),
-        x: combinedFiltered.map(entry => entry[1]),
-        y: combinedFiltered.map(entry => entry[2]),
-        z: combinedFiltered.map(entry => entry[3])
+        x: combinedFiltered.map(entry => parseFloat(Number(entry[1]).toFixed(3))),
+        y: combinedFiltered.map(entry => parseFloat(Number(entry[2]).toFixed(3))),
+        z: combinedFiltered.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       },
       x: {
         time: xDown.map(entry => parseISO(entry[0])),
-        values: xDown.map(entry => entry[1])
+        values: xDown.map(entry => parseFloat(Number(entry[1]).toFixed(3)))
       },
       y: {
         time: yDown.map(entry => parseISO(entry[0])),
-        values: yDown.map(entry => entry[2])
+        values: yDown.map(entry => parseFloat(Number(entry[2]).toFixed(3)))
       },
       z: {
         time: zDown.map(entry => parseISO(entry[0])),
-        values: zDown.map(entry => entry[3])
+        values: zDown.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       }
     };
 
@@ -518,7 +518,7 @@ const Background: React.FC = () => {
             hovertemplate: `
               <b>${axis}</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -555,8 +555,8 @@ const Background: React.FC = () => {
           }] : [])
         ]}
         layout={{
-          title: {
-            text: `${axis} Axis Vibration Data`,
+          title: { 
+            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data`, 
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -609,7 +609,14 @@ const Background: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_${axis}_Axis_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 650 }}
         useResizeHandler={true}
@@ -798,7 +805,7 @@ const Background: React.FC = () => {
             hovertemplate: `
               <b>X</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -820,7 +827,7 @@ const Background: React.FC = () => {
             hovertemplate: `
               <b>Y</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -842,7 +849,7 @@ const Background: React.FC = () => {
             hovertemplate: `
               <b>Z</b><br>
               Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
-              Value: %{y:.6f}<extra></extra>
+              Value: %{y:.3~f}<extra></extra>
             `,
             connectgaps: true
           },
@@ -933,7 +940,14 @@ const Background: React.FC = () => {
           responsive: true,
           displayModeBar: true,
           scrollZoom: true,
-          displaylogo: false
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_${axis}_Axis_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
         }}
         style={{ width: '100%', height: 650 }}
         useResizeHandler={true}
