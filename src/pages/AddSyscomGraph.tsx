@@ -70,6 +70,7 @@ const AddSyscomGraph: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<number | ''>('');
   const [instrumentName, setInstrumentName] = useState('');
   const [instrumentId, setInstrumentId] = useState('');
+  const [instrumentLocation, setInstrumentLocation] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
   const [syscomDeviceId, setSyscomDeviceId] = useState('');
   const [alertValue, setAlertValue] = useState('');
@@ -238,6 +239,7 @@ const AddSyscomGraph: React.FC = () => {
         .insert([{
           instrument_id: instrumentId,
           instrument_name: instrumentName,
+          instrument_location: instrumentLocation || null,
           project_id: selectedProject,
           alert_value: alertValue ? parseFloat(alertValue) : null,
           warning_value: warningValue ? parseFloat(warningValue) : null,
@@ -263,6 +265,7 @@ const AddSyscomGraph: React.FC = () => {
       setSelectedProject('');
       setInstrumentName('');
       setInstrumentId('');
+      setInstrumentLocation('');
       setSerialNumber('');
       setSyscomDeviceId('');
       setAlertValue('');
@@ -620,6 +623,14 @@ export default ${componentName}Seismograph;`;
 
                   <TextField
                     fullWidth
+                    label="Instrument Location"
+                    value={instrumentLocation}
+                    onChange={(e) => setInstrumentLocation(e.target.value)}
+                    placeholder="e.g., Building A, Site 1, North Wing"
+                  />
+
+                  <TextField
+                    fullWidth
                     required
                     label="Instrument ID"
                     value={instrumentId}
@@ -645,14 +656,14 @@ export default ${componentName}Seismograph;`;
                       value={devices.find(d => d.id.toString() === syscomDeviceId) || null}
                       onChange={(_, newValue) => handleDeviceSelect(newValue)}
                       loading={devicesLoading}
-                      disabled={devices.length === 0 && !devicesLoading}
+                      disabled={devices.length === 0 && !devicesLoading || allDevicesLinked}
                       renderInput={(params) => (
                         <TextField
                           {...params}
                           required
                           label="Syscom Device"
-                          placeholder={devices.length === 0 ? "No Rock devices found" : "Select a device or type to search"}
-                          helperText={devices.length === 0 ? "No devices with model 'rock' found in the API" : "Device used for background data API calls"}
+                          placeholder={devices.length === 0 ? "No Rock devices found" : allDevicesLinked ? "All devices are already linked" : "Select a device or type to search"}
+                          helperText={devices.length === 0 ? "No devices with model 'rock' found in the API" : allDevicesLinked ? "All devices are already linked to instruments" : "Device used for background data API calls"}
                           InputProps={{
                             ...params.InputProps,
                             endAdornment: (
@@ -698,14 +709,14 @@ export default ${componentName}Seismograph;`;
 
                   {allDevicesLinked && (
                     <Alert 
-                      severity="warning" 
+                      severity="error" 
                       sx={{ 
                         mt: 1,
-                        backgroundColor: '#fff9c4', // Light yellow background
-                        color: '#8a6914', // Darker yellow text for better contrast
-                        border: '1px solid #fdd835',
+                        backgroundColor: '#ffebee', // Light red background
+                        color: '#c62828', // Dark red text
+                        border: '1px solid #f44336',
                         '& .MuiAlert-icon': {
-                          color: '#f57f17'
+                          color: '#d32f2f'
                         }
                       }}
                     >

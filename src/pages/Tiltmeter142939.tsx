@@ -66,6 +66,7 @@ interface Instrument {
   instrument_id: string;
   instrument_name: string;
   project_id: number;
+  instrument_location?: string;
 }
 
 const Tiltmeter142939: React.FC = () => {
@@ -148,7 +149,7 @@ const Tiltmeter142939: React.FC = () => {
       // Get all instruments for this project that have graph pages
       const { data, error } = await supabase
         .from('instruments')
-        .select('instrument_id, instrument_name, project_id')
+        .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
         .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969'])
         .order('instrument_id');
@@ -579,7 +580,12 @@ const Tiltmeter142939: React.FC = () => {
         </Typography>
 
         {project && (
-          <Box mb={3} display="flex" justifyContent="center">
+          <Box mb={3} display="flex" justifyContent="center" alignItems="center" gap={3}>
+            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#003087' }}>
+              Location: {availableInstruments.length > 0 && availableInstruments[0].instrument_location 
+                ? availableInstruments[0].instrument_location 
+                : 'None'}
+            </Typography>
             <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
               <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
               <Select

@@ -54,6 +54,7 @@ interface Instrument {
   syscom_device_id?: number;
   sno?: string;
   project_name?: string;
+  instrument_location?: string;
 }
 
 interface DeviceUsage {
@@ -64,6 +65,7 @@ interface DeviceUsage {
     instrumentId: string;
     instrumentName: string;
     projectName: string;
+    instrumentLocation: string;
   }>;
   deviceInfo?: SyscomDevice | InstantelDevice;
 }
@@ -255,6 +257,7 @@ const DeviceManagement: React.FC = () => {
           project_id, 
           syscom_device_id,
           sno,
+          instrument_location,
           Projects(name)
         `);
 
@@ -262,6 +265,7 @@ const DeviceManagement: React.FC = () => {
 
       const instrumentsWithProjectNames = instruments?.map(instrument => {
         let projectName = 'Unknown Project';
+        
         if (instrument.Projects) {
           if (Array.isArray(instrument.Projects) && instrument.Projects.length > 0) {
             projectName = instrument.Projects[0].name || 'Unknown Project';
@@ -336,7 +340,8 @@ const DeviceManagement: React.FC = () => {
           existingDevice.instruments.push({
             instrumentId: instrument.instrument_id,
             instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project'
+            projectName: instrument.project_name || 'Unknown Project',
+            instrumentLocation: instrument.instrument_location || 'None'
           });
         }
       } else if (instrument.instrument_id.includes('TILT')) {
@@ -355,7 +360,8 @@ const DeviceManagement: React.FC = () => {
           existingDevice.instruments.push({
             instrumentId: instrument.instrument_id,
             instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project'
+            projectName: instrument.project_name || 'Unknown Project',
+            instrumentLocation: instrument.instrument_location || 'None'
           });
         }
       } else if (instrument.instrument_id.includes('INSTANTEL') || instrument.sno === 'UM15783') {
@@ -365,7 +371,8 @@ const DeviceManagement: React.FC = () => {
           existingDevice.instruments.push({
             instrumentId: instrument.instrument_id,
             instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project'
+            projectName: instrument.project_name || 'Unknown Project',
+            instrumentLocation: instrument.instrument_location || 'None'
           });
         }
       } else {
@@ -377,7 +384,8 @@ const DeviceManagement: React.FC = () => {
           existingDevice.instruments.push({
             instrumentId: instrument.instrument_id,
             instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project'
+            projectName: instrument.project_name || 'Unknown Project',
+            instrumentLocation: instrument.instrument_location || 'None'
           });
         } else {
           otherUsage.push({
@@ -387,7 +395,8 @@ const DeviceManagement: React.FC = () => {
             instruments: [{
               instrumentId: instrument.instrument_id,
               instrumentName: instrument.instrument_name,
-              projectName: instrument.project_name || 'Unknown Project'
+              projectName: instrument.project_name || 'Unknown Project',
+              instrumentLocation: ''
             }]
           });
         }
@@ -449,6 +458,7 @@ const DeviceManagement: React.FC = () => {
             <TableCell>Status</TableCell>
             <TableCell>Model/Firmware</TableCell>
             <TableCell>Used By Instruments</TableCell>
+            <TableCell>Location</TableCell>
             <TableCell>Last Communication</TableCell>
           </TableRow>
         </TableHead>
@@ -532,6 +542,26 @@ const DeviceManagement: React.FC = () => {
                   ) : (
                     <Typography variant="caption" color="textSecondary">
                       Not linked
+                    </Typography>
+                  )}
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {device.instruments.length > 0 ? (
+                    device.instruments.map((instrument, index) => (
+                      <Tooltip key={index} title={`Project: ${instrument.projectName}`}>
+                        <Chip
+                          label={instrument.instrumentLocation}
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                        />
+                      </Tooltip>
+                    ))
+                  ) : (
+                    <Typography variant="caption" color="textSecondary">
+                      N/A
                     </Typography>
                   )}
                 </Box>

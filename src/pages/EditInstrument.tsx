@@ -59,6 +59,7 @@ const EditInstrument: React.FC = () => {
     );
     const [instrumentId, setInstrumentId] = useState(instrument?.instrument_id || '');
     const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
+    const [instrumentLocation, setInstrumentLocation] = useState(instrument?.instrument_location || '');
     const [serialNumber, setSerialNumber] = useState(instrument?.sno || '');
     const [alertValue, setAlertValue] = useState<number | string>(instrument?.alert_value || '');
     const [warningValue, setWarningValue] = useState<number | string>(instrument?.warning_value || '');
@@ -151,6 +152,7 @@ const EditInstrument: React.FC = () => {
                 .update({
                     instrument_id: instrumentId,
                     instrument_name: instrumentName,
+                    instrument_location: instrumentLocation || null,
                     sno: serialNumber,
                     project_id: project.id,
                     alert_emails: emailData.alert_emails,
@@ -356,6 +358,12 @@ const EditInstrument: React.FC = () => {
                                     required
                                     value={instrumentName}
                                     onChange={(e) => setInstrumentName(e.target.value)}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Instrument Location"
+                                    value={instrumentLocation}
+                                    onChange={(e) => setInstrumentLocation(e.target.value)}
                                     fullWidth
                                 />
                                 <TextField

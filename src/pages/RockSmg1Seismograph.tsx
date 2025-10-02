@@ -28,6 +28,7 @@ interface Instrument {
   instrument_id: string;
   instrument_name: string;
   project_id: number;
+  instrument_location?: string;
 }
 
 const RockSmg1Seismograph: React.FC = () => {
@@ -119,7 +120,7 @@ const RockSmg1Seismograph: React.FC = () => {
       // Fetch all instruments for this project that have graphs
       const { data: instrumentsData, error: instrumentsError } = await supabase
         .from('instruments')
-        .select('instrument_id, instrument_name, project_id')
+        .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
         .in('instrument_id', ['ROCKSMG-1', 'ROCKSMG-2'])
         .order('instrument_id');
@@ -544,7 +545,7 @@ const RockSmg1Seismograph: React.FC = () => {
         layout={{
           title: { 
             text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data`, 
-            font: { size: 20, weight: 700, color: '#1f2937' },
+            font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
@@ -555,11 +556,12 @@ const RockSmg1Seismograph: React.FC = () => {
               standoff: 20
             },
             type: 'date',
-            tickformat: '%m/%d %H:%M',
+            tickformat: '<span style="font-size:18px;font-weight:700;">%m/%d</span><br><span style="font-size:12px;font-weight:700;">%H:%M</span>',
             gridcolor: '#f0f0f0',
             showgrid: true,
             tickfont: { size: 18, color: '#374151', weight: 700 },
-            tickangle: 0
+            tickangle: 0,
+            nticks: 6
           },
           yaxis: {
             title: { 
@@ -875,7 +877,7 @@ const RockSmg1Seismograph: React.FC = () => {
         layout={{
           title: { 
             text: 'Combined Vibration Data', 
-            font: { size: 20, weight: 700, color: '#1f2937' },
+            font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
@@ -886,11 +888,12 @@ const RockSmg1Seismograph: React.FC = () => {
               standoff: 20
             },
             type: 'date',
-            tickformat: '%m/%d %H:%M',
+            tickformat: '<span style="font-size:18px;font-weight:700;">%m/%d</span><br><span style="font-size:12px;font-weight:700;">%H:%M</span>',
             gridcolor: '#f0f0f0',
             showgrid: true,
             tickfont: { size: 18, color: '#374151', weight: 700 },
-            tickangle: 0
+            tickangle: 0,
+            nticks: 6
           },
           yaxis: {
             title: { 
@@ -954,7 +957,12 @@ const RockSmg1Seismograph: React.FC = () => {
           </Typography>
           
           {project && (
-            <Box mb={3} display="flex" justifyContent="center">
+            <Box mb={3} display="flex" justifyContent="center" alignItems="center" gap={3}>
+              <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#003087' }}>
+                Location: {availableInstruments.length > 0 && availableInstruments[0].instrument_location 
+                  ? availableInstruments[0].instrument_location 
+                  : 'None'}
+              </Typography>
               <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
                 <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
                 <Select

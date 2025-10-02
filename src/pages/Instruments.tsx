@@ -36,6 +36,7 @@ const Instruments: React.FC = () => {
   const [ShutEmailsForAlert, setShutEmailsForAlert] = React.useState<string[]>(['']);
   const [instrumentId, setInstrumentId] = React.useState('');
   const [instrumentName, setInstrumentName] = React.useState('');
+  const [instrumentLocation, setInstrumentLocation] = React.useState('');
   const [alertValue, setAlertValue] = React.useState<number | string>('');
   const [warningValue, setWarningValue] = React.useState<number | string>('');
   const [shutdownValue, setShutdownValue] = React.useState<number | string>('');
@@ -111,6 +112,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   const instrumentData: any = {
     instrument_id: instrumentId,
     instrument_name: instrumentName,
+    instrument_location: instrumentLocation || null,
     project_id: project.id,
     sno: instrumentSno || null,
     alert_emails: filteredAlertEmails.length > 0 ? filteredAlertEmails : null,
@@ -305,6 +307,12 @@ const handleSubmit = async (e: React.FormEvent) => {
           required
           value={instrumentName}
           onChange={(e) => setInstrumentName(e.target.value)}
+          fullWidth
+        />
+        <TextField
+          label="Instrument Location"
+          value={instrumentLocation}
+          onChange={(e) => setInstrumentLocation(e.target.value)}
           fullWidth
         />
         <TextField
