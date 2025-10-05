@@ -19,6 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
 
 interface SensorData {
   id: number;
@@ -294,79 +295,13 @@ const Tiltmeter30846: React.FC = () => {
   };
 
   function getReferenceShapesAndAnnotations() {
-    const shapes: any[] = [];
-    const annotations: any[] = [];
-    if (!instrumentSettings) return { shapes, annotations };
-    // Alert (orange)
-    if (instrumentSettings.alert_value) {
-      shapes.push(
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.alert_value, x1: 1, y1: instrumentSettings.alert_value,
-          line: { color: 'orange', width: 2, dash: 'dash' }
-        },
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.alert_value, x1: 1, y1: -instrumentSettings.alert_value,
-          line: { color: 'orange', width: 2, dash: 'dash' }
-        }
-      );
-      annotations.push(
-        {
-          x: 0.01, xref: 'paper', y: instrumentSettings.alert_value, yref: 'y', text: 'Alert', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
-        },
-        {
-          x: 0.01, xref: 'paper', y: -instrumentSettings.alert_value, yref: 'y', text: 'Alert', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
-        }
-      );
-    }
-    // Warning (light yellow)
-    if (instrumentSettings.warning_value) {
-      shapes.push(
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.warning_value, x1: 1, y1: instrumentSettings.warning_value,
-          line: { color: '#ffe066', width: 2, dash: 'dash' }
-        },
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.warning_value, x1: 1, y1: -instrumentSettings.warning_value,
-          line: { color: '#ffe066', width: 2, dash: 'dash' }
-        }
-      );
-      annotations.push(
-        {
-          x: 0.01, xref: 'paper', y: instrumentSettings.warning_value, yref: 'y', text: 'Warning', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
-        },
-        {
-          x: 0.01, xref: 'paper', y: -instrumentSettings.warning_value, yref: 'y', text: 'Warning', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
-        }
-      );
-    }
-    // Shutdown (red)
-    if (instrumentSettings.shutdown_value) {
-      shapes.push(
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: instrumentSettings.shutdown_value, x1: 1, y1: instrumentSettings.shutdown_value,
-          line: { color: 'red', width: 3, dash: 'solid' }
-        },
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -instrumentSettings.shutdown_value, x1: 1, y1: -instrumentSettings.shutdown_value,
-          line: { color: 'red', width: 3, dash: 'solid' }
-        }
-      );
-      annotations.push(
-        {
-          x: 0.01, xref: 'paper', y: instrumentSettings.shutdown_value, yref: 'y', text: 'Shutdown', showarrow: false,
-          font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
-        },
-        {
-          x: 0.01, xref: 'paper', y: -instrumentSettings.shutdown_value, yref: 'y', text: 'Shutdown', showarrow: false,
-          font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
-        }
-      );
-    }
-    return { shapes, annotations };
+    if (!instrumentSettings) return { shapes: [], annotations: [] };
+    
+    // Get thresholds (this tiltmeter uses general values, not axis-specific)
+    const thresholds = getThresholdsFromSettings(instrumentSettings);
+    
+    // Create colored zones and threshold lines
+    return createCompleteRiskZones(thresholds);
   }
 
   const xChartData = [

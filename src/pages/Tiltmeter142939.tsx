@@ -30,6 +30,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useAdminContext } from '../context/AdminContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
 
 interface SensorData {
   id: number;
@@ -416,90 +417,13 @@ const Tiltmeter142939: React.FC = () => {
   };
 
   function getReferenceShapesAndAnnotations(axis: 'x' | 'y' | 'z' = 'x') {
-    const shapes: any[] = [];
-    const annotations: any[] = [];
-    if (!instrumentSettings) return { shapes, annotations };
+    if (!instrumentSettings) return { shapes: [], annotations: [] };
     
-    // Use ONLY XYZ values for tiltmeters
-    const alertValues = instrumentSettings.x_y_z_alert_values;
-    const warningValues = instrumentSettings.x_y_z_warning_values;
-    const shutdownValues = instrumentSettings.x_y_z_shutdown_values;
+    // Get thresholds for the specific axis
+    const thresholds = getThresholdsFromSettings(instrumentSettings, axis);
     
-    // Get the value for the specific axis
-    const alertValue = alertValues?.[axis];
-    const warningValue = warningValues?.[axis];
-    const shutdownValue = shutdownValues?.[axis];
-    
-    // Alert (orange)
-    if (alertValue) {
-      shapes.push(
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: alertValue, x1: 1, y1: alertValue,
-          line: { color: 'orange', width: 2, dash: 'dash' }
-        },
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -alertValue, x1: 1, y1: -alertValue,
-          line: { color: 'orange', width: 2, dash: 'dash' }
-        }
-      );
-      annotations.push(
-        {
-          x: 0.01, xref: 'paper', y: alertValue, yref: 'y', text: 'Alert', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
-        },
-        {
-          x: 0.01, xref: 'paper', y: -alertValue, yref: 'y', text: 'Alert', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,165,0,0.8)', xanchor: 'left'
-        }
-      );
-    }
-    // Warning (light yellow)
-    if (warningValue) {
-      shapes.push(
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: warningValue, x1: 1, y1: warningValue,
-          line: { color: '#ffe066', width: 2, dash: 'dash' }
-        },
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -warningValue, x1: 1, y1: -warningValue,
-          line: { color: '#ffe066', width: 2, dash: 'dash' }
-        }
-      );
-      annotations.push(
-        {
-          x: 0.01, xref: 'paper', y: warningValue, yref: 'y', text: 'Warning', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
-        },
-        {
-          x: 0.01, xref: 'paper', y: -warningValue, yref: 'y', text: 'Warning', showarrow: false,
-          font: { color: 'black', size: 10 }, bgcolor: 'rgba(255,224,102,0.8)', xanchor: 'left'
-        }
-      );
-    }
-    // Shutdown (red)
-    if (shutdownValue) {
-      shapes.push(
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: shutdownValue, x1: 1, y1: shutdownValue,
-          line: { color: 'red', width: 3, dash: 'solid' }
-        },
-        {
-          type: 'line', xref: 'paper', yref: 'y', x0: 0, y0: -shutdownValue, x1: 1, y1: -shutdownValue,
-          line: { color: 'red', width: 3, dash: 'solid' }
-        }
-      );
-      annotations.push(
-        {
-          x: 0.01, xref: 'paper', y: shutdownValue, yref: 'y', text: 'Shutdown', showarrow: false,
-          font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
-        },
-        {
-          x: 0.01, xref: 'paper', y: -shutdownValue, yref: 'y', text: 'Shutdown', showarrow: false,
-          font: { color: 'white', size: 10 }, bgcolor: 'rgba(255,0,0,0.9)', xanchor: 'left'
-        }
-      );
-    }
-    return { shapes, annotations };
+    // Create colored zones and threshold lines
+    return createCompleteRiskZones(thresholds);
   }
 
   const xChartData = [

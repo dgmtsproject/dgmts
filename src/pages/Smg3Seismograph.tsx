@@ -10,6 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
+import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
 
 // const MAX_POINTS = 1000;
 
@@ -317,14 +318,13 @@ const Smg3Seismograph: React.FC = () => {
 
     if (filtered.length === 0) return null;
 
-    // Create shapes and annotations for reference lines
-    const shapes: any[] = [];
-    const annotations: any[] = [];
+    // Create shapes and annotations for reference lines using the new utility
+    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     if (instrumentSettings) {
       // Alert level (orange)
       if (instrumentSettings.alert_value) {
-        shapes.push(
+        zones.shapes.push(
           {
             type: 'line',
             xref: 'paper',
@@ -346,7 +346,7 @@ const Smg3Seismograph: React.FC = () => {
             line: { color: 'orange', width: 2, dash: 'dash' }
           }
         );
-        annotations.push(
+        zones.annotations.push(
           {
             x: 0.01,
             xref: 'paper',
@@ -374,7 +374,7 @@ const Smg3Seismograph: React.FC = () => {
 
       // Warning level (yellow)
       if (instrumentSettings.warning_value) {
-        shapes.push(
+        zones.shapes.push(
           {
             type: 'line',
             xref: 'paper',
@@ -396,7 +396,7 @@ const Smg3Seismograph: React.FC = () => {
             line: { color: 'yellow', width: 2, dash: 'dash' }
           }
         );
-        annotations.push(
+        zones.annotations.push(
           {
             x: 0.01,
             xref: 'paper',
@@ -424,7 +424,7 @@ const Smg3Seismograph: React.FC = () => {
 
       // Shutdown level (red)
       if (instrumentSettings.shutdown_value) {
-        shapes.push(
+        zones.shapes.push(
           {
             type: 'line',
             xref: 'paper',
@@ -446,7 +446,7 @@ const Smg3Seismograph: React.FC = () => {
             line: { color: 'red', width: 2, dash: 'dash' }
           }
         );
-        annotations.push(
+        zones.annotations.push(
           {
             x: 0.01,
             xref: 'paper',
@@ -580,8 +580,8 @@ const Smg3Seismograph: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: shapes,
-          annotations: annotations
+          shapes: zones.shapes,
+          annotations: zones.annotations
         }}
         config={{
           responsive: true,
@@ -620,14 +620,13 @@ const Smg3Seismograph: React.FC = () => {
 
     if (filtered.length === 0) return null;
 
-    // Create shapes and annotations for reference lines
-    const shapes: any[] = [];
-    const annotations: any[] = [];
+    // Create shapes and annotations for reference lines using the new utility
+    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     if (instrumentSettings) {
       // Alert level (orange)
       if (instrumentSettings.alert_value) {
-        shapes.push(
+        zones.shapes.push(
           {
             type: 'line',
             xref: 'paper',
@@ -649,7 +648,7 @@ const Smg3Seismograph: React.FC = () => {
             line: { color: 'orange', width: 2, dash: 'dash' }
           }
         );
-        annotations.push(
+        zones.annotations.push(
           {
             x: 0.01,
             xref: 'paper',
@@ -677,7 +676,7 @@ const Smg3Seismograph: React.FC = () => {
 
       // Warning level (yellow)
       if (instrumentSettings.warning_value) {
-        shapes.push(
+        zones.shapes.push(
           {
             type: 'line',
             xref: 'paper',
@@ -699,7 +698,7 @@ const Smg3Seismograph: React.FC = () => {
             line: { color: 'yellow', width: 2, dash: 'dash' }
           }
         );
-        annotations.push(
+        zones.annotations.push(
           {
             x: 0.01,
             xref: 'paper',
@@ -727,7 +726,7 @@ const Smg3Seismograph: React.FC = () => {
 
       // Shutdown level (red)
       if (instrumentSettings.shutdown_value) {
-        shapes.push(
+        zones.shapes.push(
           {
             type: 'line',
             xref: 'paper',
@@ -749,7 +748,7 @@ const Smg3Seismograph: React.FC = () => {
             line: { color: 'red', width: 2, dash: 'dash' }
           }
         );
-        annotations.push(
+        zones.annotations.push(
           {
             x: 0.01,
             xref: 'paper',
@@ -927,8 +926,8 @@ const Smg3Seismograph: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: shapes,
-          annotations: annotations
+          shapes: zones.shapes,
+          annotations: zones.annotations
         }}
         config={{
           responsive: true,

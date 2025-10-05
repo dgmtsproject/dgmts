@@ -10,6 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
+import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
 
 // const MAX_POINTS = 1000;
 
@@ -328,161 +329,8 @@ const RockSmg1Seismograph: React.FC = () => {
 
     if (filtered.length === 0) return null;
 
-    // Create shapes and annotations for reference lines
-    const shapes: any[] = [];
-    const annotations: any[] = [];
-
-    if (instrumentSettings) {
-      // Alert level (orange)
-      if (instrumentSettings.alert_value) {
-        shapes.push(
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: instrumentSettings.alert_value,
-            x1: 1,
-            y1: instrumentSettings.alert_value,
-            line: { color: 'orange', width: 2, dash: 'dash' }
-          },
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: -instrumentSettings.alert_value,
-            x1: 1,
-            y1: -instrumentSettings.alert_value,
-            line: { color: 'orange', width: 2, dash: 'dash' }
-          }
-        );
-        annotations.push(
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: instrumentSettings.alert_value,
-            yref: 'y',
-            text: 'Alert',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,165,0,0.8)',
-            xanchor: 'left'
-          },
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: -instrumentSettings.alert_value,
-            yref: 'y',
-            text: 'Alert',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,165,0,0.8)',
-            xanchor: 'left'
-          }
-        );
-      }
-
-      // Warning level (red)
-      if (instrumentSettings.warning_value) {
-        shapes.push(
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: instrumentSettings.warning_value,
-            x1: 1,
-            y1: instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
-          },
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: -instrumentSettings.warning_value,
-            x1: 1,
-            y1: -instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
-          }
-        );
-        annotations.push(
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: instrumentSettings.warning_value,
-            yref: 'y',
-            text: 'Warning',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
-            xanchor: 'left'
-          },
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: -instrumentSettings.warning_value,
-            yref: 'y',
-            text: 'Warning',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
-            xanchor: 'left'
-          }
-        );
-      }
-
-      // Shutdown level (dark red)
-      if (instrumentSettings.shutdown_value) {
-        shapes.push(
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: instrumentSettings.shutdown_value,
-            x1: 1,
-            y1: instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
-          },
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: -instrumentSettings.shutdown_value,
-            x1: 1,
-            y1: -instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
-          }
-        );
-        annotations.push(
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: instrumentSettings.shutdown_value,
-            yref: 'y',
-            text: 'Shutdown',
-            showarrow: false,
-            font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
-            xanchor: 'left'
-          },
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: -instrumentSettings.shutdown_value,
-            yref: 'y',
-            text: 'Shutdown',
-            showarrow: false,
-            font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
-            xanchor: 'left'
-          }
-        );
-      }
-    }
+    // Create shapes and annotations for reference lines using the new utility
+    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     return (
       <Plot
@@ -591,8 +439,8 @@ const RockSmg1Seismograph: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: shapes,
-          annotations: annotations
+          shapes: zones.shapes,
+          annotations: zones.annotations
         }}
         config={{
           responsive: true,
@@ -616,161 +464,8 @@ const RockSmg1Seismograph: React.FC = () => {
   const createCombinedPlot = (combined: { time: Date[]; x: number[]; y: number[]; z: number[] }) => {
     if (!combined.time.length) return null;
 
-    // Create shapes and annotations for reference lines
-    const shapes: any[] = [];
-    const annotations: any[] = [];
-
-    if (instrumentSettings) {
-      // Alert level (orange)
-      if (instrumentSettings.alert_value) {
-        shapes.push(
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: instrumentSettings.alert_value,
-            x1: 1,
-            y1: instrumentSettings.alert_value,
-            line: { color: 'orange', width: 2, dash: 'dash' }
-          },
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: -instrumentSettings.alert_value,
-            x1: 1,
-            y1: -instrumentSettings.alert_value,
-            line: { color: 'orange', width: 2, dash: 'dash' }
-          }
-        );
-        annotations.push(
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: instrumentSettings.alert_value,
-            yref: 'y',
-            text: 'Alert',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,165,0,0.8)',
-            xanchor: 'left'
-          },
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: -instrumentSettings.alert_value,
-            yref: 'y',
-            text: 'Alert',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,165,0,0.8)',
-            xanchor: 'left'
-          }
-        );
-      }
-
-      // Warning level (red)
-      if (instrumentSettings.warning_value) {
-        shapes.push(
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: instrumentSettings.warning_value,
-            x1: 1,
-            y1: instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
-          },
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: -instrumentSettings.warning_value,
-            x1: 1,
-            y1: -instrumentSettings.warning_value,
-            line: { color: 'red', width: 2, dash: 'dash' }
-          }
-        );
-        annotations.push(
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: instrumentSettings.warning_value,
-            yref: 'y',
-            text: 'Warning',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
-            xanchor: 'left'
-          },
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: -instrumentSettings.warning_value,
-            yref: 'y',
-            text: 'Warning',
-            showarrow: false,
-            font: { color: 'black', size: 10 },
-            bgcolor: 'rgba(255,0,0,0.8)',
-            xanchor: 'left'
-          }
-        );
-      }
-
-      // Shutdown level (dark red)
-      if (instrumentSettings.shutdown_value) {
-        shapes.push(
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: instrumentSettings.shutdown_value,
-            x1: 1,
-            y1: instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
-          },
-          {
-            type: 'line',
-            xref: 'paper',
-            yref: 'y',
-            x0: 0,
-            y0: -instrumentSettings.shutdown_value,
-            x1: 1,
-            y1: -instrumentSettings.shutdown_value,
-            line: { color: 'darkred', width: 3, dash: 'solid' }
-          }
-        );
-        annotations.push(
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: instrumentSettings.shutdown_value,
-            yref: 'y',
-            text: 'Shutdown',
-            showarrow: false,
-            font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
-            xanchor: 'left'
-          },
-          {
-            x: 0.01,
-            xref: 'paper',
-            y: -instrumentSettings.shutdown_value,
-            yref: 'y',
-            text: 'Shutdown',
-            showarrow: false,
-            font: { color: 'white', size: 10 },
-            bgcolor: 'rgba(139,0,0,0.9)',
-            xanchor: 'left'
-          }
-        );
-      }
-    }
+    // Create shapes and annotations for reference lines using the new utility
+    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     return (
       <Plot
@@ -923,8 +618,8 @@ const RockSmg1Seismograph: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: shapes,
-          annotations: annotations
+          shapes: zones.shapes,
+          annotations: zones.annotations
         }}
         config={{
           responsive: true,
