@@ -448,7 +448,7 @@ const RockSmg2Seismograph: React.FC = () => {
             zerolinecolor: '#f0f0f0',
             tickfont: { size: 14, color: '#374151', weight: 700 },
             range: (() => {
-              const allValues = [...combined.x, ...combined.y, ...combined.z];
+              const allValues = filtered.map(pair => pair.v);
               const range = getYAxisRange(allValues, getThresholdsFromSettings(instrumentSettings));
               return [range.min, range.max];
             })()
