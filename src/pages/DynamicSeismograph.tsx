@@ -237,6 +237,30 @@ const DynamicSeismograph: React.FC = () => {
     }
   };
 
+  // Helper function to calculate y-axis range for auto-zoom
+  const getYAxisRange = (values: number[], thresholds: any) => {
+    if (values.length === 0) return { min: -0.1, max: 0.1 };
+    
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    
+    // Add 20% padding
+    const padding = Math.max(range * 0.2, 0.01);
+    
+    // Consider threshold values for range
+    const thresholdMax = Math.max(
+      thresholds.warning || 0,
+      thresholds.alert || 0,
+      thresholds.shutdown || 0
+    );
+    
+    return {
+      min: Math.min(minValue - padding, -thresholdMax * 1.2),
+      max: Math.max(maxValue + padding, thresholdMax * 1.2)
+    };
+  };
+
   const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
     const filtered = data.time
       .map((t, i) => ({ t, v: data.values[i] }))
@@ -306,7 +330,11 @@ const DynamicSeismograph: React.FC = () => {
             zeroline: true,
             zerolinecolor: '#f0f0f0',
             tickfont: { size: 16, color: '#374151', weight: 700 },
-            tickformat: '.3~f'
+            tickformat: '.3~f',
+            range: (() => {
+              const range = getYAxisRange(filtered.map(pair => pair.v), getThresholdsFromSettings(instrumentSettings));
+              return [range.min, range.max];
+            })()
           },
           showlegend: true,
           legend: {
@@ -455,7 +483,14 @@ const DynamicSeismograph: React.FC = () => {
             zeroline: true,
             zerolinecolor: '#f0f0f0',
             tickfont: { size: 16, color: '#374151', weight: 700 },
-            tickformat: '.3~f'
+            tickformat: '.3~f',
+            range: (() => {
+              const range = getYAxisRange(
+                combined.x.concat(combined.y.concat(combined.z)), 
+                getThresholdsFromSettings(instrumentSettings)
+              );
+              return [range.min, range.max];
+            })()
           },
           showlegend: true,
           legend: {

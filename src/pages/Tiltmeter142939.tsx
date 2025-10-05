@@ -381,11 +381,12 @@ const Tiltmeter142939: React.FC = () => {
         standoff: 20
       },
       type: 'date' as const,
-      tickformat: '%m/%d %H:%M',
+      tickformat: '<span style="font-size:18px;font-weight:700;">%m/%d</span><br><span style="font-size:12px;font-weight:700;">%H:%M</span>',
       gridcolor: '#f0f0f0',
       showgrid: true,
       tickfont: { size: 18, color: '#374151', weight: 700 },
-      tickangle: 0
+      tickangle: 0,
+      nticks: 6
     },
     yaxis: {
       title: { 
@@ -414,6 +415,30 @@ const Tiltmeter142939: React.FC = () => {
     hovermode: 'closest' as const,
     plot_bgcolor: 'white',
     paper_bgcolor: 'white',
+  };
+
+  // Helper function to calculate y-axis range for auto-zoom
+  const getYAxisRange = (values: number[], thresholds: any) => {
+    if (values.length === 0) return { min: -0.1, max: 0.1 };
+    
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    
+    // Add 20% padding
+    const padding = Math.max(range * 0.2, 0.01);
+    
+    // Consider threshold values for range
+    const thresholdMax = Math.max(
+      thresholds.warning || 0,
+      thresholds.alert || 0,
+      thresholds.shutdown || 0
+    );
+    
+    return {
+      min: Math.min(minValue - padding, -thresholdMax * 1.2),
+      max: Math.max(maxValue + padding, thresholdMax * 1.2)
+    };
   };
 
   function getReferenceShapesAndAnnotations(axis: 'x' | 'y' | 'z' = 'x') {
@@ -708,7 +733,11 @@ const Tiltmeter142939: React.FC = () => {
                         text: 'X-Axis Value (°)', 
                         standoff: 15,
                         font: { size: 16, weight: 700, color: '#374151' }
-                      } 
+                      },
+                      range: (() => {
+                        const range = getYAxisRange(xValues, getThresholdsFromSettings(instrumentSettings, 'x'));
+                        return [range.min, range.max];
+                      })()
                     },
                     ...getReferenceShapesAndAnnotations('x'),
                   }}
@@ -740,7 +769,11 @@ const Tiltmeter142939: React.FC = () => {
                         text: 'Y-Axis Value (°)', 
                         standoff: 15,
                         font: { size: 16, weight: 700, color: '#374151' }
-                      } 
+                      },
+                      range: (() => {
+                        const range = getYAxisRange(yValues, getThresholdsFromSettings(instrumentSettings, 'y'));
+                        return [range.min, range.max];
+                      })()
                     },
                     ...getReferenceShapesAndAnnotations('y'),
                   }}
@@ -772,7 +805,11 @@ const Tiltmeter142939: React.FC = () => {
                         text: 'Z-Axis Value (°)', 
                         standoff: 15,
                         font: { size: 16, weight: 700, color: '#374151' }
-                      } 
+                      },
+                      range: (() => {
+                        const range = getYAxisRange(zValues, getThresholdsFromSettings(instrumentSettings, 'z'));
+                        return [range.min, range.max];
+                      })()
                     },
                     ...getReferenceShapesAndAnnotations('z'),
                   }}

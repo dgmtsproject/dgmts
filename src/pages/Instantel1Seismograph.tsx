@@ -341,6 +341,30 @@ const Instantel1Seismograph: React.FC = () => {
     }
   };
 
+  // Helper function to calculate y-axis range for auto-zoom
+  const getYAxisRange = (values: number[], thresholds: any) => {
+    if (values.length === 0) return { min: -0.1, max: 0.1 };
+    
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    
+    // Add 20% padding
+    const padding = Math.max(range * 0.2, 0.01);
+    
+    // Consider threshold values for range
+    const thresholdMax = Math.max(
+      thresholds.warning || 0,
+      thresholds.alert || 0,
+      thresholds.shutdown || 0
+    );
+    
+    return {
+      min: Math.min(minValue - padding, -thresholdMax * 1.2),
+      max: Math.max(maxValue + padding, thresholdMax * 1.2)
+    };
+  };
+
   const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
     // Filter out any pairs where time or value is missing or invalid
     const filtered = data.time
@@ -440,7 +464,12 @@ const Instantel1Seismograph: React.FC = () => {
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151', weight: 700 }
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            range: (() => {
+              const allValues = (processedData[axis as keyof typeof processedData] as { values: number[] })?.values || [];
+              const range = getYAxisRange(allValues, getThresholdsFromSettings(instrumentSettings));
+              return [range.min, range.max];
+            })()
           },
           showlegend: true,
           legend: {
@@ -610,7 +639,12 @@ const Instantel1Seismograph: React.FC = () => {
             gridcolor: '#f0f0f0',
             zeroline: true,
             zerolinecolor: '#f0f0f0',
-            tickfont: { size: 14, color: '#374151', weight: 700 }
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            range: (() => {
+              const allValues = [...combined.x, ...combined.y, ...combined.z];
+              const range = getYAxisRange(allValues, getThresholdsFromSettings(instrumentSettings));
+              return [range.min, range.max];
+            })()
           },
           showlegend: true,
           legend: {
