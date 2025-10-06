@@ -247,7 +247,7 @@ const Tiltmeter30846: React.FC = () => {
   const plotlyLayout = {
     autosize: true,
     height: 600,
-    margin: { t: 60, b: 100, l: 110, r: 100 },
+    margin: { t: 60, b: 100, l: 110, r: 220 },
     title: {
       font: { size: 20, weight: 700, color: '#1f2937' },
       x: 0.5,
@@ -281,7 +281,7 @@ const Tiltmeter30846: React.FC = () => {
     },
     showlegend: true,
     legend: {
-      x: 1.05,
+      x: 1.02,
       xanchor: 'left' as const,
       y: 0.5,
       yanchor: 'middle' as const,
@@ -328,6 +328,9 @@ const Tiltmeter30846: React.FC = () => {
     // Create colored zones and threshold lines
     return createCompleteRiskZones(thresholds);
   }
+  
+  // General thresholds for legend display
+  const thresholds = instrumentSettings ? getThresholdsFromSettings(instrumentSettings) : {} as any;
 
   const xChartData = [
     {
@@ -341,6 +344,36 @@ const Tiltmeter30846: React.FC = () => {
       hovertemplate: AXIS_HOVERTEMPLATE('X'),
       connectgaps: true,
     },
+    ...(thresholds?.alert ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Alert (${thresholds.alert} °)`,
+      line: { color: 'orange', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.warning ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Warning (${thresholds.warning} °)`,
+      line: { color: 'red', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.shutdown ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Shutdown (${thresholds.shutdown} °)`,
+      line: { color: 'darkred', width: 3, dash: 'solid' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : [])
   ];
   const yChartData = [
     {
@@ -354,6 +387,36 @@ const Tiltmeter30846: React.FC = () => {
       hovertemplate: AXIS_HOVERTEMPLATE('Y'),
       connectgaps: true,
     },
+    ...(thresholds?.alert ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Alert (${thresholds.alert} °)`,
+      line: { color: 'orange', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.warning ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Warning (${thresholds.warning} °)`,
+      line: { color: 'red', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.shutdown ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Shutdown (${thresholds.shutdown} °)`,
+      line: { color: 'darkred', width: 3, dash: 'solid' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : [])
   ];
   const zChartData = [
     {
@@ -367,6 +430,36 @@ const Tiltmeter30846: React.FC = () => {
       hovertemplate: AXIS_HOVERTEMPLATE('Z'),
       connectgaps: true,
     },
+    ...(thresholds?.alert ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Alert (${thresholds.alert} °)`,
+      line: { color: 'orange', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.warning ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Warning (${thresholds.warning} °)`,
+      line: { color: 'red', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.shutdown ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Shutdown (${thresholds.shutdown} °)`,
+      line: { color: 'darkred', width: 3, dash: 'solid' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : [])
   ];
   const combinedChartData = [
     {
@@ -402,6 +495,36 @@ const Tiltmeter30846: React.FC = () => {
       hovertemplate: AXIS_HOVERTEMPLATE('Z'),
       connectgaps: true,
     },
+    ...(thresholds?.alert ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Alert (${thresholds.alert} °)`,
+      line: { color: 'orange', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.warning ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Warning (${thresholds.warning} °)`,
+      line: { color: 'red', width: 2, dash: 'dash' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : []),
+    ...(thresholds?.shutdown ? [{
+      x: [null],
+      y: [null],
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: `Shutdown (${thresholds.shutdown} °)`,
+      line: { color: 'darkred', width: 3, dash: 'solid' as const },
+      showlegend: true,
+      legendgroup: 'reference-lines'
+    }] : [])
   ];
 
   return (
@@ -503,7 +626,7 @@ const Tiltmeter30846: React.FC = () => {
               layout={{
                 ...plotlyLayout,
                 title: { 
-                  text: `X-Axis Tilt - Node ${selectedNode}`,
+                  text: `${project ? project.name + ' - ' : ''}X-Axis Tilt - Node ${selectedNode}`,
                   font: { size: 20, weight: 700, color: '#1f2937' },
                   x: 0.5,
                   xanchor: 'center'
@@ -540,7 +663,7 @@ const Tiltmeter30846: React.FC = () => {
               layout={{
                 ...plotlyLayout,
                 title: { 
-                  text: `Y-Axis Tilt - Node ${selectedNode}`,
+                  text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${selectedNode}`,
                   font: { size: 20, weight: 700, color: '#1f2937' },
                   x: 0.5,
                   xanchor: 'center'
@@ -577,7 +700,7 @@ const Tiltmeter30846: React.FC = () => {
               layout={{
                 ...plotlyLayout,
                 title: { 
-                  text: `Z-Axis Tilt - Node ${selectedNode}`,
+                  text: `${project ? project.name + ' - ' : ''}Z-Axis Tilt - Node ${selectedNode}`,
                   font: { size: 20, weight: 700, color: '#1f2937' },
                   x: 0.5,
                   xanchor: 'center'
@@ -614,7 +737,7 @@ const Tiltmeter30846: React.FC = () => {
               layout={{
                 ...plotlyLayout,
                 title: { 
-                  text: `Combined Tilt Data - Node ${selectedNode}`,
+                  text: `${project ? project.name + ' - ' : ''}Combined Tilt Data - Node ${selectedNode}`,
                   font: { size: 20, weight: 700, color: '#1f2937' },
                   x: 0.5,
                   xanchor: 'center'
