@@ -114,6 +114,7 @@ const InstrumentsList: React.FC = () => {
         .select(`
           instrument_id,
           instrument_name,
+          instrument_location,
           alert_value,
           warning_value,
           shutdown_value,

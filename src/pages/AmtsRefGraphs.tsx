@@ -607,7 +607,7 @@ const AmtsRefGraphs: React.FC = () => {
                       data={allLinesData1}
                       layout={{
                         width: 800 * xScale,
-                        height: 500,
+                        height: 550,
                         margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
                         shapes: [
                           // Alert lines (red)
@@ -764,11 +764,16 @@ const AmtsRefGraphs: React.FC = () => {
                         paper_bgcolor: 'white',
                         showlegend: true,
                         legend: {
+                          x: 0.02,
+                          xanchor: 'left',
+                          y: -0.25,
+                          yanchor: 'top',
                           orientation: 'h',
-                          y: -0.2,
-                          x: 0.5,
-                          xanchor: 'center',
-                          font: { size: 12 }
+                          font: { size: 12, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.8)',
+                          bordercolor: '#CCC',
+                          borderwidth: 1,
+                          traceorder: 'normal'
                         },
                         hovermode: 'x unified',
                         hoverlabel: {
@@ -805,7 +810,7 @@ const AmtsRefGraphs: React.FC = () => {
                       data={allLinesData2}
                       layout={{
                         width: 800 * xScale,
-                        height: 500,
+                        height: 550,
                         margin: { l: 60, r: 30, b: 80, t: 30, pad: 4 },
                                                 shapes: [
                           // Alert lines (red)
@@ -955,7 +960,7 @@ const AmtsRefGraphs: React.FC = () => {
                           tickvals: generateTicks(-0.5 / yScale, 0.5 / yScale),
                           tickmode: 'linear',
                           dtick: 0.25,
-                          nticks: 6,
+                          nticks: 10,
                           gridcolor: 'rgba(240, 240, 240, 0.7)',
                           gridwidth: 1,
                           zeroline: true,
@@ -967,11 +972,16 @@ const AmtsRefGraphs: React.FC = () => {
                         paper_bgcolor: 'white',
                         showlegend: true,
                         legend: {
+                          x: 0.02,
+                          xanchor: 'left',
+                          y: -0.25,
+                          yanchor: 'top',
                           orientation: 'h',
-                          y: -0.2,
-                          x: 0.5,
-                          xanchor: 'center',
-                          font: { size: 12 }
+                          font: { size: 12, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.8)',
+                          bordercolor: '#CCC',
+                          borderwidth: 1,
+                          traceorder: 'normal'
                         },
                         hovermode: 'x unified',
                         hoverlabel: {

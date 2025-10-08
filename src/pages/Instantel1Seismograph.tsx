@@ -435,24 +435,27 @@ const Instantel1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - ${axis} Axis PPV Data (${dataType})`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis PPV Data (${dataType}) - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 1')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 1')?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: 'Time', 
+              text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
-            tickformat: '<span style="font-size:18px;font-weight:700;">%m/%d</span><br><span style="font-size:12px;font-weight:700;">%I:%M %p</span>',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%I:%M %p</span>',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 18, color: '#374151', weight: 700 },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 6
+            nticks: 10,
+            tickmode: 'linear',
+            dtick: 'D1',
+            tick0: 'D1'
           },
           yaxis: {
             title: { 
@@ -473,17 +476,19 @@ const Instantel1Seismograph: React.FC = () => {
           },
           showlegend: true,
           legend: {
-            x: 1.05,
+            x: 0.02,
             xanchor: 'left',
-            y: 0.5,
-            yanchor: 'middle',
-            font: { size: 14, weight: 700 },
-            bgcolor: 'rgba(255,255,255,0.9)',
+            y: -0.30,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#CCC',
-            borderwidth: 2
+            borderwidth: 1,
+            traceorder: 'normal'
           },
-          height: 600,
-          margin: { t: 60, b: 100, l: 110, r: 100 },
+          height: 550,
+          margin: { t: 60, b: 100, l: 80, r: 80 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -503,7 +508,7 @@ const Instantel1Seismograph: React.FC = () => {
             scale: 2
           }
         }}
-        style={{ width: '100%', height: 500 }}
+        style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
       />
     );
@@ -610,24 +615,27 @@ const Instantel1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Combined PPV Data (${dataType})`, 
+            text: `${project?.name || 'Project'} - Combined PPV Data (${dataType}) - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 1')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 1')?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: 'Time', 
+              text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
             type: 'date',
-            tickformat: '<span style="font-size:18px;font-weight:700;">%m/%d</span><br><span style="font-size:12px;font-weight:700;">%I:%M %p</span>',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%I:%M %p</span>',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 18, color: '#374151', weight: 700 },
+            tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 6
+            nticks: 10,
+            tickmode: 'linear',
+            dtick: 'D1',
+            tick0: 'D1'
           },
           yaxis: {
             title: { 
@@ -648,17 +656,19 @@ const Instantel1Seismograph: React.FC = () => {
           },
           showlegend: true,
           legend: {
-            x: 1.05,
+            x: 0.02,
             xanchor: 'left',
-            y: 0.5,
-            yanchor: 'middle',
-            font: { size: 14, weight: 700 },
-            bgcolor: 'rgba(255,255,255,0.9)',
+            y: -0.30,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#CCC',
-            borderwidth: 2
+            borderwidth: 1,
+            traceorder: 'normal'
           },
-          height: 600,
-          margin: { t: 60, b: 100, l: 110, r: 100 },
+          height: 550,
+          margin: { t: 60, b: 100, l: 80, r: 80 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -678,7 +688,7 @@ const Instantel1Seismograph: React.FC = () => {
             scale: 2
           }
         }}
-        style={{ width: '100%', height: 650 }}
+        style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
       />
     );
@@ -698,8 +708,8 @@ const Instantel1Seismograph: React.FC = () => {
           {project && (
             <Box mb={3} display="flex" justifyContent="center" alignItems="center" gap={3}>
               <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#003087' }}>
-                Location: {availableInstruments.length > 0 && availableInstruments[0].instrument_location 
-                  ? availableInstruments[0].instrument_location 
+                Location: {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 1')?.instrument_location 
+                  ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 1')?.instrument_location 
                   : 'None'}
               </Typography>
               <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>

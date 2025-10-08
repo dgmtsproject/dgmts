@@ -13,12 +13,20 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAdminContext } from '../context/AdminContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
 interface TiltmeterData {
   time: string;
   x: number;
   y: number;
   z: number;
+}
+
+interface Instrument {
+  instrument_id: string;
+  instrument_name: string;
+  project_id: number;
+  instrument_location?: string;
 }
 
 const Tiltmeter: React.FC = () => {
@@ -31,6 +39,7 @@ const Tiltmeter: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showGraphs, setShowGraphs] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
 
   const locationOptions = [
     "LBN-TM-North-OhioAbutB",
@@ -142,6 +151,27 @@ const Tiltmeter: React.FC = () => {
 
   const [rawFileData, setRawFileData] = useState<(string | number | null)[][]>([]);
 
+  const fetchAvailableInstruments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('instruments')
+        .select('instrument_id, instrument_name, project_id, instrument_location')
+        .eq('instrument_id', 'TILTMETER')
+        .single();
+
+      if (error) {
+        console.error('Error fetching instrument:', error);
+        return;
+      }
+
+      if (data) {
+        setAvailableInstruments([data]);
+      }
+    } catch (err) {
+      console.error('Error fetching instrument:', err);
+    }
+  };
+
   const handleGenerateGraphs = () => {
     if (!selectedLocation || rawFileData.length === 0 || headers.length === 0) return;
     
@@ -193,6 +223,7 @@ const Tiltmeter: React.FC = () => {
       toast.error("You do not have permission to view graphs.");
       navigate("/");
     }
+    fetchAvailableInstruments();
   }, [permissions, navigate]);
 
   return (
@@ -387,7 +418,7 @@ const Tiltmeter: React.FC = () => {
                   {/* X-Axis Chart */}
                   <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                      X-Axis Readings ({selectedLocation})
+                      X-Axis Readings ({selectedLocation}) - {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}
                     </h3>
                     <Plot
                       data={[
@@ -409,26 +440,30 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 600,
-                        margin: { t: 60, b: 100, l: 110, r: 100 },
+                        height: 550,
+                        margin: { t: 60, b: 100, l: 80, r: 80 },
                         title: {
-                          text: `X-Axis Readings (${selectedLocation})`,
+                          text: `X-Axis Readings (${selectedLocation}) - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
                         },
                         xaxis: {
                           title: {
-                            text: 'Time',
+                            text: `Time<br><span style="font-size:12px;color:#666;">TILTMETER</span>`,
                             standoff: 20,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickformat: '%m/%d %H:%M',
+                          tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 18, color: '#374151', weight: 700 },
-                          tickangle: 0
+                          tickfont: { size: 14, color: '#374151', weight: 700 },
+                          tickangle: 0,
+                          nticks: 10,
+                          tickmode: 'linear' as const,
+                          dtick: 'D1',
+                          tick0: 'D1'
                         },
                         yaxis: {
                           title: {
@@ -440,20 +475,34 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 18, color: '#374151', weight: 700 }
+                          tickfont: { size: 14, color: '#374151', weight: 700 }
+                        },
+                        showlegend: true,
+                        legend: {
+                          x: 0.02,
+                          xanchor: 'left' as const,
+                          y: -0.30,
+                          yanchor: 'top' as const,
+                          orientation: 'h' as const,
+                          font: { size: 12, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.8)',
+                          bordercolor: '#CCC',
+                          borderwidth: 1,
+                          traceorder: 'normal' as const
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
+                      style={{ width: '100%', height: 550 }}
                     />
                   </div>
 
                   {/* Y-Axis Chart */}
                   <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                      Y-Axis Readings ({selectedLocation})
+                      Y-Axis Readings ({selectedLocation}) - {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}
                     </h3>
                     <Plot
                       data={[
@@ -475,26 +524,30 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 600,
-                        margin: { t: 60, b: 100, l: 110, r: 100 },
+                        height: 550,
+                        margin: { t: 60, b: 100, l: 80, r: 80 },
                         title: {
-                          text: `Y-Axis Readings (${selectedLocation})`,
+                          text: `Y-Axis Readings (${selectedLocation}) - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
                         },
                         xaxis: {
                           title: {
-                            text: 'Time',
+                            text: `Time<br><span style="font-size:12px;color:#666;">TILTMETER</span>`,
                             standoff: 20,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickformat: '%m/%d %H:%M',
+                          tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 18, color: '#374151', weight: 700 },
-                          tickangle: 0
+                          tickfont: { size: 14, color: '#374151', weight: 700 },
+                          tickangle: 0,
+                          nticks: 10,
+                          tickmode: 'linear' as const,
+                          dtick: 'D1',
+                          tick0: 'D1'
                         },
                         yaxis: {
                           title: {
@@ -506,20 +559,34 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 18, color: '#374151', weight: 700 }
+                          tickfont: { size: 14, color: '#374151', weight: 700 }
+                        },
+                        showlegend: true,
+                        legend: {
+                          x: 0.02,
+                          xanchor: 'left' as const,
+                          y: -0.30,
+                          yanchor: 'top' as const,
+                          orientation: 'h' as const,
+                          font: { size: 12, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.8)',
+                          bordercolor: '#CCC',
+                          borderwidth: 1,
+                          traceorder: 'normal' as const
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
+                      style={{ width: '100%', height: 550 }}
                     />
                   </div>
 
                   {/* Z-Axis Chart */}
                   <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                      Z-Axis Readings ({selectedLocation})
+                      Z-Axis Readings ({selectedLocation}) - {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}
                     </h3>
                     <Plot
                       data={[
@@ -541,26 +608,30 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 600,
-                        margin: { t: 60, b: 100, l: 110, r: 100 },
+                        height: 550,
+                        margin: { t: 60, b: 100, l: 80, r: 80 },
                         title: {
-                          text: `Z-Axis Readings (${selectedLocation})`,
+                          text: `Z-Axis Readings (${selectedLocation}) - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
                         },
                         xaxis: {
                           title: {
-                            text: 'Time',
+                            text: `Time<br><span style="font-size:12px;color:#666;">TILTMETER</span>`,
                             standoff: 20,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickformat: '%m/%d %H:%M',
+                          tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 18, color: '#374151', weight: 700 },
-                          tickangle: 0
+                          tickfont: { size: 14, color: '#374151', weight: 700 },
+                          tickangle: 0,
+                          nticks: 10,
+                          tickmode: 'linear' as const,
+                          dtick: 'D1',
+                          tick0: 'D1'
                         },
                         yaxis: {
                           title: {
@@ -572,20 +643,34 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 18, color: '#374151', weight: 700 }
+                          tickfont: { size: 14, color: '#374151', weight: 700 }
+                        },
+                        showlegend: true,
+                        legend: {
+                          x: 0.02,
+                          xanchor: 'left' as const,
+                          y: -0.30,
+                          yanchor: 'top' as const,
+                          orientation: 'h' as const,
+                          font: { size: 12, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.8)',
+                          bordercolor: '#CCC',
+                          borderwidth: 1,
+                          traceorder: 'normal' as const
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
+                      style={{ width: '100%', height: 550 }}
                     />
                   </div>
 
                   {/* Combined Chart */}
                   <div style={{ width: '100%', overflowX: 'auto', marginBottom: '2.5rem' }}>
                     <h3 style={{ fontWeight: "700", fontSize: "1.25rem", color: "#1f2937", marginBottom: "1rem" }}>
-                      Combined X, Y, Z Readings ({selectedLocation})
+                      Combined X, Y, Z Readings ({selectedLocation}) - {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}
                     </h3>
                     <Plot
                       data={[
@@ -637,26 +722,30 @@ const Tiltmeter: React.FC = () => {
                       ]}
                       layout={{
                         autosize: true,
-                        height: 600,
-                        margin: { t: 60, b: 100, l: 110, r: 100 },
+                        height: 550,
+                        margin: { t: 60, b: 100, l: 80, r: 80 },
                         title: {
-                          text: `Combined X, Y, Z Readings (${selectedLocation})`,
+                          text: `Combined X, Y, Z Readings (${selectedLocation}) - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER')?.instrument_location : 'Location: None'}`,
                           font: { size: 20, weight: 700, color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
                         },
                         xaxis: {
                           title: {
-                            text: 'Time',
+                            text: `Time<br><span style="font-size:12px;color:#666;">TILTMETER</span>`,
                             standoff: 20,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
                           type: 'date',
-                          tickformat: '%m/%d %H:%M',
+                          tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
                           gridcolor: '#f0f0f0',
                           showgrid: true,
-                          tickfont: { size: 18, color: '#374151', weight: 700 },
-                          tickangle: 0
+                          tickfont: { size: 14, color: '#374151', weight: 700 },
+                          tickangle: 0,
+                          nticks: 10,
+                          tickmode: 'linear' as const,
+                          dtick: 'D1',
+                          tick0: 'D1'
                         },
                         yaxis: {
                           title: {
@@ -668,24 +757,27 @@ const Tiltmeter: React.FC = () => {
                           gridcolor: '#f0f0f0',
                           zeroline: true,
                           zerolinecolor: '#f0f0f0',
-                          tickfont: { size: 18, color: '#374151', weight: 700 }
+                          tickfont: { size: 14, color: '#374151', weight: 700 }
                         },
                         showlegend: true,
                         legend: {
-                          x: 1.05,
-                          xanchor: 'left',
-                          y: 0.5,
-                          yanchor: 'middle',
-                          font: { size: 14, weight: 700 },
-                          bgcolor: 'rgba(255,255,255,0.9)',
+                          x: 0.02,
+                          xanchor: 'left' as const,
+                          y: -0.30,
+                          yanchor: 'top' as const,
+                          orientation: 'h' as const,
+                          font: { size: 12, weight: 700 },
+                          bgcolor: 'rgba(255,255,255,0.8)',
                           bordercolor: '#CCC',
-                          borderwidth: 2
+                          borderwidth: 1,
+                          traceorder: 'normal' as const
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
                         paper_bgcolor: 'white'
                       }}
                       config={{ responsive: true }}
+                      style={{ width: '100%', height: 550 }}
                     />
                   </div>
                 </div>

@@ -152,7 +152,7 @@ const Tiltmeter142939: React.FC = () => {
         .from('instruments')
         .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
-        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969'])
+        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969', 'TILTMETER-30846'])
         .order('instrument_id');
 
       if (error) {
@@ -175,8 +175,8 @@ const Tiltmeter142939: React.FC = () => {
       navigate('/smg3-seismograph', { state: { project } });
     } else if (instrumentId === 'TILT-142939') {
       navigate('/tiltmeter-142939', { state: { project } });
-    } else if (instrumentId === 'TILT-143969') {
-      navigate('/tiltmeter-143969', { state: { project } });
+    } else if (instrumentId === 'TILTMETER-30846') {
+      navigate('/tiltmeter-30846', { state: { project } });
     }
   };
 
@@ -367,8 +367,8 @@ const Tiltmeter142939: React.FC = () => {
 
   const plotlyLayout = {
     autosize: true,
-    height: 600,
-    margin: { t: 60, b: 100, l: 110, r: 220 },
+    height: 550,
+    margin: { t: 60, b: 100, l: 80, r: 80 },
     title: {
       font: { size: 20, weight: 700, color: '#1f2937' },
       x: 0.5,
@@ -376,17 +376,20 @@ const Tiltmeter142939: React.FC = () => {
     },
     xaxis: {
       title: { 
-        text: 'Time', 
+        text: `Time<br><span style="font-size:12px;color:#666;">TILTMETER-142939</span>`, 
         font: { size: 16, weight: 700, color: '#374151' },
         standoff: 20
       },
       type: 'date' as const,
-      tickformat: '<span style="font-size:18px;font-weight:700;">%m/%d</span><br><span style="font-size:12px;font-weight:700;">%H:%M</span>',
+      tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
       gridcolor: '#f0f0f0',
       showgrid: true,
-      tickfont: { size: 18, color: '#374151', weight: 700 },
+      tickfont: { size: 14, color: '#374151', weight: 700 },
       tickangle: 0,
-      nticks: 6
+      nticks: 10,
+      tickmode: 'linear' as const,
+      dtick: 'D1',
+      tick0: 'D1'
     },
     yaxis: {
       title: { 
@@ -399,18 +402,20 @@ const Tiltmeter142939: React.FC = () => {
       zeroline: true,
       zerolinecolor: '#f0f0f0',
 
-      tickfont: { size: 18, color: '#374151', weight: 700 }
+      tickfont: { size: 14, color: '#374151', weight: 700 }
     },
     showlegend: true,
     legend: {
-      x: 1.02,
+      x: 0.02,
       xanchor: 'left',
-      y: 0.5,
-      yanchor: 'middle',
-      font: { size: 14, weight: 700 },
-      bgcolor: 'rgba(255,255,255,0.9)',
+      y: -0.30,
+      yanchor: 'top',
+      orientation: 'h' as const,
+      font: { size: 12, weight: 700 },
+      bgcolor: 'rgba(255,255,255,0.8)',
       bordercolor: '#CCC',
-      borderwidth: 2,
+      borderwidth: 1,
+      traceorder: 'normal' as const
     } as any,
     hovermode: 'closest' as const,
     plot_bgcolor: 'white',
@@ -626,9 +631,9 @@ const Tiltmeter142939: React.FC = () => {
         {project && (
           <Box mb={3} display="flex" justifyContent="center" alignItems="center" gap={3}>
             <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#003087' }}>
-              Location: {availableInstruments.length > 0 && availableInstruments[0].instrument_location 
-                ? availableInstruments[0].instrument_location 
-                : 'None'}
+                Location: {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location 
+                  ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location 
+                  : 'None'}
             </Typography>
             <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
               <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
@@ -817,7 +822,7 @@ const Tiltmeter142939: React.FC = () => {
                   layout={{
                     ...plotlyLayout,
                     title: { 
-                      text: `${project ? project.name + ' - ' : ''}X-Axis Tilt - Node ${nodeId}`,
+                      text: `${project ? project.name + ' - ' : ''}X-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
                       font: { size: 20, weight: 700, color: '#1f2937' },
                       x: 0.5,
                       xanchor: 'center'
@@ -837,7 +842,7 @@ const Tiltmeter142939: React.FC = () => {
                     ...getReferenceShapesAndAnnotations('x'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', height: 550 }}
                   useResizeHandler={true}
                 />
               </div>
@@ -853,7 +858,7 @@ const Tiltmeter142939: React.FC = () => {
                   layout={{
                     ...plotlyLayout,
                     title: { 
-                      text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${nodeId}`,
+                      text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
                       font: { size: 20, weight: 700, color: '#1f2937' },
                       x: 0.5,
                       xanchor: 'center'
@@ -873,7 +878,7 @@ const Tiltmeter142939: React.FC = () => {
                     ...getReferenceShapesAndAnnotations('y'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', height: 550 }}
                   useResizeHandler={true}
                 />
               </div>
@@ -889,7 +894,7 @@ const Tiltmeter142939: React.FC = () => {
                   layout={{
                     ...plotlyLayout,
                     title: { 
-                      text: `${project ? project.name + ' - ' : ''}Z-Axis Tilt - Node ${nodeId}`,
+                      text: `${project ? project.name + ' - ' : ''}Z-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
                       font: { size: 20, weight: 700, color: '#1f2937' },
                       x: 0.5,
                       xanchor: 'center'
@@ -909,7 +914,7 @@ const Tiltmeter142939: React.FC = () => {
                     ...getReferenceShapesAndAnnotations('z'),
                   }}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', height: 550 }}
                   useResizeHandler={true}
                 />
               </div>

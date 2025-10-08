@@ -81,6 +81,7 @@ const EditInstrument: React.FC = () => {
             setShutEmailsForAlert(parseEmails(instrument.shutdown_emails));
             setInstrumentId(instrument.instrument_id || '');
             setInstrumentName(instrument.instrument_name || '');
+            setInstrumentLocation(instrument.instrument_location || '');
             setSerialNumber(instrument.sno || '');
             setAlertValue(instrument.alert_value || '');
             setWarningValue(instrument.warning_value || '');

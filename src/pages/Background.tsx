@@ -29,6 +29,7 @@ interface Instrument {
   instrument_id: string;
   instrument_name: string;
   project_id: number;
+  instrument_location?: string;
 }
 
 const Background: React.FC = () => {
@@ -120,7 +121,7 @@ const Background: React.FC = () => {
       // Fetch all instruments for this project that have graphs
       const { data: instrumentsData, error: instrumentsError } = await supabase
         .from('instruments')
-        .select('instrument_id, instrument_name, project_id')
+        .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
         .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'AMTS-1', 'AMTS-2', 'TILT-142939', 'TILT-143969'])
         .order('instrument_id');
@@ -428,23 +429,27 @@ const Background: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Combined Vibration Data`, 
+            text: `${project?.name || 'Project'} - Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG1')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG1')?.instrument_location : 'Location: None'}`,
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
-            title: {
-              text: 'Time',
+            title: { 
+              text: `Time<br><span style="font-size:12px;color:#666;">SMG1</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
-              standoff: 20
+              standoff: 10
             },
             type: 'date',
-            tickformat: '%m/%d %H:%M',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 18, color: '#374151', weight: 700 },
-            tickangle: 0
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickangle: 0,
+            nticks: 15,
+            tickmode: 'linear',
+            dtick: 'D1',
+            tick0: 'D1'
           },
           yaxis: {
             title: {
@@ -464,17 +469,19 @@ const Background: React.FC = () => {
           },
           showlegend: true,
           legend: {
-            x: 1.05,
+            x: 0.02,
             xanchor: 'left',
-            y: 0.5,
-            yanchor: 'middle',
-            font: { size: 14, weight: 700 },
-            bgcolor: 'rgba(255,255,255,0.9)',
+            y: -0.30,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#CCC',
-            borderwidth: 2
+            borderwidth: 1,
+            traceorder: 'normal'
           },
-          height: 600,
-          margin: { t: 60, b: 100, l: 110, r: 100 },
+          height: 550,
+          margin: { t: 60, b: 100, l: 80, r: 80 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -494,7 +501,7 @@ const Background: React.FC = () => {
             scale: 2
           }
         }}
-        style={{ width: '100%', height: 650 }}
+        style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
       />
     );
@@ -610,7 +617,7 @@ const Background: React.FC = () => {
         ]}
         layout={{
           title: {
-            text: 'Combined Vibration Data',
+            text: `Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG1')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG1')?.instrument_location : 'Location: None'}`,
             font: { size: 20, weight: 700, color: '#1f2937' },
             x: 0.5,
             xanchor: 'center'
@@ -622,11 +629,13 @@ const Background: React.FC = () => {
               standoff: 20
             },
             type: 'date',
-            tickformat: '%m/%d %H:%M',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
             gridcolor: '#f0f0f0',
             showgrid: true,
-            tickfont: { size: 18, color: '#374151', weight: 700 },
-            tickangle: 0
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickangle: 0,
+            nticks: 10,
+            tickmode: 'auto'
           },
           yaxis: {
             title: {
@@ -647,17 +656,19 @@ const Background: React.FC = () => {
           },
           showlegend: true,
           legend: {
-            x: 1.05,
+            x: 0.02,
             xanchor: 'left',
-            y: 0.5,
-            yanchor: 'middle',
-            font: { size: 14, weight: 700 },
-            bgcolor: 'rgba(255,255,255,0.9)',
+            y: -0.30,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#CCC',
-            borderwidth: 2
+            borderwidth: 1,
+            traceorder: 'normal'
           },
-          height: 600,
-          margin: { t: 60, b: 100, l: 110, r: 100 },
+          height: 550,
+          margin: { t: 60, b: 100, l: 80, r: 80 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
@@ -677,7 +688,7 @@ const Background: React.FC = () => {
             scale: 2
           }
         }}
-        style={{ width: '100%', height: 650 }}
+        style={{ width: '100%', height: 550 }}
         useResizeHandler={true}
       />
     );

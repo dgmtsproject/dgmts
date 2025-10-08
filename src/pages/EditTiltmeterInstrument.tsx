@@ -29,6 +29,7 @@ const EditTiltmeterInstrument: React.FC = () => {
 
   const [instrumentId, setInstrumentId] = useState(instrument?.instrument_id || '');
   const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
+  const [instrumentLocation, setInstrumentLocation] = useState(instrument?.instrument_location || '');
   const [instrumentSno, setInstrumentSno] = useState(instrument?.sno || '');
   const [project, _setProject] = useState({ id: instrument?.project_id, name: instrument?.project_name || '' });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -85,6 +86,7 @@ const EditTiltmeterInstrument: React.FC = () => {
     const updateData: any = {
       instrument_id: instrumentId,
       instrument_name: instrumentName,
+      instrument_location: instrumentLocation || null,
       project_id: project.id,
       sno: instrumentSno || null,
       x_y_z_alert_values: {
@@ -185,7 +187,7 @@ const EditTiltmeterInstrument: React.FC = () => {
               padding="20px"
               onSubmit={handleSubmit}
             >
-              <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} width="100%" mb={2}>
+              <Box display="grid" gridTemplateColumns="1fr 1fr 1fr 1fr" gap={2} width="100%" mb={2}>
                 <TextField
                   label="Instrument ID"
                   required
@@ -198,6 +200,12 @@ const EditTiltmeterInstrument: React.FC = () => {
                   required
                   value={instrumentName}
                   onChange={(e) => setInstrumentName(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Instrument Location"
+                  value={instrumentLocation}
+                  onChange={(e) => setInstrumentLocation(e.target.value)}
                   fullWidth
                 />
                 <TextField
