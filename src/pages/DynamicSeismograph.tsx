@@ -165,32 +165,97 @@ const DynamicSeismograph: React.FC = () => {
       };
     }
 
-    // Process data similar to existing seismograph pages
-    const combined = rawData.filter((entry: any) => {
+    // Date and hour-based filtering: Ensure at least one point per hour per date (same as Background.tsx)
+    const getDateHourKey = (timestamp: string) => {
+      const date = timestamp.split('T')[0]; // Get YYYY-MM-DD
+      const hour = timestamp.split('T')[1]?.split(':')[0]; // Get HH
+      return `${date}-${hour}`;
+    };
+
+    // Group data by date and hour
+    const dataByDateHour = new Map<string, any[]>();
+    rawData.forEach(entry => {
+      const dateHourKey = getDateHourKey(entry[0]);
+      if (!dataByDateHour.has(dateHourKey)) {
+        dataByDateHour.set(dateHourKey, []);
+      }
+      dataByDateHour.get(dateHourKey)!.push(entry);
+    });
+
+    // For each date-hour, keep the entry with the highest value (max of all axes) to ensure date-hour coverage
+    const dateHourCoverageData: any[] = [];
+    dataByDateHour.forEach((dateHourEntries) => {
+      // Find the entry with the highest value across all axes
+      let maxEntry = dateHourEntries[0];
+      let maxValue = Math.max(
+        Math.abs(Number(dateHourEntries[0][1])), // X axis
+        Math.abs(Number(dateHourEntries[0][2])), // Y axis
+        Math.abs(Number(dateHourEntries[0][3]))  // Z axis
+      );
+      
+      dateHourEntries.forEach(entry => {
+        const currentMax = Math.max(
+          Math.abs(Number(entry[1])), // X axis
+          Math.abs(Number(entry[2])), // Y axis
+          Math.abs(Number(entry[3]))  // Z axis
+        );
+        if (currentMax > maxValue) {
+          maxValue = currentMax;
+          maxEntry = entry;
+        }
+      });
+      
+      dateHourCoverageData.push(maxEntry); // Get the entry with highest value
+    });
+
+    // Ensure minimum 500 points per chart while covering all dates
+    const MIN_POINTS = 500;
+    
+    // Combined: at least one axis is nonzero (from date-hour coverage data)
+    const combined = dateHourCoverageData.filter((entry: any) => {
       const x = Math.abs(Number(entry[1]));
       const y = Math.abs(Number(entry[2]));
       const z = Math.abs(Number(entry[3]));
       return x > 0.0001 || y > 0.0001 || z > 0.0001;
     });
+    
+    // Ensure combined has at least MIN_POINTS or all available data
+    const combinedFiltered = combined.length <= MIN_POINTS ? combined : 
+      combined.filter((_, index) => index % Math.max(1, Math.floor(combined.length / MIN_POINTS)) === 0);
+
+    // X: ensure at least MIN_POINTS while covering dates
+    const xFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[1])) > 0.0001);
+    const xDown = xFiltered.length <= MIN_POINTS ? xFiltered : 
+      xFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(xFiltered.length / MIN_POINTS)) === 0);
+
+    // Y: ensure at least MIN_POINTS while covering dates
+    const yFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[2])) > 0.0001);
+    const yDown = yFiltered.length <= MIN_POINTS ? yFiltered : 
+      yFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(yFiltered.length / MIN_POINTS)) === 0);
+
+    // Z: ensure at least MIN_POINTS while covering dates
+    const zFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[3])) > 0.0001);
+    const zDown = zFiltered.length <= MIN_POINTS ? zFiltered : 
+      zFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(zFiltered.length / MIN_POINTS)) === 0);
 
     return {
       combined: {
-        time: combined.map(entry => parseISO(entry[0])),
-        x: combined.map(entry => parseFloat(Number(entry[1]).toFixed(3))),
-        y: combined.map(entry => parseFloat(Number(entry[2]).toFixed(3))),
-        z: combined.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
+        time: combinedFiltered.map(entry => parseISO(entry[0])),
+        x: combinedFiltered.map(entry => parseFloat(Number(entry[1]).toFixed(3))),
+        y: combinedFiltered.map(entry => parseFloat(Number(entry[2]).toFixed(3))),
+        z: combinedFiltered.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       },
       x: {
-        time: combined.map(entry => parseISO(entry[0])),
-        values: combined.map(entry => parseFloat(Number(entry[1]).toFixed(3)))
+        time: xDown.map(entry => parseISO(entry[0])),
+        values: xDown.map(entry => parseFloat(Number(entry[1]).toFixed(3)))
       },
       y: {
-        time: combined.map(entry => parseISO(entry[0])),
-        values: combined.map(entry => parseFloat(Number(entry[2]).toFixed(3)))
+        time: yDown.map(entry => parseISO(entry[0])),
+        values: yDown.map(entry => parseFloat(Number(entry[2]).toFixed(3)))
       },
       z: {
-        time: combined.map(entry => parseISO(entry[0])),
-        values: combined.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
+        time: zDown.map(entry => parseISO(entry[0])),
+        values: zDown.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       }
     };
   }, [rawData]);
@@ -237,29 +302,6 @@ const DynamicSeismograph: React.FC = () => {
     }
   };
 
-  // Helper function to calculate y-axis range for auto-zoom
-  const getYAxisRange = (values: number[], thresholds: any) => {
-    if (values.length === 0) return { min: -0.1, max: 0.1 };
-    
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
-    const range = maxValue - minValue;
-    
-    // Add 20% padding
-    const padding = Math.max(range * 0.2, 0.01);
-    
-    // Consider threshold values for range
-    const thresholdMax = Math.max(
-      thresholds.warning || 0,
-      thresholds.alert || 0,
-      thresholds.shutdown || 0
-    );
-    
-    return {
-      min: Math.min(minValue - padding, -thresholdMax * 1.2),
-      max: Math.max(maxValue + padding, thresholdMax * 1.2)
-    };
-  };
 
   const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
     const filtered = data.time
@@ -300,14 +342,14 @@ const DynamicSeismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'DYNAMIC')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'DYNAMIC')?.instrument_location : 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - Combined Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">DYNAMIC</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${selectedInstrument?.instrument_id || 'Instrument'}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -318,9 +360,7 @@ const DynamicSeismograph: React.FC = () => {
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
             nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
@@ -335,8 +375,33 @@ const DynamicSeismograph: React.FC = () => {
             tickfont: { size: 16, color: '#374151', weight: 700 },
             tickformat: '.3~f',
             range: (() => {
-              const range = getYAxisRange(filtered.map(pair => pair.v), getThresholdsFromSettings(instrumentSettings));
-              return [range.min, range.max];
+              try {
+                const values = filtered.map(pair => pair.v);
+                if (values.length === 0) return [-0.1, 0.1];
+                
+                const minValue = Math.min(...values);
+                const maxValue = Math.max(...values);
+                const range = maxValue - minValue;
+                const padding = Math.max(range * 0.2, 0.01);
+                
+                // Safe threshold calculation
+                let thresholdMax = 0;
+                if (instrumentSettings) {
+                  thresholdMax = Math.max(
+                    instrumentSettings.warning_value || 0,
+                    instrumentSettings.alert_value || 0,
+                    instrumentSettings.shutdown_value || 0
+                  );
+                }
+                
+                return [
+                  Math.min(minValue - padding, -thresholdMax * 1.2),
+                  Math.max(maxValue + padding, thresholdMax * 1.2)
+                ];
+              } catch (error) {
+                console.error('Error calculating range:', error);
+                return [-0.1, 0.1];
+              }
             })()
           },
           showlegend: true,
@@ -458,14 +523,14 @@ const DynamicSeismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'DYNAMIC')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'DYNAMIC')?.instrument_location : 'Location: None'}`, 
+            text: `Combined Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">DYNAMIC</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${selectedInstrument?.instrument_id || 'Instrument'}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -476,9 +541,7 @@ const DynamicSeismograph: React.FC = () => {
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
             nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
@@ -493,11 +556,33 @@ const DynamicSeismograph: React.FC = () => {
             tickfont: { size: 16, color: '#374151', weight: 700 },
             tickformat: '.3~f',
             range: (() => {
-              const range = getYAxisRange(
-                combined.x.concat(combined.y.concat(combined.z)), 
-                getThresholdsFromSettings(instrumentSettings)
-              );
-              return [range.min, range.max];
+              try {
+                const allValues = combined.x.concat(combined.y.concat(combined.z));
+                if (allValues.length === 0) return [-0.1, 0.1];
+                
+                const minValue = Math.min(...allValues);
+                const maxValue = Math.max(...allValues);
+                const range = maxValue - minValue;
+                const padding = Math.max(range * 0.2, 0.01);
+                
+                // Safe threshold calculation
+                let thresholdMax = 0;
+                if (instrumentSettings) {
+                  thresholdMax = Math.max(
+                    instrumentSettings.warning_value || 0,
+                    instrumentSettings.alert_value || 0,
+                    instrumentSettings.shutdown_value || 0
+                  );
+                }
+                
+                return [
+                  Math.min(minValue - padding, -thresholdMax * 1.2),
+                  Math.max(maxValue + padding, thresholdMax * 1.2)
+                ];
+              } catch (error) {
+                console.error('Error calculating range:', error);
+                return [-0.1, 0.1];
+              }
             })()
           },
           showlegend: true,
