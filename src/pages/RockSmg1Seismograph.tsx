@@ -416,7 +416,7 @@ const RockSmg1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-1')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-1')?.instrument_location}` : ''}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
@@ -605,7 +605,7 @@ const RockSmg1Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: 'Combined Vibration Data', 
+            text: `Combined Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-1')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-1')?.instrument_location}` : ''}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
