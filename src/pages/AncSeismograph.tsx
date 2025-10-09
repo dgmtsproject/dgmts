@@ -499,7 +499,7 @@ const AncSeismograph: React.FC = () => {
 
     return (
       <Plot
-        key={`${axis}-plot`}
+        key={`${axis}-plot-${project?.name || 'default'}`}
         data={[
           {
             x: filtered.map(pair => pair.t),
@@ -793,7 +793,7 @@ const AncSeismograph: React.FC = () => {
 
     return (
       <Plot
-        key="combined-plot"
+        key={`combined-plot-${project?.name || 'default'}`}
         data={[
           {
             x: combined.time,
@@ -895,7 +895,7 @@ const AncSeismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location : 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'

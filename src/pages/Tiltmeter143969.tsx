@@ -30,7 +30,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useAdminContext } from '../context/AdminContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
 
 interface SensorData {
   id: number;
@@ -454,7 +454,7 @@ const Tiltmeter143969: React.FC = () => {
     const thresholds = getThresholdsFromSettings(instrumentSettings, axis);
     
     // Create colored zones and threshold lines
-    return createCompleteRiskZones(thresholds);
+    return createReferenceLinesOnly(thresholds);
   }
   
   // Axis-specific thresholds for legend display

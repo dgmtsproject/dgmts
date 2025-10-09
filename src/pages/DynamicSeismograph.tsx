@@ -10,7 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
-import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
 
 interface InstrumentSettings {
   alert_value: number;
@@ -311,11 +311,11 @@ const DynamicSeismograph: React.FC = () => {
     if (filtered.length === 0) return null;
 
     // Create shapes and annotations for reference lines using the new utility
-    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+    const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     return (
       <Plot
-        key={`${axis}-plot`}
+        key={`${axis}-plot-${project?.name || 'default'}`}
         data={[
           {
             x: filtered.map(pair => pair.t),
@@ -448,11 +448,11 @@ const DynamicSeismograph: React.FC = () => {
     if (!combined.time.length) return null;
 
     // Create shapes and annotations for reference lines using the new utility
-    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+    const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     return (
       <Plot
-        key="combined-plot"
+        key={`combined-plot-${project?.name || 'default'}`}
         data={[
           {
             x: combined.time,
@@ -523,7 +523,7 @@ const DynamicSeismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `Combined Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - Combined Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'

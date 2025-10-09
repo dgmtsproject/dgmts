@@ -9,7 +9,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
-import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
 
 // Utility function to format time without timezone conversion
 const formatUTCTime = (timeString: string): Date => {
@@ -374,14 +374,14 @@ const Instantel1Seismograph: React.FC = () => {
     if (filtered.length === 0) return null;
 
     // Create shapes and annotations for reference lines using the new utility
-    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+    const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     if (instrumentSettings) {
     }
 
     return (
       <Plot
-        key={`${axis}-plot`}
+        key={`${axis}-plot-${project?.name || 'default'}`}
         data={[
           {
             x: filtered.map(pair => pair.t),
@@ -518,14 +518,14 @@ const Instantel1Seismograph: React.FC = () => {
     if (!combined.time.length) return null;
 
     // Create shapes and annotations for reference lines using the new utility
-    const zones = instrumentSettings ? createCompleteRiskZones(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+    const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
     if (instrumentSettings) {
     }
 
     return (
       <Plot
-        key="combined-plot"
+        key={`combined-plot-${project?.name || 'default'}`}
         data={[
           {
             x: combined.time,

@@ -19,7 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createCompleteRiskZones, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
 
 interface SensorData {
   id: number;
@@ -331,7 +331,7 @@ const Tiltmeter30846: React.FC = () => {
     const thresholds = getThresholdsFromSettings(instrumentSettings);
     
     // Create colored zones and threshold lines
-    return createCompleteRiskZones(thresholds);
+    return createReferenceLinesOnly(thresholds);
   }
   
   // General thresholds for legend display

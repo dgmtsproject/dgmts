@@ -361,6 +361,111 @@ export function createCompleteRiskZones(
 }
 
 /**
+ * Creates only threshold lines without background zones but with labels
+ * @param thresholds - The threshold values
+ * @returns Object containing line shapes and annotations for Plotly
+ */
+export function createReferenceLinesOnly(thresholds: ZoneThresholds): ZoneShapes {
+  const lines = createThresholdLines(thresholds);
+  const annotations: any[] = [];
+  
+  const { warning, alert, shutdown } = thresholds;
+  
+  // Add labels for each threshold line
+  if (warning) {
+    annotations.push(
+      {
+        x: 0.02,
+        xref: 'paper',
+        y: warning,
+        yref: 'y',
+        text: `Warning: ±${warning}`,
+        showarrow: false,
+        font: { color: '#ffcc00', size: 12, weight: 'bold' },
+        bgcolor: 'rgba(255,255,255,0.9)',
+        xanchor: 'left',
+        yanchor: 'bottom'
+      },
+      {
+        x: 0.02,
+        xref: 'paper',
+        y: -warning,
+        yref: 'y',
+        text: `Warning: ±${warning}`,
+        showarrow: false,
+        font: { color: '#ffcc00', size: 12, weight: 'bold' },
+        bgcolor: 'rgba(255,255,255,0.9)',
+        xanchor: 'left',
+        yanchor: 'top'
+      }
+    );
+  }
+  
+  if (alert) {
+    annotations.push(
+      {
+        x: 0.02,
+        xref: 'paper',
+        y: alert,
+        yref: 'y',
+        text: `Alert: ±${alert}`,
+        showarrow: false,
+        font: { color: '#ff8c00', size: 12, weight: 'bold' },
+        bgcolor: 'rgba(255,255,255,0.9)',
+        xanchor: 'left',
+        yanchor: 'bottom'
+      },
+      {
+        x: 0.02,
+        xref: 'paper',
+        y: -alert,
+        yref: 'y',
+        text: `Alert: ±${alert}`,
+        showarrow: false,
+        font: { color: '#ff8c00', size: 12, weight: 'bold' },
+        bgcolor: 'rgba(255,255,255,0.9)',
+        xanchor: 'left',
+        yanchor: 'top'
+      }
+    );
+  }
+  
+  if (shutdown) {
+    annotations.push(
+      {
+        x: 0.02,
+        xref: 'paper',
+        y: shutdown,
+        yref: 'y',
+        text: `Shutdown: ±${shutdown}`,
+        showarrow: false,
+        font: { color: '#ff0000', size: 12, weight: 'bold' },
+        bgcolor: 'rgba(255,255,255,0.9)',
+        xanchor: 'left',
+        yanchor: 'bottom'
+      },
+      {
+        x: 0.02,
+        xref: 'paper',
+        y: -shutdown,
+        yref: 'y',
+        text: `Shutdown: ±${shutdown}`,
+        showarrow: false,
+        font: { color: '#ff0000', size: 12, weight: 'bold' },
+        bgcolor: 'rgba(255,255,255,0.9)',
+        xanchor: 'left',
+        yanchor: 'top'
+      }
+    );
+  }
+  
+  return {
+    shapes: lines,
+    annotations: annotations
+  };
+}
+
+/**
  * Helper function to get thresholds from instrument settings
  * @param instrumentSettings - The instrument settings object
  * @param axis - Optional axis ('x', 'y', 'z') for tiltmeters
