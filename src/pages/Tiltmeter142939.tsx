@@ -152,7 +152,7 @@ const Tiltmeter142939: React.FC = () => {
         .from('instruments')
         .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
-        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969', 'TILTMETER-30846'])
+        .in('instrument_id', ['SMG1', 'SMG-1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969', 'TILTMETER-30846'])
         .order('instrument_id');
 
       if (error) {
@@ -169,6 +169,8 @@ const Tiltmeter142939: React.FC = () => {
   const handleInstrumentChange = (instrumentId: string) => {
     if (instrumentId === 'SMG1') {
       navigate('/background', { state: { project } });
+    } else if (instrumentId === 'SMG-1') {
+      navigate('/dynamic-seismograph?instrument=SMG-1', { state: { project } });
     } else if (instrumentId === 'SMG-2') {
       navigate('/anc-seismograph', { state: { project } });
     } else if (instrumentId === 'SMG-3') {

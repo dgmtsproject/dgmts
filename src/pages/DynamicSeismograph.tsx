@@ -92,7 +92,7 @@ const DynamicSeismograph: React.FC = () => {
     try {
       const { data: instrumentData, error: instrumentError } = await supabase
         .from('instruments')
-        .select('project_id, instrument_name')
+        .select('project_id, instrument_name, instrument_location')
         .eq('instrument_id', instrumentId)
         .single();
 
@@ -116,7 +116,8 @@ const DynamicSeismograph: React.FC = () => {
       setSelectedInstrument({
         instrument_id: instrumentId,
         instrument_name: instrumentData.instrument_name,
-        project_id: instrumentData.project_id
+        project_id: instrumentData.project_id,
+        instrument_location: instrumentData.instrument_location
       });
       
       fetchAvailableInstruments(projectData.id);
@@ -148,10 +149,41 @@ const DynamicSeismograph: React.FC = () => {
     const instrument = availableInstruments.find(inst => inst.instrument_id === newInstrumentId);
     if (instrument) {
       setSelectedInstrument(instrument);
-      // Navigate to the new instrument's page
-      navigate(`/dynamic-seismograph?instrument=${newInstrumentId}`, { 
-        state: { project, instrumentId: newInstrumentId } 
-      });
+      
+      // Route to the appropriate page based on instrument type
+      switch (newInstrumentId) {
+        case 'SMG1':
+          navigate('/background', { state: { project } });
+          break;
+        case 'SMG-1':
+          navigate('/dynamic-seismograph?instrument=SMG-1', { state: { project } });
+          break;
+        case 'SMG-2':
+          navigate('/anc-seismograph', { state: { project } });
+          break;
+        case 'SMG-3':
+          navigate('/smg3-seismograph', { state: { project } });
+          break;
+        case 'AMTS-1':
+        case 'AMTS-2':
+          navigate('/single-prism-with-time', { state: { project } });
+          break;
+        case 'TILT-142939':
+          navigate('/tiltmeter-142939', { state: { project } });
+          break;
+        case 'TILT-143969':
+          navigate('/tiltmeter-143969', { state: { project } });
+          break;
+        case 'TILTMETER-30846':
+          navigate('/tiltmeter-30846', { state: { project } });
+          break;
+        default:
+          // For any other instruments, stay on dynamic seismograph
+          navigate(`/dynamic-seismograph?instrument=${newInstrumentId}`, { 
+            state: { project, instrumentId: newInstrumentId } 
+          });
+          break;
+      }
     }
   };
 

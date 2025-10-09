@@ -123,7 +123,7 @@ const Smg3Seismograph: React.FC = () => {
         .from('instruments')
         .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
-        .in('instrument_id', ['SMG1', 'SMG-2', 'SMG-3', 'AMTS-1', 'AMTS-2', 'TILT-142939', 'TILT-143969'])
+        .in('instrument_id', ['SMG1', 'SMG-1', 'SMG-2', 'SMG-3', 'AMTS-1', 'AMTS-2', 'TILT-142939', 'TILT-143969', 'TILTMETER-30846'])
         .order('instrument_id');
 
       if (instrumentsError) {
@@ -142,6 +142,9 @@ const Smg3Seismograph: React.FC = () => {
       case 'SMG1':
         navigate('/background');
         break;
+      case 'SMG-1':
+        navigate('/dynamic-seismograph?instrument=SMG-1');
+        break;
       case 'SMG-2':
         navigate('/anc-seismograph');
         break;
@@ -157,6 +160,9 @@ const Smg3Seismograph: React.FC = () => {
         break;
       case 'TILT-143969':
         navigate('/tiltmeter-143969');
+        break;
+      case 'TILTMETER-30846':
+        navigate('/tiltmeter-30846');
         break;
       default:
         break;
