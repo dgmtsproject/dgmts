@@ -557,7 +557,7 @@ const Smg3Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-3')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-3')?.instrument_location : 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-3')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-3')?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'

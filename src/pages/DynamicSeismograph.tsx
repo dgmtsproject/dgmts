@@ -342,7 +342,7 @@ const DynamicSeismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Combined Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'

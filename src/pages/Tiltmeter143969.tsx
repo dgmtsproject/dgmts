@@ -175,6 +175,8 @@ const Tiltmeter143969: React.FC = () => {
       navigate('/smg3-seismograph', { state: { project } });
     } else if (instrumentId === 'TILT-142939') {
       navigate('/tiltmeter-142939', { state: { project } });
+    } else if (instrumentId === 'TILT-143969') {
+      navigate('/tiltmeter-143969', { state: { project } });
     } else if (instrumentId === 'TILTMETER-30846') {
       navigate('/tiltmeter-30846', { state: { project } });
     }
