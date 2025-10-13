@@ -631,7 +631,7 @@ const Tiltmeter142939: React.FC = () => {
         }
         
         const rawData = await response.json();
-        dataToExport = rawData.map((d: SensorData) => ({
+        dataToExport = rawData.reverse().map((d: SensorData) => ({
           Time: d.timestamp,
           X: d.x_value,
           Y: d.y_value,
