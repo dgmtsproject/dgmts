@@ -268,6 +268,13 @@ const Tiltmeter143969: React.FC = () => {
     }
   };
 
+  // confirm saving reference values
+  const confirmSavingReferenceValues = () => {
+    if(window.confirm('Are you sure you want to save reference values?')) {
+      saveReferenceValues();
+    }
+  };
+
   // Save reference values to database
   const saveReferenceValues = async () => {
     setSavingReference(true);
@@ -852,7 +859,7 @@ const Tiltmeter143969: React.FC = () => {
                   {isAdmin && (
                     <Button
                       variant="contained"
-                      onClick={saveReferenceValues}
+                      onClick={confirmSavingReferenceValues}
                       disabled={savingReference}
                       startIcon={savingReference ? <CircularProgress size={16} /> : null}
                     >
