@@ -95,6 +95,7 @@ const Tiltmeter143969: React.FC = () => {
   const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   const nodeId = 143969; // Hardcoded node ID
   const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
+  const [downloadingRaw, setDownloadingRaw] = useState(false);
 
   // Fetch instrument settings and project info on component mount
   useEffect(() => {
@@ -189,19 +190,17 @@ const Tiltmeter143969: React.FC = () => {
     
     setLoading(true);
     try {
-      // Format fromDate as start of day in local timezone
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+      // Format dates in UTC to match database timestamps
+      const formatDateUTC = (date: Date) => {
+        const utcDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
+        return utcDate.toISOString().split('T')[0];
       };
       
-      // For fromDate, use start of day (00:00:00)
-      const startParam = `${formatDate(fromDate)}T00:00:00`;
+      // For fromDate, use start of day in UTC
+      const startParam = `${formatDateUTC(fromDate)}T00:00:00Z`;
       
-      // For toDate, use end of day (23:59:59) to include all data for that day
-      const endParam = `${formatDate(toDate)}T23:59:59`;
+      // For toDate, use end of day in UTC to include all data for that day
+      const endParam = `${formatDateUTC(toDate)}T23:59:59Z`;
 
       const response = await fetch(
         `${API_BASE_URL}/api/sensor-data/${nodeId}?start_time=${startParam}&end_time=${endParam}&limit=1000`
@@ -594,29 +593,74 @@ const Tiltmeter143969: React.FC = () => {
     }] : [])
   ];
 
-  const handleDownloadExcel = (type: 'raw' | 'calibrated') => {
-    let dataToExport: any[] = [];
-    if (type === 'raw') {
-      dataToExport = sensorData.map(d => ({
-        Time: d.timestamp,
-        X: d.x_value,
-        Y: d.y_value,
-        Z: d.z_value,
-      }));
-    } else if (type === 'calibrated') {
-      dataToExport = sensorData.map(d => ({
-        Time: d.timestamp,
-        X: d.x_value, // Already calibrated by backend API
-        Y: d.y_value, // Already calibrated by backend API
-        Z: d.z_value, // Already calibrated by backend API
-      }));
+  const handleDownloadExcel = async (type: 'raw' | 'calibrated') => {
+    try {
+      let dataToExport: any[] = [];
+      
+      if (type === 'raw') {
+        setDownloadingRaw(true);
+        // Fetch raw data from the new API endpoint
+        // For raw data, we'll use UTC timestamps and a broader range to ensure we get all available data
+        let startParam, endParam;
+        
+        if (fromDate && toDate) {
+          // Convert local dates to UTC to match database timestamps
+          const formatDateUTC = (date: Date) => {
+            const utcDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
+            return utcDate.toISOString().split('T')[0];
+          };
+          
+          startParam = `${formatDateUTC(fromDate)}T00:00:00Z`;
+          endParam = `${formatDateUTC(toDate)}T23:59:59Z`;
+        } else {
+          // If no date range selected, use a broader range to get recent data
+          const now = new Date();
+          const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          
+          startParam = thirtyDaysAgo.toISOString();
+          endParam = now.toISOString();
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/sensor-data-raw/${nodeId}?start_time=${startParam}&end_time=${endParam}&limit=2000`
+        );
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const rawData = await response.json();
+        dataToExport = rawData.map((d: SensorData) => ({
+          Time: d.timestamp,
+          X: d.x_value,
+          Y: d.y_value,
+          Z: d.z_value,
+        }));
+      } else if (type === 'calibrated') {
+        // Use the already loaded calibrated data
+        dataToExport = sensorData.map(d => ({
+          Time: d.timestamp,
+          X: d.x_value, // Already calibrated by backend API
+          Y: d.y_value, // Already calibrated by backend API
+          Z: d.z_value, // Already calibrated by backend API
+        }));
+      }
+      
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, type === 'raw' ? 'Raw Data' : 'Calibrated Data');
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      saveAs(blob, `tiltmeter-${nodeId}-${type}-data.xlsx`);
+      
+      toast.success(`${type === 'raw' ? 'Raw' : 'Calibrated'} data downloaded successfully`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      toast.error(`Failed to download ${type} data: ${errorMessage}`);
+      console.error(`Error downloading ${type} data:`, error);
+    } finally {
+      setDownloadingRaw(false);
     }
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, type === 'raw' ? 'Raw Data' : 'Calibrated Data');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    saveAs(blob, `tiltmeter-${nodeId}-${type}-data.xlsx`);
   };
 
 
@@ -704,8 +748,18 @@ const Tiltmeter143969: React.FC = () => {
                 open={Boolean(downloadMenuAnchor)}
                 onClose={() => setDownloadMenuAnchor(null)}
               >
-                <MenuItem onClick={() => { handleDownloadExcel('raw'); setDownloadMenuAnchor(null); }}>
-                  Raw Data
+                <MenuItem 
+                  onClick={() => { handleDownloadExcel('raw'); setDownloadMenuAnchor(null); }}
+                  disabled={downloadingRaw}
+                >
+                  {downloadingRaw ? (
+                    <>
+                      <CircularProgress size={16} sx={{ mr: 1 }} />
+                      Downloading Raw Data...
+                    </>
+                  ) : (
+                    'Raw Data'
+                  )}
                 </MenuItem>
                 {permissions.download_graph && (
                   <MenuItem onClick={() => { handleDownloadExcel('calibrated'); setDownloadMenuAnchor(null); }}>
