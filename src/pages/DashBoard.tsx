@@ -1,41 +1,43 @@
 import React from 'react';
-import { Box, Typography, Button, Paper, useTheme } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Typography, useTheme } from '@mui/material';
+//import { useNavigate } from 'react-router-dom';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { useAdminContext } from '../context/AdminContext';
+import InteractiveProjectMaps from '../components/InteractiveProjectMaps';
 
 const Dashboard: React.FC = () => {
   const theme = useTheme();
-  const navigate = useNavigate();
-  const { isAdmin, userEmail, permissions } = useAdminContext();
+  //const navigate = useNavigate();
+  const { userEmail } = useAdminContext();
 
-  const featureCards = [
-    ...(permissions.access_to_site ? [{
-      title: 'Projects',
-      description: 'Manage and view all your monitoring projects',
-      icon: '📊',
-      path: '/projects-list'
-    }] : []),
-    {
-      title: 'Data Visualization',
-      description: 'View graphs and analyze your data',
-      icon: '📈',
-      path: '/project-graphs'
-    },
-    {
-      title: 'Alarms',
-      description: 'Monitor and manage system alerts',
-      icon: '🚨',
-      path: '/alarms'
-    },
-    ...(isAdmin ? [{
-      title: 'Admin Panel',
-      description: 'Manage users, Projects,Permissions and Instruments',
-      icon: '⚙️',
-      path: '/admin-setup'
-    }] : [])
-  ];
+  // COMMENTED OUT: Original feature cards - preserved for future use
+  // const featureCards = [
+  //   ...(permissions.access_to_site ? [{
+  //     title: 'Projects',
+  //     description: 'Manage and view all your monitoring projects',
+  //     icon: '📊',
+  //     path: '/projects-list'
+  //   }] : []),
+  //   {
+  //     title: 'Data Visualization',
+  //     description: 'View graphs and analyze your data',
+  //     icon: '📈',
+  //     path: '/project-graphs'
+  //   },
+  //   {
+  //     title: 'Alarms',
+  //     description: 'Monitor and manage system alerts',
+  //     icon: '🚨',
+  //     path: '/alarms'
+  //   },
+  //   ...(isAdmin ? [{
+  //     title: 'Admin Panel',
+  //     description: 'Manage users, Projects,Permissions and Instruments',
+  //     icon: '⚙️',
+  //     path: '/admin-setup'
+  //   }] : [])
+  // ];
 
   return (
     <>
@@ -58,6 +60,7 @@ const Dashboard: React.FC = () => {
           </Typography>
         </Box>
 
+        {/* COMMENTED OUT: Original feature cards - preserved for future use
         <Box sx={{ 
           display: 'grid', 
           gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
@@ -92,7 +95,12 @@ const Dashboard: React.FC = () => {
             </Paper>
           ))}
         </Box>
+        */}
 
+        {/* NEW: Interactive Project Maps */}
+        <InteractiveProjectMaps />
+
+        {/* COMMENTED OUT: Quick Actions section - preserved for future use
         <Box sx={{ mt: 6, textAlign: 'center' }}>
           <Typography variant="h5" gutterBottom>
             Quick Actions
@@ -118,6 +126,7 @@ const Dashboard: React.FC = () => {
             )}
           </Box>
         </Box>
+        */}
       </MainContentWrapper>
     </>
   );
