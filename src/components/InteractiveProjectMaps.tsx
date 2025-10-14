@@ -59,7 +59,7 @@ const ProjectMap: React.FC<{ project: ProjectLocation }> = ({ project }) => {
     <Box sx={{ height: '400px', width: '100%', borderRadius: 1, overflow: 'hidden' }}>
       <MapContainer
         center={[project.latitude, project.longitude]}
-        zoom={20}
+        zoom={17}
         style={{ height: '100%', width: '100%' }}
         zoomControl={true}
         dragging={true}
@@ -72,9 +72,9 @@ const ProjectMap: React.FC<{ project: ProjectLocation }> = ({ project }) => {
         key={`map-${project.id}`}
       >
         <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          url={`https://api.mapbox.com/styles/v1/patrick-geo-instruments/ckngbuxda2rxn18pc2c4io7le/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
           maxZoom={22}
-          attribution='Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics'
+          attribution='© Mapbox © OpenStreetMap contributors'
         />
         <Marker 
           position={[project.latitude, project.longitude]}
@@ -159,24 +159,7 @@ const InteractiveProjectMaps: React.FC = () => {
       latitude: 38.869197, // 38°52'9.11"N converted to decimal
       longitude: -77.059714, // 77°3'34.97"W converted to decimal
       description: 'ANC DAR BC Arlington, VA - Vibration monitoring system',
-      instruments: [],
-      lines: [
-        {
-          name: 'DAR-BC Tiltmeter Connection',
-          coordinates: [
-            [38.869197, -77.059714], // DAR-B
-            [38.869197, -77.060714], // DAR-C (moved further east)
-            [38.869197, -77.060214]  // Connection point (midway)
-          ],
-          color: 'red',
-          weight: 4
-        }
-      ],
-      labels: [
-        { position: [38.869197, -77.059714], text: 'DAR-B' },
-        { position: [38.869197, -77.060714], text: 'DAR-C' },
-        { position: [38.869197, -77.060214], text: 'Tiltmeter Connection' }
-      ]
+      instruments: []
     },
     {
       id: 25304,
