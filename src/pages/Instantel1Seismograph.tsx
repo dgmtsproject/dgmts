@@ -376,8 +376,6 @@ const Instantel1Seismograph: React.FC = () => {
     // Create shapes and annotations for reference lines using the new utility
     const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
-    if (instrumentSettings) {
-    }
 
     return (
       <Plot
@@ -520,8 +518,6 @@ const Instantel1Seismograph: React.FC = () => {
     // Create shapes and annotations for reference lines using the new utility
     const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
-    if (instrumentSettings) {
-    }
 
     return (
       <Plot
