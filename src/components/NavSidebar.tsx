@@ -27,7 +27,8 @@ import {
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
   AccountTree as ProjectIcon,
-  Map as ProjectMapIcon
+  Map as ProjectMapIcon,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -246,6 +247,12 @@ useEffect(() => {
         <Divider />
       </Box>
         <List>
+          <ListItemButton component={Link} to="/dashboard">
+            <ListItemIcon sx={{ color: 'inherit' }}>
+              <DashboardIcon />
+            </ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItemButton>
           {permissions.access_to_site && (
             <ListItemButton component={Link} to="/projects-list">
               <ListItemIcon sx={{ color: 'inherit' }}>
