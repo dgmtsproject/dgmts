@@ -22,7 +22,6 @@ import {
 } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -58,6 +57,18 @@ interface ReferenceValues {
   reference_z_value: number | null;
 }
 
+interface TimedReferenceValue {
+  id?: number;
+  instrument_id: string;
+  start_time: string;
+  end_time: string | null;
+  reference_x_value: number | null;
+  reference_y_value: number | null;
+  reference_z_value: number | null;
+  created_at?: string;
+  is_saved?: boolean; // Track if saved to database
+}
+
 interface Project {
   id: number;
   name: string;
@@ -91,6 +102,19 @@ const Tiltmeter143969: React.FC = () => {
     reference_z_value: ''
   });
   const [savingReference, setSavingReference] = useState(false);
+  
+  // Time-based reference values
+  const [timedReferenceValues, setTimedReferenceValues] = useState<TimedReferenceValue[]>([]);
+  const [newTimedReference, setNewTimedReference] = useState<Partial<TimedReferenceValue>>({
+    start_time: '',
+    end_time: '',
+    reference_x_value: null,
+    reference_y_value: null,
+    reference_z_value: null
+  });
+  const [editingTimedReference, setEditingTimedReference] = useState<TimedReferenceValue | null>(null);
+  const [showTimedReferenceForm, setShowTimedReferenceForm] = useState(false);
+  const [savingTimedReferences, setSavingTimedReferences] = useState(false);
   const [project, setProject] = useState<Project | null>(location.state?.project || null);
   const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   const nodeId = 143969; // Hardcoded node ID
@@ -190,28 +214,21 @@ const Tiltmeter143969: React.FC = () => {
     
     setLoading(true);
     try {
-      // Format dates in UTC to match database timestamps
-      const formatDateUTC = (date: Date) => {
-        const utcDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-        return utcDate.toISOString().split('T')[0];
-      };
-      
-      // For fromDate, use start of day in UTC
-      const startParam = `${formatDateUTC(fromDate)}T00:00:00Z`;
-      
-      // For toDate, use end of day in UTC to include all data for that day
-      const endParam = `${formatDateUTC(toDate)}T23:59:59Z`;
+      // Fetch raw data from sensor_readings table
+      const { data: rawData, error } = await supabase
+        .from('sensor_readings')
+        .select('*')
+        .eq('node_id', nodeId)
+        .gte('timestamp', fromDate.toISOString())
+        .lte('timestamp', toDate.toISOString())
+        .order('timestamp', { ascending: true })
+        .limit(1000);
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/sensor-data/${nodeId}?start_time=${startParam}&end_time=${endParam}&limit=1000`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setSensorData(data.reverse()); // Reverse to show chronological order
+      if (error) throw error;
+
+      // Apply calibration if reference values are enabled
+      const calibratedData = applyCalibration(rawData || []);
+      setSensorData(calibratedData);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       toast.error(`Failed to fetch sensor data: ${errorMessage}`);
@@ -219,6 +236,68 @@ const Tiltmeter143969: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Apply calibration to raw sensor data
+  const applyCalibration = (rawData: SensorData[]): SensorData[] => {
+    if (!referenceValues.enabled) {
+      return rawData; // Return raw data if calibration is disabled
+    }
+
+    return rawData.map(dataPoint => {
+      const timestamp = new Date(dataPoint.timestamp);
+      
+      // Find applicable time-based reference value
+      const applicableTimedRef = timedReferenceValues.find(ref => {
+        const startTime = new Date(ref.start_time);
+        const endTime = ref.end_time ? new Date(ref.end_time) : null;
+        return timestamp >= startTime && (!endTime || timestamp < endTime);
+      });
+
+      let calibratedX = dataPoint.x_value;
+      let calibratedY = dataPoint.y_value;
+      let calibratedZ = dataPoint.z_value;
+
+      if (applicableTimedRef) {
+        // Apply time-based reference values
+        if (applicableTimedRef.reference_x_value !== null) {
+          calibratedX = dataPoint.x_value - applicableTimedRef.reference_x_value;
+        } else if (referenceValues.reference_x_value !== null) {
+          // Fall back to global reference if time-based doesn't specify this axis
+          calibratedX = dataPoint.x_value - referenceValues.reference_x_value;
+        }
+
+        if (applicableTimedRef.reference_y_value !== null) {
+          calibratedY = dataPoint.y_value - applicableTimedRef.reference_y_value;
+        } else if (referenceValues.reference_y_value !== null) {
+          calibratedY = dataPoint.y_value - referenceValues.reference_y_value;
+        }
+
+        if (applicableTimedRef.reference_z_value !== null) {
+          calibratedZ = dataPoint.z_value - applicableTimedRef.reference_z_value;
+        } else if (referenceValues.reference_z_value !== null) {
+          calibratedZ = dataPoint.z_value - referenceValues.reference_z_value;
+        }
+      } else {
+        // No time-based reference applies, use global reference values
+        if (referenceValues.reference_x_value !== null) {
+          calibratedX = dataPoint.x_value - referenceValues.reference_x_value;
+        }
+        if (referenceValues.reference_y_value !== null) {
+          calibratedY = dataPoint.y_value - referenceValues.reference_y_value;
+        }
+        if (referenceValues.reference_z_value !== null) {
+          calibratedZ = dataPoint.z_value - referenceValues.reference_z_value;
+        }
+      }
+
+      return {
+        ...dataPoint,
+        x_value: calibratedX,
+        y_value: calibratedY,
+        z_value: calibratedZ
+      };
+    });
   };
 
   const fetchInstrumentSettings = async () => {
@@ -265,6 +344,176 @@ const Tiltmeter143969: React.FC = () => {
     } catch (error) {
       console.error('Error fetching reference values:', error);
       toast.error('Failed to load reference values');
+    }
+  };
+
+  // Fetch time-based reference values from database
+  const fetchTimedReferenceValues = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('time_based_reference_values')
+        .select('*')
+        .eq('instrument_id', 'TILT-143969')
+        .order('from_date', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedData: TimedReferenceValue[] = data.map(item => ({
+          id: item.id,
+          instrument_id: item.instrument_id,
+          start_time: item.from_date,
+          end_time: item.to_date,
+          reference_x_value: item.x_reference_value,
+          reference_y_value: item.y_reference_value,
+          reference_z_value: item.z_reference_value,
+          created_at: item.created_at,
+          is_saved: true
+        }));
+        setTimedReferenceValues(mappedData);
+      }
+    } catch (error) {
+      console.error('Error fetching timed reference values:', error);
+      toast.error('Failed to load time-based reference values');
+    }
+  };
+
+  // Add a new timed reference value (in-memory, not saved until user clicks Save)
+  const addTimedReferenceValue = () => {
+    if (!newTimedReference.start_time) {
+      toast.error('Please specify a start time');
+      return;
+    }
+
+    // Check if at least one reference value is provided
+    if (newTimedReference.reference_x_value === null && 
+        newTimedReference.reference_y_value === null && 
+        newTimedReference.reference_z_value === null) {
+      toast.error('Please specify at least one reference value (X, Y, or Z)');
+      return;
+    }
+
+    const newRef: TimedReferenceValue = {
+      id: Date.now(), // Use timestamp as temporary ID for unsaved items
+      instrument_id: 'TILT-143969',
+      start_time: newTimedReference.start_time!,
+      end_time: newTimedReference.end_time || null,
+      reference_x_value: newTimedReference.reference_x_value ?? null,
+      reference_y_value: newTimedReference.reference_y_value ?? null,
+      reference_z_value: newTimedReference.reference_z_value ?? null,
+      is_saved: false
+    };
+
+    setTimedReferenceValues(prev => [...prev, newRef].sort((a, b) => 
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    ));
+
+    toast.success('Timed reference value added. Click "Save All" to persist.');
+    setShowTimedReferenceForm(false);
+    setNewTimedReference({
+      start_time: '',
+      end_time: '',
+      reference_x_value: null,
+      reference_y_value: null,
+      reference_z_value: null
+    });
+
+    // Refresh data if loaded
+    if (sensorData.length > 0) {
+      fetchSensorData();
+    }
+  };
+
+  // Update an existing timed reference value (in-memory)
+  const updateTimedReferenceValue = () => {
+    if (!editingTimedReference) return;
+
+    setTimedReferenceValues(prev => 
+      prev.map(ref => ref.id === editingTimedReference.id ? { ...editingTimedReference, is_saved: false } : ref)
+        .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    );
+
+    toast.success('Timed reference value updated. Click "Save All" to persist.');
+    setEditingTimedReference(null);
+
+    // Refresh data if loaded
+    if (sensorData.length > 0) {
+      fetchSensorData();
+    }
+  };
+
+  // Delete a timed reference value (in-memory, will be deleted from DB on save)
+  const deleteTimedReferenceValue = (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this timed reference value?')) return;
+
+    setTimedReferenceValues(prev => prev.filter(ref => ref.id !== id));
+    toast.success('Timed reference value removed. Click "Save All" to persist changes.');
+
+    // Refresh data if loaded
+    if (sensorData.length > 0) {
+      fetchSensorData();
+    }
+  };
+
+  // Helper function to format date as local datetime string (without timezone conversion)
+  const formatLocalDateTime = (dateString: string | null): string | null => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  // Save all timed reference values to database
+  const saveTimedReferenceValues = async () => {
+    if (!window.confirm('This will save all time-based reference values to the database. Continue?')) return;
+
+    setSavingTimedReferences(true);
+    try {
+      // First, delete all existing records for this instrument
+      const { error: deleteError } = await supabase
+        .from('time_based_reference_values')
+        .delete()
+        .eq('instrument_id', 'TILT-143969');
+
+      if (deleteError) throw deleteError;
+
+      // Then insert all current values (prevents duplicates)
+      if (timedReferenceValues.length > 0) {
+        const dataToInsert = timedReferenceValues.map(ref => ({
+          instrument_id: 'TILT-143969',
+          from_date: formatLocalDateTime(ref.start_time),
+          to_date: formatLocalDateTime(ref.end_time),
+          x_reference_value: ref.reference_x_value,
+          y_reference_value: ref.reference_y_value,
+          z_reference_value: ref.reference_z_value
+        }));
+
+        const { error: insertError } = await supabase
+          .from('time_based_reference_values')
+          .insert(dataToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      // Refresh from database to get actual IDs
+      await fetchTimedReferenceValues();
+      
+      toast.success('Time-based reference values saved successfully');
+      
+      // Refresh data if loaded
+      if (sensorData.length > 0) {
+        await fetchSensorData();
+      }
+    } catch (error) {
+      console.error('Error saving timed reference values:', error);
+      toast.error('Failed to save time-based reference values');
+    } finally {
+      setSavingTimedReferences(false);
     }
   };
 
@@ -351,14 +600,14 @@ const Tiltmeter143969: React.FC = () => {
   useEffect(() => {
     fetchInstrumentSettings();
     fetchReferenceValues();
+    fetchTimedReferenceValues();
   }, []);
 
   // Prepare data for charts
   const timestamps = sensorData.map(d => new Date(d.timestamp));
   
-  // The backend API already applies reference values when enabled, so we don't need to subtract again
-  // If reference values are enabled, the data from API is already calibrated
-  // If reference values are disabled, we use raw data as is
+  // Data is already calibrated by the applyCalibration function
+  // It applies time-based reference values (if applicable) or falls back to global reference values
   const xValues = sensorData.map(d => d.x_value);
   const yValues = sensorData.map(d => d.y_value);
   const zValues = sensorData.map(d => d.z_value);
@@ -606,38 +855,22 @@ const Tiltmeter143969: React.FC = () => {
       
       if (type === 'raw') {
         setDownloadingRaw(true);
-        // Fetch raw data from the new API endpoint
-        // For raw data, we'll use UTC timestamps and a broader range to ensure we get all available data
-        let startParam, endParam;
-        
-        if (fromDate && toDate) {
-          // Convert local dates to UTC to match database timestamps
-          const formatDateUTC = (date: Date) => {
-            const utcDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-            return utcDate.toISOString().split('T')[0];
-          };
-          
-          startParam = `${formatDateUTC(fromDate)}T00:00:00Z`;
-          endParam = `${formatDateUTC(toDate)}T23:59:59Z`;
-        } else {
-          // If no date range selected, use a broader range to get recent data
-          const now = new Date();
-          const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          
-          startParam = thirtyDaysAgo.toISOString();
-          endParam = now.toISOString();
-        }
+        // Fetch raw data directly from sensor_readings table
+        const startDate = fromDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const endDate = toDate || new Date();
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/sensor-data-raw/${nodeId}?start_time=${startParam}&end_time=${endParam}&limit=2000`
-        );
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const rawData = await response.json();
-        dataToExport = rawData.reverse().map((d: SensorData) => ({
+        const { data: rawData, error } = await supabase
+          .from('sensor_readings')
+          .select('*')
+          .eq('node_id', nodeId)
+          .gte('timestamp', startDate.toISOString())
+          .lte('timestamp', endDate.toISOString())
+          .order('timestamp', { ascending: true })
+          .limit(2000);
+
+        if (error) throw error;
+
+        dataToExport = (rawData || []).map((d: SensorData) => ({
           Time: d.timestamp,
           X: d.x_value,
           Y: d.y_value,
@@ -647,9 +880,9 @@ const Tiltmeter143969: React.FC = () => {
         // Use the already loaded calibrated data
         dataToExport = sensorData.map(d => ({
           Time: d.timestamp,
-          X: d.x_value, // Already calibrated by backend API
-          Y: d.y_value, // Already calibrated by backend API
-          Z: d.z_value, // Already calibrated by backend API
+          X: d.x_value, // Already calibrated by applyCalibration function
+          Y: d.y_value, // Already calibrated by applyCalibration function
+          Z: d.z_value, // Already calibrated by applyCalibration function
         }));
       }
       
@@ -868,6 +1101,318 @@ const Tiltmeter143969: React.FC = () => {
                   )}
                 </Stack>
               </Box>
+            )}
+          </Box>
+
+          {/* Time-Based Reference Values Section */}
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">
+                Time-Based Reference Values
+              </Typography>
+              {isAdmin && timedReferenceValues.length > 0 && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={saveTimedReferenceValues}
+                  disabled={savingTimedReferences}
+                  startIcon={savingTimedReferences ? <CircularProgress size={16} /> : null}
+                >
+                  {savingTimedReferences ? 'Saving...' : 'Save All'}
+                </Button>
+              )}
+            </Box>
+            
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <strong>Note:</strong> Time-based reference values are applied on top of the global reference values above. 
+              Click "Save All" to persist your changes to the database.
+            </Alert>
+            
+            {!isAdmin && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Contact an administrator to manage time-based reference values.
+              </Alert>
+            )}
+
+            {/* List of existing timed reference values */}
+            {timedReferenceValues.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Configured Time Periods:
+                </Typography>
+                {timedReferenceValues.map((timed) => (
+                  <Paper key={timed.id} sx={{ p: 2, mb: 2, bgcolor: 'white', border: timed.is_saved ? '1px solid #e0e0e0' : '2px solid #ff9800' }}>
+                    {editingTimedReference?.id === timed.id && editingTimedReference ? (
+                      // Edit mode
+                      <Box>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <Stack spacing={2}>
+                            <Stack direction="row" spacing={2} alignItems="center">
+                              <DateTimePicker
+                                label="Start Time"
+                                value={editingTimedReference.start_time ? new Date(editingTimedReference.start_time) : null}
+                                onChange={(date) => {
+                                  if (date) {
+                                    setEditingTimedReference({
+                                      ...editingTimedReference,
+                                      start_time: date.toISOString()
+                                    });
+                                  }
+                                }}
+                                slotProps={{ textField: { size: 'small' } }}
+                              />
+                              <DateTimePicker
+                                label="End Time (Optional)"
+                                value={editingTimedReference.end_time ? new Date(editingTimedReference.end_time) : null}
+                                onChange={(date) => {
+                                  setEditingTimedReference({
+                                    ...editingTimedReference,
+                                    end_time: date ? date.toISOString() : null
+                                  });
+                                }}
+                                minDateTime={editingTimedReference.start_time ? new Date(editingTimedReference.start_time) : undefined}
+                                slotProps={{ textField: { size: 'small' } }}
+                              />
+                            </Stack>
+                            <Stack direction="row" spacing={2} alignItems="center">
+                              <TextField
+                                label="Reference X"
+                                type="number"
+                                value={editingTimedReference.reference_x_value || ''}
+                                onChange={(e) => {
+                                  if (editingTimedReference) {
+                                    setEditingTimedReference({
+                                      ...editingTimedReference,
+                                      reference_x_value: e.target.value ? parseFloat(e.target.value) : null
+                                    });
+                                  }
+                                }}
+                                size="small"
+                                inputProps={{ step: "any" }}
+                              />
+                              <TextField
+                                label="Reference Y"
+                                type="number"
+                                value={editingTimedReference.reference_y_value || ''}
+                                onChange={(e) => {
+                                  if (editingTimedReference) {
+                                    setEditingTimedReference({
+                                      ...editingTimedReference,
+                                      reference_y_value: e.target.value ? parseFloat(e.target.value) : null
+                                    });
+                                  }
+                                }}
+                                size="small"
+                                inputProps={{ step: "any" }}
+                              />
+                              <TextField
+                                label="Reference Z"
+                                type="number"
+                                value={editingTimedReference.reference_z_value || ''}
+                                onChange={(e) => {
+                                  if (editingTimedReference) {
+                                    setEditingTimedReference({
+                                      ...editingTimedReference,
+                                      reference_z_value: e.target.value ? parseFloat(e.target.value) : null
+                                    });
+                                  }
+                                }}
+                                size="small"
+                                inputProps={{ step: "any" }}
+                              />
+                            </Stack>
+                            <Stack direction="row" spacing={2}>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={updateTimedReferenceValue}
+                                size="small"
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                onClick={() => setEditingTimedReference(null)}
+                                size="small"
+                              >
+                                Cancel
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        </LocalizationProvider>
+                      </Box>
+                    ) : (
+                      // View mode
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Box sx={{ flex: 1 }}>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                            <Typography variant="body2">
+                              <strong>Period:</strong> {new Date(timed.start_time).toLocaleString()} 
+                              {timed.end_time ? ` → ${new Date(timed.end_time).toLocaleString()}` : ' → (till now)'}
+                            </Typography>
+                            {!timed.is_saved && (
+                              <Box 
+                                sx={{ 
+                                  bgcolor: '#ff9800', 
+                                  color: 'white', 
+                                  px: 1, 
+                                  py: 0.25, 
+                                  borderRadius: 1, 
+                                  fontSize: '0.7rem',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                UNSAVED
+                              </Box>
+                            )}
+                          </Stack>
+                          <Typography variant="body2">
+                            <strong>Reference Values:</strong> 
+                            {timed.reference_x_value !== null ? ` X=${timed.reference_x_value.toFixed(6)}` : ''}
+                            {timed.reference_y_value !== null ? ` Y=${timed.reference_y_value.toFixed(6)}` : ''}
+                            {timed.reference_z_value !== null ? ` Z=${timed.reference_z_value.toFixed(6)}` : ''}
+                            {timed.reference_x_value === null && timed.reference_y_value === null && timed.reference_z_value === null ? ' None specified' : ''}
+                          </Typography>
+                        </Box>
+                        {isAdmin && (
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => setEditingTimedReference(timed)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              size="small"
+                              onClick={() => timed.id && deleteTimedReferenceValue(timed.id)}
+                            >
+                              Delete
+                            </Button>
+                          </Stack>
+                        )}
+                      </Stack>
+                    )}
+                  </Paper>
+                ))}
+              </Box>
+            )}
+
+            {/* Add new timed reference value form */}
+            {isAdmin && (
+              <>
+                {!showTimedReferenceForm ? (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setShowTimedReferenceForm(true)}
+                    sx={{ mb: 2 }}
+                  >
+                    + Add Time-Based Reference Value
+                  </Button>
+                ) : (
+                  <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #ddd' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold' }}>
+                      Add New Time-Based Reference Value
+                    </Typography>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <Stack spacing={2}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <DateTimePicker
+                            label="Start Time *"
+                            value={newTimedReference.start_time ? new Date(newTimedReference.start_time) : null}
+                            onChange={(date) => {
+                              setNewTimedReference({
+                                ...newTimedReference,
+                                start_time: date ? date.toISOString() : ''
+                              });
+                            }}
+                            slotProps={{ textField: { size: 'small', required: true } }}
+                          />
+                          <DateTimePicker
+                            label="End Time (Optional)"
+                            value={newTimedReference.end_time ? new Date(newTimedReference.end_time) : null}
+                            onChange={(date) => {
+                              setNewTimedReference({
+                                ...newTimedReference,
+                                end_time: date ? date.toISOString() : ''
+                              });
+                            }}
+                            minDateTime={newTimedReference.start_time ? new Date(newTimedReference.start_time) : undefined}
+                            slotProps={{ textField: { size: 'small' } }}
+                          />
+                        </Stack>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <TextField
+                            label="Reference X Value (Optional)"
+                            type="number"
+                            value={newTimedReference.reference_x_value ?? ''}
+                            onChange={(e) => setNewTimedReference({
+                              ...newTimedReference,
+                              reference_x_value: e.target.value ? parseFloat(e.target.value) : null
+                            })}
+                            size="small"
+                            inputProps={{ step: "any" }}
+                            helperText="Leave blank to skip X-axis calibration"
+                          />
+                          <TextField
+                            label="Reference Y Value (Optional)"
+                            type="number"
+                            value={newTimedReference.reference_y_value ?? ''}
+                            onChange={(e) => setNewTimedReference({
+                              ...newTimedReference,
+                              reference_y_value: e.target.value ? parseFloat(e.target.value) : null
+                            })}
+                            size="small"
+                            inputProps={{ step: "any" }}
+                            helperText="Leave blank to skip Y-axis calibration"
+                          />
+                          <TextField
+                            label="Reference Z Value (Optional)"
+                            type="number"
+                            value={newTimedReference.reference_z_value ?? ''}
+                            onChange={(e) => setNewTimedReference({
+                              ...newTimedReference,
+                              reference_z_value: e.target.value ? parseFloat(e.target.value) : null
+                            })}
+                            size="small"
+                            inputProps={{ step: "any" }}
+                            helperText="Leave blank to skip Z-axis calibration"
+                          />
+                        </Stack>
+                        <Alert severity="info">
+                          <strong>Note:</strong> Specify at least one reference value. Leave any axis blank to use raw data for that axis. If no end time is specified, this reference value will apply from the start time onwards until another period begins.
+                        </Alert>
+                        <Stack direction="row" spacing={2}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={addTimedReferenceValue}
+                          >
+                            Add Reference Value
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() => {
+                              setShowTimedReferenceForm(false);
+                              setNewTimedReference({
+                                start_time: '',
+                                end_time: '',
+                                reference_x_value: null,
+                                reference_y_value: null,
+                                reference_z_value: null
+                              });
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </LocalizationProvider>
+                  </Box>
+                )}
+              </>
             )}
           </Box>
         </Paper>
