@@ -353,7 +353,7 @@ const DynamicSeismograph: React.FC = () => {
             x: filtered.map(pair => pair.t),
             y: filtered.map(pair => pair.v),
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: `${axis} [in/s]`,
             line: {
               color: color,
@@ -490,7 +490,7 @@ const DynamicSeismograph: React.FC = () => {
             x: combined.time,
             y: combined.x,
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: 'X [in/s]',
             line: {
               color: '#FF6384',
@@ -512,7 +512,7 @@ const DynamicSeismograph: React.FC = () => {
             x: combined.time,
             y: combined.y,
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: 'Y [in/s]',
             line: {
               color: '#36A2EB',
@@ -534,7 +534,7 @@ const DynamicSeismograph: React.FC = () => {
             x: combined.time,
             y: combined.z,
             type: 'scatter',
-            mode: 'lines+markers',
+            mode: 'lines',
             name: 'Z [in/s]',
             line: {
               color: '#FFCE56',

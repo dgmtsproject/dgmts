@@ -426,10 +426,9 @@ const Tiltmeter: React.FC = () => {
                           x: graphData.times.map(time => new Date(time)),
                           y: graphData.xValues,
                           type: 'scatter',
-                          mode: 'lines+markers',
+                          mode: 'lines',
                           name: 'X-Axis',
                           line: { color: '#10b981', shape: 'spline' },
-                          marker: { size: 6, color: '#10b981' },
                           hovertemplate: `
                             <b>X-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
@@ -510,10 +509,9 @@ const Tiltmeter: React.FC = () => {
                           x: graphData.times.map(time => new Date(time)),
                           y: graphData.yValues,
                           type: 'scatter',
-                          mode: 'lines+markers',
+                          mode: 'lines',
                           name: 'Y-Axis',
                           line: { color: '#8b5cf6', shape: 'spline' },
-                          marker: { size: 6, color: '#8b5cf6' },
                           hovertemplate: `
                             <b>Y-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
@@ -594,10 +592,9 @@ const Tiltmeter: React.FC = () => {
                           x: graphData.times.map(time => new Date(time)),
                           y: graphData.zValues,
                           type: 'scatter',
-                          mode: 'lines+markers',
+                          mode: 'lines',
                           name: 'Z-Axis',
                           line: { color: '#f59e0b', shape: 'spline' },
-                          marker: { size: 6, color: '#f59e0b' },
                           hovertemplate: `
                             <b>Z-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
@@ -678,10 +675,9 @@ const Tiltmeter: React.FC = () => {
                           x: graphData.times.map(time => new Date(time)),
                           y: graphData.xValues,
                           type: 'scatter',
-                          mode: 'lines+markers',
+                          mode: 'lines',
                           name: 'X-Axis',
                           line: { color: '#10b981', shape: 'spline' },
-                          marker: { size: 6, color: '#10b981' },
                           hovertemplate: `
                             <b>X-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
@@ -693,10 +689,9 @@ const Tiltmeter: React.FC = () => {
                           x: graphData.times.map(time => new Date(time)),
                           y: graphData.yValues,
                           type: 'scatter',
-                          mode: 'lines+markers',
+                          mode: 'lines',
                           name: 'Y-Axis',
                           line: { color: '#8b5cf6', shape: 'spline' },
-                          marker: { size: 6, color: '#8b5cf6' },
                           hovertemplate: `
                             <b>Y-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
@@ -708,10 +703,9 @@ const Tiltmeter: React.FC = () => {
                           x: graphData.times.map(time => new Date(time)),
                           y: graphData.zValues,
                           type: 'scatter',
-                          mode: 'lines+markers',
+                          mode: 'lines',
                           name: 'Z-Axis',
                           line: { color: '#f59e0b', shape: 'spline' },
-                          marker: { size: 6, color: '#f59e0b' },
                           hovertemplate: `
                             <b>Z-Axis</b><br>
                             Time: %{x|%m/%d/%Y %H:%M}<br>
