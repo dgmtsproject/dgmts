@@ -147,7 +147,7 @@ const InteractiveProjectMaps: React.FC = () => {
   const projectData: ProjectLocation[] = [
     {
       id: 12,
-      name: 'Vibration Monitoring–LLV System Improvement Project Phase 1',
+      name: 'Loading...', // Will be fetched from Supabase Projects table
       latitude: 38.827033, // 38°49'37.32"N converted to decimal
       longitude: -77.377278, // 77°22'38.20"W converted to decimal
       description: 'Lincoln Lewis Fairfax, VA - Vibration monitoring system',
@@ -155,7 +155,7 @@ const InteractiveProjectMaps: React.FC = () => {
     },
     {
       id: 24429,
-      name: 'Vibration Monitoring–ANC DAR-BC Arlington',
+      name: 'Loading...', // Will be fetched from Supabase Projects table
       latitude: 38.869197, // 38°52'9.11"N converted to decimal
       longitude: -77.059714, // 77°3'34.97"W converted to decimal
       description: 'ANC DAR BC Arlington, VA - Vibration monitoring system',
@@ -163,7 +163,7 @@ const InteractiveProjectMaps: React.FC = () => {
     },
     {
       id: 25304,
-      name: 'Instrumentation–ANC Yellow Line Arlington',
+      name: 'Loading...', // Will be fetched from Supabase Projects table
       latitude: 38.881472, // 38°52'53.30"N converted to decimal
       longitude: -77.073383, // 77°4'24.18"W converted to decimal
       description: 'Yellow Line ANC Arlington, VA - Instrumentation system',
@@ -179,21 +179,40 @@ const InteractiveProjectMaps: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch instruments for each project
+      // Fetch project names and instruments for each project
       const projectsWithInstruments = await Promise.all(
         projectData.map(async (project) => {
-          const { data: instruments, error } = await supabase
+          // Fetch project name from Projects table
+          const { data: projectData, error: projectError } = await supabase
+            .from('Projects')
+            .select('name')
+            .eq('id', project.id)
+            .single();
+
+          // Fetch instruments for the project
+          const { data: instruments, error: instrumentsError } = await supabase
             .from('instruments')
             .select('instrument_id, instrument_name, project_id, instrument_location')
             .eq('project_id', project.id);
 
-          if (error) {
-            console.error(`Error fetching instruments for project ${project.id}:`, error);
-            return { ...project, instruments: [] };
+          if (projectError) {
+            console.error(`Error fetching project name for project ${project.id}:`, projectError);
           }
+
+          if (instrumentsError) {
+            console.error(`Error fetching instruments for project ${project.id}:`, instrumentsError);
+          }
+
+          // Fallback names for each project in case Supabase fetch fails
+          const fallbackNames: { [key: number]: string } = {
+            12: 'Lincoln Lewis Fairfax Project',
+            24429: 'Vibration Monitoring–ANC DAR-BC Arlington',
+            25304: 'Instrumentation–ANC Yellow Line Arlington'
+          };
 
           return {
             ...project,
+            name: projectData?.name || fallbackNames[project.id] || `Project ${project.id}`, // Use fetched name or fallback
             instruments: instruments || []
           };
         })
