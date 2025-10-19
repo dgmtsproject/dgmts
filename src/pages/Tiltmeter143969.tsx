@@ -96,11 +96,6 @@ const Tiltmeter143969: React.FC = () => {
     reference_y_value: null,
     reference_z_value: null
   });
-  const [tempReferenceValues, setTempReferenceValues] = useState({
-    reference_x_value: '',
-    reference_y_value: '',
-    reference_z_value: ''
-  });
   
   // Time-based reference values
   const [timedReferenceValues, setTimedReferenceValues] = useState<TimedReferenceValue[]>([]);
@@ -315,12 +310,6 @@ const Tiltmeter143969: React.FC = () => {
           reference_x_value: data.reference_x_value,
           reference_y_value: data.reference_y_value,
           reference_z_value: data.reference_z_value
-        });
-        
-        setTempReferenceValues({
-          reference_x_value: data.reference_x_value?.toString() || '',
-          reference_y_value: data.reference_y_value?.toString() || '',
-          reference_z_value: data.reference_z_value?.toString() || ''
         });
       }
     } catch (error) {
