@@ -101,7 +101,6 @@ const Tiltmeter143969: React.FC = () => {
     reference_y_value: '',
     reference_z_value: ''
   });
-  const [savingReference, setSavingReference] = useState(false);
   
   // Time-based reference values
   const [timedReferenceValues, setTimedReferenceValues] = useState<TimedReferenceValue[]>([]);
@@ -500,58 +499,6 @@ const Tiltmeter143969: React.FC = () => {
     }
   };
 
-  // confirm saving reference values
-  const confirmSavingReferenceValues = () => {
-    if(window.confirm('Are you sure you want to save reference values?')) {
-      saveReferenceValues();
-    }
-  };
-
-  // Save reference values to database
-  const saveReferenceValues = async () => {
-    setSavingReference(true);
-    try {
-      const valuesToSave = {
-        instrument_id: 'TILT-143969',
-        enabled: referenceValues.enabled,
-        reference_x_value: tempReferenceValues.reference_x_value ? parseFloat(tempReferenceValues.reference_x_value) : null,
-        reference_y_value: tempReferenceValues.reference_y_value ? parseFloat(tempReferenceValues.reference_y_value) : null,
-        reference_z_value: tempReferenceValues.reference_z_value ? parseFloat(tempReferenceValues.reference_z_value) : null
-      };
-
-      const { error } = await supabase
-        .from('reference_values')
-        .update({
-          enabled: referenceValues.enabled,
-          reference_x_value: tempReferenceValues.reference_x_value ? parseFloat(tempReferenceValues.reference_x_value) : null,
-          reference_y_value: tempReferenceValues.reference_y_value ? parseFloat(tempReferenceValues.reference_y_value) : null,
-          reference_z_value: tempReferenceValues.reference_z_value ? parseFloat(tempReferenceValues.reference_z_value) : null
-        })
-        .eq('instrument_id', 'TILT-143969');
-
-      if (error) throw error;
-
-      // Update local state
-      setReferenceValues({
-        enabled: referenceValues.enabled,
-        reference_x_value: valuesToSave.reference_x_value,
-        reference_y_value: valuesToSave.reference_y_value,
-        reference_z_value: valuesToSave.reference_z_value
-      });
-
-      toast.success('Reference values updated successfully');
-      
-      // Refresh data to show updated values
-      if (sensorData.length > 0) {
-        await fetchSensorData();
-      }
-    } catch (error) {
-      console.error('Error saving reference values:', error);
-      toast.error('Failed to save reference values');
-    } finally {
-      setSavingReference(false);
-    }
-  };
 
   // Save only the enabled/disabled state
   const saveEnabledState = async (enabled: boolean) => {
