@@ -262,34 +262,17 @@ const Tiltmeter143969: React.FC = () => {
         // Apply time-based reference values
         if (applicableTimedRef.reference_x_value !== null) {
           calibratedX = dataPoint.x_value - applicableTimedRef.reference_x_value;
-        } else if (referenceValues.reference_x_value !== null) {
-          // Fall back to global reference if time-based doesn't specify this axis
-          calibratedX = dataPoint.x_value - referenceValues.reference_x_value;
         }
 
         if (applicableTimedRef.reference_y_value !== null) {
           calibratedY = dataPoint.y_value - applicableTimedRef.reference_y_value;
-        } else if (referenceValues.reference_y_value !== null) {
-          calibratedY = dataPoint.y_value - referenceValues.reference_y_value;
         }
 
         if (applicableTimedRef.reference_z_value !== null) {
           calibratedZ = dataPoint.z_value - applicableTimedRef.reference_z_value;
-        } else if (referenceValues.reference_z_value !== null) {
-          calibratedZ = dataPoint.z_value - referenceValues.reference_z_value;
-        }
-      } else {
-        // No time-based reference applies, use global reference values
-        if (referenceValues.reference_x_value !== null) {
-          calibratedX = dataPoint.x_value - referenceValues.reference_x_value;
-        }
-        if (referenceValues.reference_y_value !== null) {
-          calibratedY = dataPoint.y_value - referenceValues.reference_y_value;
-        }
-        if (referenceValues.reference_z_value !== null) {
-          calibratedZ = dataPoint.z_value - referenceValues.reference_z_value;
         }
       }
+      // If no time-based reference applies, return raw data (no calibration)
 
       return {
         ...dataPoint,
@@ -874,12 +857,29 @@ const Tiltmeter143969: React.FC = () => {
           Z: d.z_value,
         }));
       } else if (type === 'calibrated') {
-        // Use the already loaded calibrated data
-        dataToExport = sensorData.map(d => ({
+        // For calibrated data, fetch fresh raw data and apply calibration
+        const startDate = fromDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const endDate = toDate || new Date();
+
+        const { data: rawData, error } = await supabase
+          .from('sensor_readings')
+          .select('*')
+          .eq('node_id', nodeId)
+          .gte('timestamp', startDate.toISOString())
+          .lte('timestamp', endDate.toISOString())
+          .order('timestamp', { ascending: true })
+          .limit(2000);
+
+        if (error) throw error;
+
+        // Apply calibration to the fresh raw data
+        const calibratedData = applyCalibration(rawData || []);
+        
+        dataToExport = calibratedData.map(d => ({
           Time: d.timestamp,
-          X: d.x_value, // Already calibrated by applyCalibration function
-          Y: d.y_value, // Already calibrated by applyCalibration function
-          Z: d.z_value, // Already calibrated by applyCalibration function
+          X: d.x_value,
+          Y: d.y_value,
+          Z: d.z_value,
         }));
       }
       
@@ -1037,71 +1037,10 @@ const Tiltmeter143969: React.FC = () => {
               }
               label="Enable Reference Values"
             />
-            
-            {referenceValues.enabled && (
-              <Box sx={{ mt: 2 }}>
-                {!isAdmin && (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    Reference values are enabled. Contact an administrator to modify these values.
-                  </Alert>
-                )}
-                
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }} alignItems="center">
-                  <TextField
-                    label="Reference X Value"
-                    type="number"
-                    value={tempReferenceValues.reference_x_value}
-                    onChange={(e) => {
-                      if (!isAdmin) return;
-                      setTempReferenceValues(prev => ({ ...prev, reference_x_value: e.target.value }));
-                    }}
-                    size="small"
-                    sx={{ width: 150 }}
-                    disabled={!isAdmin}
-                    inputProps={{ step: "any" }}
-                  />
-                  <TextField
-                    label="Reference Y Value"
-                    type="number"
-                    value={tempReferenceValues.reference_y_value}
-                    onChange={(e) => {
-                      if (!isAdmin) return;
-                      setTempReferenceValues(prev => ({ ...prev, reference_y_value: e.target.value }));
-                    }}
-                    size="small"
-                    sx={{ width: 150 }}
-                    disabled={!isAdmin}
-                    inputProps={{ step: "any" }}
-                  />
-                  <TextField
-                    label="Reference Z Value"
-                    type="number"
-                    value={tempReferenceValues.reference_z_value}
-                    onChange={(e) => {
-                      if (!isAdmin) return;
-                      setTempReferenceValues(prev => ({ ...prev, reference_z_value: e.target.value }));
-                    }}
-                    size="small"
-                    sx={{ width: 150 }}
-                    disabled={!isAdmin}
-                    inputProps={{ step: "any" }}
-                  />
-                  {isAdmin && (
-                    <Button
-                      variant="contained"
-                      onClick={confirmSavingReferenceValues}
-                      disabled={savingReference}
-                      startIcon={savingReference ? <CircularProgress size={16} /> : null}
-                    >
-                      {savingReference ? 'Saving...' : 'Update Reference Values'}
-                    </Button>
-                  )}
-                </Stack>
-              </Box>
-            )}
           </Box>
 
           {/* Time-Based Reference Values Section */}
+          {referenceValues.enabled && (
           <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">
@@ -1121,7 +1060,7 @@ const Tiltmeter143969: React.FC = () => {
             </Box>
             
             <Alert severity="info" sx={{ mb: 2 }}>
-              <strong>Note:</strong> Time-based reference values are applied on top of the global reference values above. 
+              <strong>Note:</strong> Time-based reference values are used for calibration. Enable reference values above to activate this feature. 
               Click "Save All" to persist your changes to the database.
             </Alert>
             
@@ -1412,6 +1351,7 @@ const Tiltmeter143969: React.FC = () => {
               </>
             )}
           </Box>
+          )}
         </Paper>
 
         {/* Individual Charts in order: X, Y, Z */}

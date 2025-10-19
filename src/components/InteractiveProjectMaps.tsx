@@ -156,8 +156,8 @@ const InteractiveProjectMaps: React.FC = () => {
     {
       id: 24429,
       name: 'Loading...', // Will be fetched from Supabase Projects table
-      latitude: 38.869297, // 38°52'9.11"N converted to decimal
-      longitude: -77.059714, // 77°3'34.97"W converted to decimal
+      latitude: 38.86992232, // 38°52'9.11"N converted to decimal
+      longitude: -77.061126712, // 77°3'34.97"W converted to decimal
       description: 'ANC DAR BC Arlington, VA - Vibration monitoring system',
       instruments: []
     },
