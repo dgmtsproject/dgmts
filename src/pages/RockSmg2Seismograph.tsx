@@ -160,7 +160,14 @@ const RockSmg2Seismograph: React.FC = () => {
       };
     }
 
-        // Date and hour-based filtering: Ensure at least one point per hour per date
+    // Get thresholds for filtering
+    const thresholds = instrumentSettings ? {
+      alert: instrumentSettings.alert_value || 0,
+      warning: instrumentSettings.warning_value || 0,
+      shutdown: instrumentSettings.shutdown_value || 0
+    } : { alert: 0, warning: 0, shutdown: 0 };
+
+    // Date and hour-based filtering: Ensure at least one point per hour per date
     const getDateHourKey = (timestamp: string) => {
       const date = timestamp.split('T')[0]; // Get YYYY-MM-DD
       const hour = timestamp.split('T')[1]?.split(':')[0]; // Get HH
@@ -178,7 +185,10 @@ const RockSmg2Seismograph: React.FC = () => {
     });
 
     // For each date-hour, keep the entry with the highest value (max of all axes) to ensure date-hour coverage
+    // BUT also include ALL entries that exceed thresholds
     const dateHourCoverageData: any[] = [];
+    const thresholdViolations: any[] = [];
+    
     dataByDateHour.forEach((dateHourEntries) => {
       // Find the entry with the highest value across all axes
       let maxEntry = dateHourEntries[0];
@@ -188,12 +198,21 @@ const RockSmg2Seismograph: React.FC = () => {
         Math.abs(Number(dateHourEntries[0][3]))  // Z axis
       );
       
+      // Check all entries for threshold violations
       dateHourEntries.forEach(entry => {
-        const currentMax = Math.max(
-          Math.abs(Number(entry[1])), // X axis
-          Math.abs(Number(entry[2])), // Y axis
-          Math.abs(Number(entry[3]))  // Z axis
-        );
+        const x = Math.abs(Number(entry[1]));
+        const y = Math.abs(Number(entry[2]));
+        const z = Math.abs(Number(entry[3]));
+        
+        // If any axis exceeds any threshold, add to violations
+        if (x >= thresholds.alert || y >= thresholds.alert || z >= thresholds.alert ||
+            x >= thresholds.warning || y >= thresholds.warning || z >= thresholds.warning ||
+            x >= thresholds.shutdown || y >= thresholds.shutdown || z >= thresholds.shutdown) {
+          thresholdViolations.push(entry);
+        }
+        
+        // Find max entry for hourly representation
+        const currentMax = Math.max(x, y, z);
         if (currentMax > maxValue) {
           maxValue = currentMax;
           maxEntry = entry;
@@ -203,11 +222,24 @@ const RockSmg2Seismograph: React.FC = () => {
       dateHourCoverageData.push(maxEntry); // Get the entry with highest value
     });
 
+    // Combine hourly data with threshold violations, removing duplicates
+    const combinedData = [...dateHourCoverageData];
+    thresholdViolations.forEach(violation => {
+      // Only add if not already in the data (avoid duplicates)
+      const exists = combinedData.some(entry => entry[0] === violation[0]);
+      if (!exists) {
+        combinedData.push(violation);
+      }
+    });
+
+    // Sort by timestamp
+    combinedData.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+
     // Ensure minimum 500 points per chart while covering all dates
     const MIN_POINTS = 500;
     
-    // Combined: at least one axis is nonzero (from date-hour coverage data)
-    const combined = dateHourCoverageData.filter((entry: any) => {
+    // Combined: at least one axis is nonzero (from combined data that includes threshold violations)
+    const combined = combinedData.filter((entry: any) => {
       const x = Math.abs(Number(entry[1]));
       const y = Math.abs(Number(entry[2]));
       const z = Math.abs(Number(entry[3]));
@@ -218,18 +250,18 @@ const RockSmg2Seismograph: React.FC = () => {
     const combinedFiltered = combined.length <= MIN_POINTS ? combined : 
       combined.filter((_, index) => index % Math.max(1, Math.floor(combined.length / MIN_POINTS)) === 0);
 
-    // X: ensure at least MIN_POINTS while covering dates
-    const xFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[1])) > 0.0001);
+    // X: ensure at least MIN_POINTS while covering dates (use combined data for threshold violations)
+    const xFiltered = combinedData.filter((entry: any) => Math.abs(Number(entry[1])) > 0.0001);
     const xDown = xFiltered.length <= MIN_POINTS ? xFiltered : 
       xFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(xFiltered.length / MIN_POINTS)) === 0);
 
-    // Y: ensure at least MIN_POINTS while covering dates
-    const yFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[2])) > 0.0001);
+    // Y: ensure at least MIN_POINTS while covering dates (use combined data for threshold violations)
+    const yFiltered = combinedData.filter((entry: any) => Math.abs(Number(entry[2])) > 0.0001);
     const yDown = yFiltered.length <= MIN_POINTS ? yFiltered : 
       yFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(yFiltered.length / MIN_POINTS)) === 0);
 
-    // Z: ensure at least MIN_POINTS while covering dates
-    const zFiltered = dateHourCoverageData.filter((entry: any) => Math.abs(Number(entry[3])) > 0.0001);
+    // Z: ensure at least MIN_POINTS while covering dates (use combined data for threshold violations)
+    const zFiltered = combinedData.filter((entry: any) => Math.abs(Number(entry[3])) > 0.0001);
     const zDown = zFiltered.length <= MIN_POINTS ? zFiltered : 
       zFiltered.filter((_: any, index: number) => index % Math.max(1, Math.floor(zFiltered.length / MIN_POINTS)) === 0);
 
