@@ -389,6 +389,7 @@ const RockSmg2Seismograph: React.FC = () => {
     const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
 
 
+
     return (
       <Plot
         key={`${axis}-plot-${project?.name || 'default'}`}
@@ -467,9 +468,7 @@ const RockSmg2Seismograph: React.FC = () => {
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
             nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
@@ -516,7 +515,7 @@ const RockSmg2Seismograph: React.FC = () => {
           displaylogo: false,
           toImageButtonOptions: {
             format: 'png',
-            filename: `${project?.name || 'Project'}_Combined_${new Date().toISOString().split('T')[0]}`,
+            filename: `${project?.name || 'Project'}_${axis}_${new Date().toISOString().split('T')[0]}`,
             height: 600,
             width: 1200,
             scale: 2
@@ -533,6 +532,7 @@ const RockSmg2Seismograph: React.FC = () => {
 
     // Create shapes and annotations for reference lines using the new utility
     const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+
 
 
     return (
@@ -657,9 +657,7 @@ const RockSmg2Seismograph: React.FC = () => {
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
             nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
