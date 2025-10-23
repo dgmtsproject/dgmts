@@ -7,6 +7,7 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
 import { Box, Typography, Paper, Card, CardContent, Chip, Button, Grid, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { useAdminContext } from '../context/AdminContext';
 
 // Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -137,6 +138,7 @@ const ProjectMap: React.FC<{ project: ProjectLocation }> = ({ project }) => {
 
 const InteractiveProjectMaps: React.FC = () => {
   const navigate = useNavigate();
+  const { isAdmin, permissions, userEmail } = useAdminContext();
   const [projects, setProjects] = useState<ProjectLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<ProjectLocation | null>(null);
@@ -173,15 +175,39 @@ const InteractiveProjectMaps: React.FC = () => {
 
   useEffect(() => {
     fetchProjectInstruments();
-  }, []);
+  }, [isAdmin, userEmail]);
 
   const fetchProjectInstruments = async () => {
     try {
       setLoading(true);
       
-      // Fetch project names and instruments for each project
+      // First, get the projects the user has access to
+      let accessibleProjects: ProjectLocation[] = [];
+      if (isAdmin) {
+        // Admins get access to all projects
+        accessibleProjects = projectData;
+      } else if (userEmail) {
+        // For regular users, get projects via ProjectUsers
+        const { data: projectUsers, error: puError } = await supabase
+          .from('ProjectUsers')
+          .select('project_id, Projects(*)')
+          .eq('user_email', userEmail);
+        
+        if (puError) {
+          console.error('Error fetching user projects:', puError);
+          setProjects([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Filter projectData to only include projects the user has access to
+        const userProjectIds = (projectUsers || []).map(pu => pu.project_id);
+        accessibleProjects = projectData.filter(project => userProjectIds.includes(project.id));
+      }
+      
+      // Fetch project names and instruments for accessible projects only
       const projectsWithInstruments = await Promise.all(
-        projectData.map(async (project) => {
+        accessibleProjects.map(async (project) => {
           // Fetch project name from Projects table
           const { data: projectData, error: projectError } = await supabase
             .from('Projects')
@@ -221,7 +247,7 @@ const InteractiveProjectMaps: React.FC = () => {
       setProjects(projectsWithInstruments);
     } catch (error) {
       console.error('Error fetching project instruments:', error);
-      setProjects(projectData); // Fallback to basic project data
+      setProjects([]); // Set empty array instead of fallback data
     } finally {
       setLoading(false);
     }
@@ -238,6 +264,12 @@ const InteractiveProjectMaps: React.FC = () => {
   };
 
   const handleInstrumentClick = (instrument: Instrument) => {
+    // Check if user has view_data permission
+    if (!isAdmin && !permissions.view_data) {
+      console.log('User does not have view_data permission');
+      return;
+    }
+
     // Navigate to the appropriate instrument page based on instrument_id
     const instrumentRoutes: { [key: string]: string } = {
       'SMG1': '/background',
@@ -268,6 +300,24 @@ const InteractiveProjectMaps: React.FC = () => {
     return 'active'; // Default to active
   };
 
+  const canAccessInstrument = (): boolean => {
+    return isAdmin || permissions.view_data;
+  };
+
+  const getInstrumentCardStyle = (_instrument: Instrument) => {
+    const canAccess = canAccessInstrument();
+    return {
+      cursor: canAccess ? 'pointer' : 'not-allowed',
+      opacity: canAccess ? 1 : 0.6,
+      transition: 'all 0.3s ease',
+      '&:hover': canAccess ? {
+        boxShadow: 4,
+        transform: 'translateY(-2px)',
+        backgroundColor: '#f5f5f5'
+      } : {}
+    };
+  };
+
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'active': return '#4caf50';
@@ -285,7 +335,18 @@ const InteractiveProjectMaps: React.FC = () => {
     );
   }
 
-  
+  if (!loading && projects.length === 0) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary">
+          {isAdmin ? 'No projects found.' : 'You don\'t have access to any projects.'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {!isAdmin && 'Contact your administrator to request access to projects.'}
+        </Typography>
+      </Box>
+    );
+  }
   return (
     <Box sx={{ p: 3 }}>
       <style>
@@ -419,14 +480,8 @@ const InteractiveProjectMaps: React.FC = () => {
                 {selectedProject.instruments.map((instrument) => (
                   <Box key={instrument.instrument_id} sx={{ flex: '0 0 calc(33.333% - 8px)', minWidth: '200px' }}>
                     <Card 
-                      sx={{ 
-                        cursor: 'pointer',
-                        '&:hover': {
-                          boxShadow: 4,
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                      onClick={() => handleInstrumentClick(instrument)}
+                      sx={getInstrumentCardStyle(instrument)}
+                      onClick={() => canAccessInstrument() && handleInstrumentClick(instrument)}
                     >
                       <CardContent>
                         <Typography variant="h6" gutterBottom>
@@ -458,6 +513,14 @@ const InteractiveProjectMaps: React.FC = () => {
             <Typography variant="body2" color="text.secondary">
               No instruments found for this project.
             </Typography>
+          )}
+          
+          {!canAccessInstrument() && selectedProject.instruments.length > 0 && (
+            <Box sx={{ mt: 2, p: 2, backgroundColor: '#fff3cd', borderRadius: 1, border: '1px solid #ffeaa7' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                You don't have permission to access instrument data. Contact your administrator for access.
+              </Typography>
+            </Box>
           )}
         </Paper>
       )}
@@ -521,18 +584,12 @@ const InteractiveProjectMaps: React.FC = () => {
                   {selectedProject.instruments.map((instrument) => (
                     <Box key={instrument.instrument_id} sx={{ flex: '0 0 calc(33.333% - 8px)', minWidth: '200px' }}>
                       <Card 
-                        sx={{ 
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            boxShadow: 4,
-                            transform: 'translateY(-2px)',
-                            backgroundColor: '#f5f5f5'
-                          }
-                        }}
+                        sx={getInstrumentCardStyle(instrument)}
                         onClick={() => {
-                          handleInstrumentClick(instrument);
-                          handleCloseProfileDialog();
+                          if (canAccessInstrument()) {
+                            handleInstrumentClick(instrument);
+                            handleCloseProfileDialog();
+                          }
                         }}
                       >
                         <CardContent sx={{ p: 2 }}>
@@ -565,6 +622,14 @@ const InteractiveProjectMaps: React.FC = () => {
                 <Typography variant="body2" color="text.secondary">
                   No instruments found for this project.
                 </Typography>
+              )}
+              
+              {!canAccessInstrument() && selectedProject.instruments.length > 0 && (
+                <Box sx={{ mt: 2, p: 2, backgroundColor: '#fff3cd', borderRadius: 1, border: '1px solid #ffeaa7' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    You don't have permission to access instrument data. Contact your administrator for access.
+                  </Typography>
+                </Box>
               )}
             </Box>
           )}
