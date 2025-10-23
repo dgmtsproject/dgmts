@@ -40,7 +40,7 @@ import RockSmg2Seismograph from "../pages/RockSmg2Seismograph";
 import Instantel1Seismograph from "../pages/Instantel1Seismograph";
 import VibrationDataTablePage from "../pages/VibrationDataTablePage";
 import DeviceMap from "../pages/DeviceMap";
-import Maps from "../pages/Maps";
+import MapsPage from "../pages/MapsPage";
 import DataSummary from "../pages/DataSummary";
 import DgmtsDataSummary from "../pages/DgmtsDataSummary";
 import LongBridgeMap from "../pages/LongBridgeMap";
@@ -109,7 +109,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/vibration-data-table" element={<VibrationDataTablePage />} />
         <Route path="/seismograph-map" element={<DeviceMap/>} />
         <Route path="/long-bridge-map" element={<LongBridgeMap />} />
-        <Route path="/maps" element={<Maps />} />
+        <Route path="/maps" element={<MapsPage />} />
         <Route path="/edit-project" element={<EditProject />} />
         <Route path="/edit-users" element={<EditUsers />} />
         <Route path="/add-syscom-graph" element={<AddSyscomGraph />} />
