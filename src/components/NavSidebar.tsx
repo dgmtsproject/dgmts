@@ -27,7 +27,6 @@ import {
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
   AccountTree as ProjectIcon,
-  Map as ProjectMapIcon,
   Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
@@ -456,16 +455,6 @@ useEffect(() => {
               <ListItemText primary="Data Summary" />
             </ListItemButton>
           )}
-
-          <ListItemButton
-            component={Link}
-            to="/maps"
-          >
-            <ListItemIcon sx={{ color: 'inherit' }}>
-              <ProjectMapIcon />
-            </ListItemIcon>
-            <ListItemText primary="Maps" />
-          </ListItemButton>
           {permissions.view_data && (
             <ListItemButton component={Link} to="/file-manager">
               <ListItemIcon sx={{ color: 'inherit' }}>

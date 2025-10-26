@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import BackButton from '../components/Back';
-import ChartWindow from '../components/ChartWindow';
-import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import { OpenInNew } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -11,6 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createSeismographChartData, createSeismographCombinedChartData } from '../utils/seismographCharts';
+import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
 
 // const MAX_POINTS = 1000;
 
@@ -314,6 +316,439 @@ const RockSmg2Seismograph: React.FC = () => {
     }
   }, [rawData]);
 
+  // Helper function to calculate y-axis range for auto-zoom
+  const getYAxisRange = (values: number[], thresholds: any) => {
+    if (values.length === 0) return { min: -0.1, max: 0.1 };
+    
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    
+    // Add 20% padding
+    const padding = Math.max(range * 0.2, 0.01);
+    
+    // Consider threshold values for range
+    const thresholdMax = Math.max(
+      thresholds.warning || 0,
+      thresholds.alert || 0,
+      thresholds.shutdown || 0
+    );
+    
+    return {
+      min: Math.min(minValue - padding, -thresholdMax * 1.2),
+      max: Math.max(maxValue + padding, thresholdMax * 1.2)
+    };
+  };
+
+  const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
+    // Filter out any pairs where time or value is missing or invalid
+    const filtered = data.time
+      .map((t, i) => ({ t, v: data.values[i] }))
+      .filter(pair => pair.t && typeof pair.v === 'number' && !isNaN(pair.v));
+
+    if (filtered.length === 0) return null;
+
+    // Create shapes and annotations for reference lines using the new utility
+    const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+
+    return (
+      <Plot
+        key={`${axis}-plot-${project?.name || 'default'}`}
+        data={[
+          {
+            x: filtered.map(pair => pair.t),
+            y: filtered.map(pair => pair.v),
+            type: 'scatter',
+            mode: 'lines',
+            name: `${axis} [in/s]`,
+            line: {
+              color: color,
+              shape: 'spline',
+              width: 1.5
+            },
+            marker: {
+              size: 6,
+              color: color
+            },
+            hovertemplate: `
+              <b>${axis}</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.3~f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          // Add reference line traces for legend
+          ...(instrumentSettings?.alert_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Alert (${instrumentSettings.alert_value} in/s)`,
+            line: { color: 'orange', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.warning_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Warning (${instrumentSettings.warning_value} in/s)`,
+            line: { color: 'red', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.shutdown_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Shutdown (${instrumentSettings.shutdown_value} in/s)`,
+            line: { color: 'darkred', width: 3, dash: 'solid' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : [])
+        ]}
+        layout={{
+          title: { 
+            text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}` : ''}`, 
+            font: { size: 20, weight: 700, color: '#003087' },
+            x: 0.5,
+            xanchor: 'center'
+          },
+          xaxis: {
+            title: { 
+              text: `Time<br><span style="font-size:12px;color:#666;">${availableInstruments.length > 0 ? availableInstruments[0].instrument_id : 'ROCKSMG-2'}</span>`, 
+              font: { size: 18, weight: 700, color: '#374151' },
+              standoff: 20
+            },
+            type: 'date',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+            gridcolor: '#f0f0f0',
+            showgrid: true,
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickangle: 0,
+            nticks: 10,
+            tickmode: 'linear',
+            dtick: 'D1',
+            tick0: 'D1'
+          },
+          yaxis: {
+            title: { 
+              text: 'Vibration (in/s)', 
+              font: { size: 18, weight: 700, color: '#374151' },
+              standoff: 25 
+            },
+            fixedrange: false,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#f0f0f0',
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            range: (() => {
+              const allValues = filtered.map(pair => pair.v);
+              const range = getYAxisRange(allValues, getThresholdsFromSettings(instrumentSettings));
+              return [range.min, range.max];
+            })()
+          },
+          showlegend: true,
+          legend: {
+            x: 0.02,
+            xanchor: 'left',
+            y: -0.30,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#CCC',
+            borderwidth: 1,
+            traceorder: 'normal'
+          },
+          height: 550,
+          margin: { t: 60, b: 100, l: 80, r: 80 },
+          hovermode: 'closest',
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          shapes: zones.shapes,
+          annotations: zones.annotations
+        }}
+        config={{
+          responsive: true,
+          displayModeBar: true,
+          scrollZoom: true,
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_${axis}_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
+        }}
+        style={{ width: '100%', height: 550 }}
+        useResizeHandler={true}
+      />
+    );
+  };
+
+  const openChartInWindow = (
+    chartTitle: string,
+    chartData: any[],
+    layout: any,
+    config: any,
+    location: string | undefined
+  ) => {
+    const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
+    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    
+    const newWindow = window.open('', '_blank', windowFeatures);
+    if (!newWindow) {
+      alert('Popup blocked! Please allow popups for this site.');
+      return;
+    }
+
+    newWindow.document.title = windowTitle;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${windowTitle}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+              background-color: #f5f5f5;
+            }
+            .chart-container {
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+              padding: 20px;
+              height: calc(100vh - 40px);
+            }
+            .plotly-graph-div {
+              width: 100% !important;
+              height: 100% !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="chart-container">
+            <div id="plotly-chart"></div>
+          </div>
+          
+          <script>
+            const chartData = ${JSON.stringify(chartData)};
+            const chartLayout = ${JSON.stringify(layout)};
+            const chartConfig = ${JSON.stringify(config)};
+            
+            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig);
+            
+            window.addEventListener('resize', function() {
+              Plotly.Plots.resize('plotly-chart');
+            });
+          </script>
+        </body>
+      </html>
+    `;
+
+    newWindow.document.write(htmlContent);
+    newWindow.document.close();
+  };
+
+  const createCombinedPlot = (combined: { time: Date[]; x: number[]; y: number[]; z: number[] }) => {
+    if (!combined.time.length) return null;
+
+    // Create shapes and annotations for reference lines using the new utility
+    const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+
+    return (
+      <Plot
+        key={`combined-plot-${project?.name || 'default'}`}
+        data={[
+          {
+            x: combined.time,
+            y: combined.x,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'X [in/s]',
+            line: {
+              color: '#FF6384',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#FF6384'
+            },
+            hovertemplate: `
+              <b>X</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.3~f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          {
+            x: combined.time,
+            y: combined.y,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Y [in/s]',
+            line: {
+              color: '#36A2EB',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#36A2EB'
+            },
+            hovertemplate: `
+              <b>Y</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.3~f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          {
+            x: combined.time,
+            y: combined.z,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Z [in/s]',
+            line: {
+              color: '#FFCE56',
+              shape: 'spline',
+              width: 1.2
+            },
+            marker: {
+              size: 5,
+              color: '#FFCE56'
+            },
+            hovertemplate: `
+              <b>Z</b><br>
+              Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>
+              Value: %{y:.3~f}<extra></extra>
+            `,
+            connectgaps: true
+          },
+          // Add reference line traces for legend
+          ...(instrumentSettings?.alert_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Alert (${instrumentSettings.alert_value} in/s)`,
+            line: { color: 'orange', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.warning_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Warning (${instrumentSettings.warning_value} in/s)`,
+            line: { color: 'red', width: 2, dash: 'dash' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : []),
+          ...(instrumentSettings?.shutdown_value ? [{
+            x: [null],
+            y: [null],
+            type: 'scatter' as const,
+            mode: 'lines' as const,
+            name: `Shutdown (${instrumentSettings.shutdown_value} in/s)`,
+            line: { color: 'darkred', width: 3, dash: 'solid' as const },
+            showlegend: true,
+            legendgroup: 'reference-lines'
+          }] : [])
+        ]}
+        layout={{
+          title: { 
+            text: `${project?.name || 'Project'} - Combined Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}` : ''}`, 
+            font: { size: 20, weight: 700, color: '#003087' },
+            x: 0.5,
+            xanchor: 'center'
+          },
+          xaxis: {
+            title: { 
+              text: `Time<br><span style="font-size:12px;color:#666;">${availableInstruments.length > 0 ? availableInstruments[0].instrument_id : 'ROCKSMG-2'}</span>`, 
+              font: { size: 18, weight: 700, color: '#374151' },
+              standoff: 20
+            },
+            type: 'date',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+            gridcolor: '#f0f0f0',
+            showgrid: true,
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickangle: 0,
+            nticks: 10,
+            tickmode: 'linear',
+            dtick: 'D1',
+            tick0: 'D1'
+          },
+          yaxis: {
+            title: { 
+              text: 'Vibration (in/s)', 
+              font: { size: 18, weight: 700, color: '#374151' },
+              standoff: 25 
+            },
+            fixedrange: false,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#f0f0f0',
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            range: (() => {
+              const allValues = [...combined.x, ...combined.y, ...combined.z];
+              const range = getYAxisRange(allValues, getThresholdsFromSettings(instrumentSettings));
+              return [range.min, range.max];
+            })()
+          },
+          showlegend: true,
+          legend: {
+            x: 0.02,
+            xanchor: 'left',
+            y: -0.30,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#CCC',
+            borderwidth: 1,
+            traceorder: 'normal'
+          },
+          height: 600,
+          margin: { t: 60, b: 150, l: 80, r: 80 },
+          hovermode: 'closest',
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          shapes: zones.shapes,
+          annotations: zones.annotations
+        }}
+        config={{
+          responsive: true,
+          displayModeBar: true,
+          scrollZoom: true,
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_Combined_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
+        }}
+        style={{ width: '100%', height: 550 }}
+        useResizeHandler={true}
+      />
+    );
+  };
+
   const fetchData = async () => {
     if (!fromDate || !toDate) return;
 
@@ -444,101 +879,122 @@ const RockSmg2Seismograph: React.FC = () => {
           )}
 
           {rawData.length > 0 && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', mt: 4 }}>
-              <Typography variant="h5" gutterBottom>
-                Open Charts in Separate Windows
-              </Typography>
-              
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
-                {processedData.x.values.length > 0 && (() => {
-                  const chartData = createSeismographChartData(processedData.x, 'X', '#FF6384', 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
-                  return chartData ? (
-                    <ChartWindow
-                      data={chartData.data}
-                      layout={{
-                        ...chartData.layout,
-                        title: {
-                          text: `${project?.name || 'Project'} - X Axis Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}` : ''}`,
-                          font: { size: 20, weight: 700, color: '#003087' },
-                          x: 0.5,
-                          xanchor: 'center'
+            <>
+              {processedData.x.values.length > 0 && (
+                <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">X Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const chartData = createSeismographChartData(processedData.x, 'X', '#FF6384', 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
+                          if (chartData) {
+                            openChartInWindow(
+                              'X Axis Vibration Data',
+                              chartData.data,
+                              chartData.layout,
+                              chartData.config,
+                              availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location
+                            );
+                          }
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                  {createSinglePlot(processedData.x, 'X', '#FF6384')}
+                </Box>
+              )}
+              {processedData.y.values.length > 0 && (
+                <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Y Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const chartData = createSeismographChartData(processedData.y, 'Y', '#36A2EB', 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
+                          if (chartData) {
+                            openChartInWindow(
+                              'Y Axis Vibration Data',
+                              chartData.data,
+                              chartData.layout,
+                              chartData.config,
+                              availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location
+                            );
+                          }
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                  {createSinglePlot(processedData.y, 'Y', '#36A2EB')}
+                </Box>
+              )}
+              {processedData.z.values.length > 0 && (
+                <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Z Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const chartData = createSeismographChartData(processedData.z, 'Z', '#FFCE56', 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
+                          if (chartData) {
+                            openChartInWindow(
+                              'Z Axis Vibration Data',
+                              chartData.data,
+                              chartData.layout,
+                              chartData.config,
+                              availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location
+                            );
+                          }
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                  {createSinglePlot(processedData.z, 'Z', '#FFCE56')}
+                </Box>
+              )}
+              <Box mb={4} width="100%">
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">Combined Vibration Data</Typography>
+                  <Tooltip title="Open in Popup">
+                    <Button
+                      startIcon={<OpenInNew />}
+                      onClick={() => {
+                        const chartData = createSeismographCombinedChartData(processedData.combined, 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
+                        if (chartData) {
+                          openChartInWindow(
+                            'Combined Vibration Data',
+                            chartData.data,
+                            chartData.layout,
+                            chartData.config,
+                            availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location
+                          );
                         }
                       }}
-                      config={chartData.config}
-                      title="X Axis Vibration Data"
-                      projectName={project?.name}
-                      location={availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}
-                    />
-                  ) : null;
-                })()}
-                
-                {processedData.y.values.length > 0 && (() => {
-                  const chartData = createSeismographChartData(processedData.y, 'Y', '#36A2EB', 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
-                  return chartData ? (
-                    <ChartWindow
-                      data={chartData.data}
-                      layout={{
-                        ...chartData.layout,
-                        title: {
-                          text: `${project?.name || 'Project'} - Y Axis Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}` : ''}`,
-                          font: { size: 20, weight: 700, color: '#003087' },
-                          x: 0.5,
-                          xanchor: 'center'
-                        }
-                      }}
-                      config={chartData.config}
-                      title="Y Axis Vibration Data"
-                      projectName={project?.name}
-                      location={availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}
-                    />
-                  ) : null;
-                })()}
-                
-                {processedData.z.values.length > 0 && (() => {
-                  const chartData = createSeismographChartData(processedData.z, 'Z', '#FFCE56', 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
-                  return chartData ? (
-                    <ChartWindow
-                      data={chartData.data}
-                      layout={{
-                        ...chartData.layout,
-                        title: {
-                          text: `${project?.name || 'Project'} - Z Axis Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}` : ''}`,
-                          font: { size: 20, weight: 700, color: '#003087' },
-                          x: 0.5,
-                          xanchor: 'center'
-                        }
-                      }}
-                      config={chartData.config}
-                      title="Z Axis Vibration Data"
-                      projectName={project?.name}
-                      location={availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}
-                    />
-                  ) : null;
-                })()}
-                
-                {(() => {
-                  const chartData = createSeismographCombinedChartData(processedData.combined, 'ROCKSMG-2', instrumentSettings, project, availableInstruments);
-                  return chartData ? (
-                    <ChartWindow
-                      data={chartData.data}
-                      layout={{
-                        ...chartData.layout,
-                        title: {
-                          text: `${project?.name || 'Project'} - Combined Vibration Data${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location ? ` - ${availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}` : ''}`,
-                          font: { size: 20, weight: 700, color: '#003087' },
-                          x: 0.5,
-                          xanchor: 'center'
-                        }
-                      }}
-                      config={chartData.config}
-                      title="Combined Vibration Data"
-                      projectName={project?.name}
-                      location={availableInstruments.find(inst => inst.instrument_id === 'ROCKSMG-2')?.instrument_location}
-                    />
-                  ) : null;
-                })()}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Open in Popup
+                    </Button>
+                  </Tooltip>
+                </Box>
+                {createCombinedPlot(processedData.combined)}
               </Box>
-            </Box>
+            </>
           )}
 
           {!loading && rawData.length === 0 && !error && (
