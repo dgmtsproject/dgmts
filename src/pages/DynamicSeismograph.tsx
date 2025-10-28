@@ -3,7 +3,8 @@ import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import BackButton from '../components/Back';
-import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import { OpenInNew } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -334,6 +335,76 @@ const DynamicSeismograph: React.FC = () => {
     }
   };
 
+
+  const openChartInWindow = (
+    chartTitle: string,
+    chartData: any[],
+    layout: any,
+    config: any,
+    location: string | undefined
+  ) => {
+    const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
+    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    
+    const newWindow = window.open('', '_blank', windowFeatures);
+    if (!newWindow) {
+      alert('Popup blocked! Please allow popups for this site.');
+      return;
+    }
+
+    newWindow.document.title = windowTitle;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${windowTitle}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+              background-color: #f5f5f5;
+            }
+            .chart-container {
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+              padding: 20px;
+              height: calc(100vh - 40px);
+            }
+            .plotly-graph-div {
+              width: 100% !important;
+              height: 100% !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="chart-container">
+            <div id="plotly-chart"></div>
+          </div>
+          
+          <script>
+            const chartData = ${JSON.stringify(chartData)};
+            const chartLayout = ${JSON.stringify(layout)};
+            const chartConfig = ${JSON.stringify(config)};
+            
+            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig);
+            
+            window.addEventListener('resize', function() {
+              Plotly.Plots.resize('plotly-chart');
+            });
+          </script>
+        </body>
+      </html>
+    `;
+
+    newWindow.document.write(htmlContent);
+    newWindow.document.close();
+  };
 
   const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
     const filtered = data.time
@@ -728,20 +799,512 @@ const DynamicSeismograph: React.FC = () => {
             <>
               {processedData.x.values.length > 0 && (
                 <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">X Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const filtered = processedData.x.time
+                            .map((t, i) => ({ t, v: processedData.x.values[i] }))
+                            .filter(pair => pair.t && typeof pair.v === 'number' && !isNaN(pair.v));
+                          
+                          const chartData = [{
+                            x: filtered.map(pair => pair.t),
+                            y: filtered.map(pair => pair.v),
+                            type: 'scatter' as const,
+                            mode: 'lines' as const,
+                            name: 'X [in/s]',
+                            line: { color: '#FF6384', shape: 'spline', width: 1.5 },
+                            marker: { size: 6, color: '#FF6384' },
+                            hovertemplate: '<b>X</b><br>Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>Value: %{y:.3~f}<extra></extra>',
+                            connectgaps: true
+                          }];
+                          
+                          const values = filtered.map(pair => pair.v);
+                          const minValue = Math.min(...values);
+                          const maxValue = Math.max(...values);
+                          const range = maxValue - minValue;
+                          const padding = Math.max(range * 0.2, 0.01);
+                          const thresholdMax = instrumentSettings ? Math.max(
+                            instrumentSettings.warning_value || 0,
+                            instrumentSettings.alert_value || 0,
+                            instrumentSettings.shutdown_value || 0
+                          ) : 0;
+                          
+                          const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+                          
+                          const chartLayout = {
+                            title: { 
+                              text: `${project?.name || 'Project'} - X Axis Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`,
+                              font: { size: 20, weight: 700, color: '#003087' },
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            xaxis: {
+                              title: { 
+                                text: `Time<br><span style="font-size:12px;color:#666;">${selectedInstrument?.instrument_id || 'Instrument'}</span>`,
+                                font: { size: 18, weight: 700, color: '#374151' },
+                                standoff: 20
+                              },
+                              type: 'date',
+                              tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                              gridcolor: '#f0f0f0',
+                              showgrid: true,
+                              tickfont: { size: 14, color: '#374151', weight: 700 },
+                              tickangle: 0,
+                              nticks: 10,
+                              tickmode: 'auto'
+                            },
+                            yaxis: {
+                              title: {
+                                text: 'Vibration (in/s)',
+                                font: { size: 18, weight: 700, color: '#374151' },
+                                standoff: 25
+                              },
+                              fixedrange: false,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              tickfont: { size: 16, color: '#374151', weight: 700 },
+                              tickformat: '.3~f',
+                              range: [
+                                Math.min(minValue - padding, -thresholdMax * 1.2),
+                                Math.max(maxValue + padding, thresholdMax * 1.2)
+                              ]
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 0.02,
+                              xanchor: 'left',
+                              y: -0.30,
+                              yanchor: 'top',
+                              orientation: 'h',
+                              font: { size: 12, weight: 700 },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1,
+                              traceorder: 'normal'
+                            },
+                            height: 550,
+                            margin: { t: 60, b: 100, l: 80, r: 80 },
+                            hovermode: 'closest',
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white',
+                            shapes: zones.shapes,
+                            annotations: zones.annotations
+                          };
+                          
+                          const chartConfig = {
+                            responsive: true,
+                            displayModeBar: true,
+                            scrollZoom: true,
+                            displaylogo: false,
+                          };
+                          
+                          openChartInWindow(
+                            'X Axis Vibration Data',
+                            chartData,
+                            chartLayout,
+                            chartConfig,
+                            selectedInstrument?.instrument_location
+                          );
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
                   {createSinglePlot(processedData.x, 'X', '#FF6384')}
                 </Box>
               )}
               {processedData.y.values.length > 0 && (
                 <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Y Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const filtered = processedData.y.time
+                            .map((t, i) => ({ t, v: processedData.y.values[i] }))
+                            .filter(pair => pair.t && typeof pair.v === 'number' && !isNaN(pair.v));
+                          
+                          const chartData = [{
+                            x: filtered.map(pair => pair.t),
+                            y: filtered.map(pair => pair.v),
+                            type: 'scatter' as const,
+                            mode: 'lines' as const,
+                            name: 'Y [in/s]',
+                            line: { color: '#36A2EB', shape: 'spline', width: 1.5 },
+                            marker: { size: 6, color: '#36A2EB' },
+                            hovertemplate: '<b>Y</b><br>Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>Value: %{y:.3~f}<extra></extra>',
+                            connectgaps: true
+                          }];
+                          
+                          const values = filtered.map(pair => pair.v);
+                          const minValue = Math.min(...values);
+                          const maxValue = Math.max(...values);
+                          const range = maxValue - minValue;
+                          const padding = Math.max(range * 0.2, 0.01);
+                          const thresholdMax = instrumentSettings ? Math.max(
+                            instrumentSettings.warning_value || 0,
+                            instrumentSettings.alert_value || 0,
+                            instrumentSettings.shutdown_value || 0
+                          ) : 0;
+                          
+                          const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+                          
+                          const chartLayout = {
+                            title: { 
+                              text: `${project?.name || 'Project'} - Y Axis Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`,
+                              font: { size: 20, weight: 700, color: '#003087' },
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            xaxis: {
+                              title: { 
+                                text: `Time<br><span style="font-size:12px;color:#666;">${selectedInstrument?.instrument_id || 'Instrument'}</span>`,
+                                font: { size: 18, weight: 700, color: '#374151' },
+                                standoff: 20
+                              },
+                              type: 'date',
+                              tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                              gridcolor: '#f0f0f0',
+                              showgrid: true,
+                              tickfont: { size: 14, color: '#374151', weight: 700 },
+                              tickangle: 0,
+                              nticks: 10,
+                              tickmode: 'auto'
+                            },
+                            yaxis: {
+                              title: {
+                                text: 'Vibration (in/s)',
+                                font: { size: 18, weight: 700, color: '#374151' },
+                                standoff: 25
+                              },
+                              fixedrange: false,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              tickfont: { size: 16, color: '#374151', weight: 700 },
+                              tickformat: '.3~f',
+                              range: [
+                                Math.min(minValue - padding, -thresholdMax * 1.2),
+                                Math.max(maxValue + padding, thresholdMax * 1.2)
+                              ]
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 0.02,
+                              xanchor: 'left',
+                              y: -0.30,
+                              yanchor: 'top',
+                              orientation: 'h',
+                              font: { size: 12, weight: 700 },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1,
+                              traceorder: 'normal'
+                            },
+                            height: 550,
+                            margin: { t: 60, b: 100, l: 80, r: 80 },
+                            hovermode: 'closest',
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white',
+                            shapes: zones.shapes,
+                            annotations: zones.annotations
+                          };
+                          
+                          const chartConfig = {
+                            responsive: true,
+                            displayModeBar: true,
+                            scrollZoom: true,
+                            displaylogo: false,
+                          };
+                          
+                          openChartInWindow(
+                            'Y Axis Vibration Data',
+                            chartData,
+                            chartLayout,
+                            chartConfig,
+                            selectedInstrument?.instrument_location
+                          );
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
                   {createSinglePlot(processedData.y, 'Y', '#36A2EB')}
                 </Box>
               )}
               {processedData.z.values.length > 0 && (
                 <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Z Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const filtered = processedData.z.time
+                            .map((t, i) => ({ t, v: processedData.z.values[i] }))
+                            .filter(pair => pair.t && typeof pair.v === 'number' && !isNaN(pair.v));
+                          
+                          const chartData = [{
+                            x: filtered.map(pair => pair.t),
+                            y: filtered.map(pair => pair.v),
+                            type: 'scatter' as const,
+                            mode: 'lines' as const,
+                            name: 'Z [in/s]',
+                            line: { color: '#FFCE56', shape: 'spline', width: 1.5 },
+                            marker: { size: 6, color: '#FFCE56' },
+                            hovertemplate: '<b>Z</b><br>Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>Value: %{y:.3~f}<extra></extra>',
+                            connectgaps: true
+                          }];
+                          
+                          const values = filtered.map(pair => pair.v);
+                          const minValue = Math.min(...values);
+                          const maxValue = Math.max(...values);
+                          const range = maxValue - minValue;
+                          const padding = Math.max(range * 0.2, 0.01);
+                          const thresholdMax = instrumentSettings ? Math.max(
+                            instrumentSettings.warning_value || 0,
+                            instrumentSettings.alert_value || 0,
+                            instrumentSettings.shutdown_value || 0
+                          ) : 0;
+                          
+                          const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+                          
+                          const chartLayout = {
+                            title: { 
+                              text: `${project?.name || 'Project'} - Z Axis Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`,
+                              font: { size: 20, weight: 700, color: '#003087' },
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            xaxis: {
+                              title: { 
+                                text: `Time<br><span style="font-size:12px;color:#666;">${selectedInstrument?.instrument_id || 'Instrument'}</span>`,
+                                font: { size: 18, weight: 700, color: '#374151' },
+                                standoff: 20
+                              },
+                              type: 'date',
+                              tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                              gridcolor: '#f0f0f0',
+                              showgrid: true,
+                              tickfont: { size: 14, color: '#374151', weight: 700 },
+                              tickangle: 0,
+                              nticks: 10,
+                              tickmode: 'auto'
+                            },
+                            yaxis: {
+                              title: {
+                                text: 'Vibration (in/s)',
+                                font: { size: 18, weight: 700, color: '#374151' },
+                                standoff: 25
+                              },
+                              fixedrange: false,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              tickfont: { size: 16, color: '#374151', weight: 700 },
+                              tickformat: '.3~f',
+                              range: [
+                                Math.min(minValue - padding, -thresholdMax * 1.2),
+                                Math.max(maxValue + padding, thresholdMax * 1.2)
+                              ]
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 0.02,
+                              xanchor: 'left',
+                              y: -0.30,
+                              yanchor: 'top',
+                              orientation: 'h',
+                              font: { size: 12, weight: 700 },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1,
+                              traceorder: 'normal'
+                            },
+                            height: 550,
+                            margin: { t: 60, b: 100, l: 80, r: 80 },
+                            hovermode: 'closest',
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white',
+                            shapes: zones.shapes,
+                            annotations: zones.annotations
+                          };
+                          
+                          const chartConfig = {
+                            responsive: true,
+                            displayModeBar: true,
+                            scrollZoom: true,
+                            displaylogo: false,
+                          };
+                          
+                          openChartInWindow(
+                            'Z Axis Vibration Data',
+                            chartData,
+                            chartLayout,
+                            chartConfig,
+                            selectedInstrument?.instrument_location
+                          );
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
                   {createSinglePlot(processedData.z, 'Z', '#FFCE56')}
                 </Box>
               )}
               <Box mb={4} width="100%">
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">Combined Vibration Data</Typography>
+                  <Tooltip title="Open in Popup">
+                    <Button
+                      startIcon={<OpenInNew />}
+                      onClick={() => {
+                        const chartData = [
+                          { 
+                            x: processedData.combined.time, 
+                            y: processedData.combined.x, 
+                            type: 'scatter' as const, 
+                            mode: 'lines' as const, 
+                            name: 'X [in/s]',
+                            line: { color: '#FF6384', shape: 'spline', width: 1.2 },
+                            marker: { size: 5, color: '#FF6384' },
+                            hovertemplate: '<b>X</b><br>Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>Value: %{y:.3~f}<extra></extra>',
+                            connectgaps: true
+                          },
+                          { 
+                            x: processedData.combined.time, 
+                            y: processedData.combined.y, 
+                            type: 'scatter' as const, 
+                            mode: 'lines' as const, 
+                            name: 'Y [in/s]',
+                            line: { color: '#36A2EB', shape: 'spline', width: 1.2 },
+                            marker: { size: 5, color: '#36A2EB' },
+                            hovertemplate: '<b>Y</b><br>Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>Value: %{y:.3~f}<extra></extra>',
+                            connectgaps: true
+                          },
+                          { 
+                            x: processedData.combined.time, 
+                            y: processedData.combined.z, 
+                            type: 'scatter' as const, 
+                            mode: 'lines' as const, 
+                            name: 'Z [in/s]',
+                            line: { color: '#FFCE56', shape: 'spline', width: 1.2 },
+                            marker: { size: 5, color: '#FFCE56' },
+                            hovertemplate: '<b>Z</b><br>Time: %{x|%Y-%m-%d %H:%M:%S.%L}<br>Value: %{y:.3~f}<extra></extra>',
+                            connectgaps: true
+                          }
+                        ];
+                        
+                        const allValues = processedData.combined.x.concat(processedData.combined.y).concat(processedData.combined.z);
+                        const minValue = Math.min(...allValues);
+                        const maxValue = Math.max(...allValues);
+                        const range = maxValue - minValue;
+                        const padding = Math.max(range * 0.2, 0.01);
+                        const thresholdMax = instrumentSettings ? Math.max(
+                          instrumentSettings.warning_value || 0,
+                          instrumentSettings.alert_value || 0,
+                          instrumentSettings.shutdown_value || 0
+                        ) : 0;
+                        
+                        const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
+                        
+                        const chartLayout = {
+                          title: { 
+                            text: `${project?.name || 'Project'} - Combined Vibration Data - ${selectedInstrument?.instrument_location || 'Location: None'}`,
+                            font: { size: 20, weight: 700, color: '#003087' },
+                            x: 0.5,
+                            xanchor: 'center'
+                          },
+                          xaxis: {
+                            title: { 
+                              text: `Time<br><span style="font-size:12px;color:#666;">${selectedInstrument?.instrument_id || 'Instrument'}</span>`,
+                              font: { size: 18, weight: 700, color: '#374151' },
+                              standoff: 20
+                            },
+                            type: 'date',
+                            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                            gridcolor: '#f0f0f0',
+                            showgrid: true,
+                            tickfont: { size: 14, color: '#374151', weight: 700 },
+                            tickangle: 0,
+                            nticks: 10,
+                            tickmode: 'auto'
+                          },
+                          yaxis: {
+                            title: {
+                              text: 'Vibration (in/s)',
+                              font: { size: 18, weight: 700, color: '#374151' },
+                              standoff: 25
+                            },
+                            fixedrange: false,
+                            gridcolor: '#f0f0f0',
+                            zeroline: true,
+                            zerolinecolor: '#f0f0f0',
+                            tickfont: { size: 16, color: '#374151', weight: 700 },
+                            tickformat: '.3~f',
+                            range: [
+                              Math.min(minValue - padding, -thresholdMax * 1.2),
+                              Math.max(maxValue + padding, thresholdMax * 1.2)
+                            ]
+                          },
+                          showlegend: true,
+                          legend: {
+                            x: 0.02,
+                            xanchor: 'left',
+                            y: -0.30,
+                            yanchor: 'top',
+                            orientation: 'h',
+                            font: { size: 12, weight: 700 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            bordercolor: '#CCC',
+                            borderwidth: 1,
+                            traceorder: 'normal'
+                          },
+                          height: 550,
+                          margin: { t: 60, b: 100, l: 80, r: 80 },
+                          hovermode: 'closest',
+                          plot_bgcolor: 'white',
+                          paper_bgcolor: 'white',
+                          shapes: zones.shapes,
+                          annotations: zones.annotations
+                        };
+                        
+                        const chartConfig = {
+                          responsive: true,
+                          displayModeBar: true,
+                          scrollZoom: true,
+                          displaylogo: false,
+                        };
+                        
+                        openChartInWindow(
+                          'Combined Vibration Data',
+                          chartData,
+                          chartLayout,
+                          chartConfig,
+                          selectedInstrument?.instrument_location
+                        );
+                      }}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Open in Popup
+                    </Button>
+                  </Tooltip>
+                </Box>
                 {createCombinedPlot(processedData.combined)}
               </Box>
             </>

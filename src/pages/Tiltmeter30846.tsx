@@ -12,8 +12,10 @@ import {
   FormControl,
   InputLabel,
   Box,
-  Paper
+  Paper,
+  Tooltip
 } from '@mui/material';
+import { OpenInNew } from '@mui/icons-material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
@@ -333,6 +335,63 @@ const Tiltmeter30846: React.FC = () => {
     // Create colored zones and threshold lines
     return createReferenceLinesOnly(thresholds);
   }
+
+  const openChartInWindow = (
+    chartTitle: string,
+    chartData: any[],
+    layout: any,
+    config: any,
+    location: string | undefined
+  ) => {
+    const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
+    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    
+    const newWindow = window.open('', '_blank', windowFeatures);
+    if (!newWindow) {
+      alert('Popup blocked! Please allow popups for this site.');
+      return;
+    }
+
+    newWindow.document.title = windowTitle;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${windowTitle}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: Arial, sans-serif;
+              background-color: #f5f5f5;
+            }
+            #chart {
+              background-color: white;
+              padding: 20px;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+          </style>
+        </head>
+        <body>
+          <div id="chart"></div>
+          <script>
+            const data = ${JSON.stringify(chartData)};
+            const layout = ${JSON.stringify(layout)};
+            const config = ${JSON.stringify(config)};
+            Plotly.newPlot('chart', data, layout, config);
+          </script>
+        </body>
+      </html>
+    `;
+
+    newWindow.document.write(htmlContent);
+    newWindow.document.close();
+  };
   
   // General thresholds for legend display
   const thresholds = instrumentSettings ? getThresholdsFromSettings(instrumentSettings) : {} as any;
@@ -616,9 +675,58 @@ const Tiltmeter30846: React.FC = () => {
         {/* Individual Charts in order: X, Y, Z */}
         {/* X-Axis Chart */}
         <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
-          <Typography variant="h6" gutterBottom>
-            X-Axis Tilt (Channel 0)
-          </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6" gutterBottom>
+              X-Axis Tilt (Channel 0)
+            </Typography>
+            <Tooltip title="Open in Popup">
+              <Button
+                startIcon={<OpenInNew />}
+                onClick={() => {
+                  const chartConfig = {
+                    responsive: true,
+                    displayModeBar: true,
+                    scrollZoom: true,
+                    displaylogo: false,
+                  };
+                  const chartLayout = {
+                    ...plotlyLayout,
+                    title: { 
+                      text: `${project ? project.name + ' - ' : ''}X-Axis Tilt - Node ${selectedNode} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location : 'Location: None'}`,
+                      font: { size: 20, weight: 700, color: '#1f2937' },
+                      x: 0.5,
+                      xanchor: 'center'
+                    },
+                    yaxis: { 
+                      ...plotlyLayout.yaxis, 
+                      title: { 
+                        text: 'X-Axis Value', 
+                        standoff: 15,
+                        font: { size: 16, weight: 700, color: '#374151' }
+                      },
+                      range: (() => {
+                        const range = getYAxisRange(xValues, getThresholdsFromSettings(instrumentSettings));
+                        return [range.min, range.max];
+                      })()
+                    },
+                    shapes: getReferenceShapesAndAnnotations().shapes,
+                    annotations: getReferenceShapesAndAnnotations().annotations,
+                  };
+                  openChartInWindow(
+                    `X-Axis Tilt - Node ${selectedNode}`,
+                    xChartData,
+                    chartLayout,
+                    chartConfig,
+                    availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location
+                  );
+                }}
+                variant="outlined"
+                size="small"
+              >
+                Open in Popup
+              </Button>
+            </Tooltip>
+          </Box>
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <Plot
               data={xChartData}
@@ -653,9 +761,58 @@ const Tiltmeter30846: React.FC = () => {
         </Paper>
         {/* Y-Axis Chart */}
         <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
-          <Typography variant="h6" gutterBottom>
-            Y-Axis Tilt (Channel 1)
-          </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6" gutterBottom>
+              Y-Axis Tilt (Channel 1)
+            </Typography>
+            <Tooltip title="Open in Popup">
+              <Button
+                startIcon={<OpenInNew />}
+                onClick={() => {
+                  const chartConfig = {
+                    responsive: true,
+                    displayModeBar: true,
+                    scrollZoom: true,
+                    displaylogo: false,
+                  };
+                  const chartLayout = {
+                    ...plotlyLayout,
+                    title: { 
+                      text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${selectedNode} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location : 'Location: None'}`,
+                      font: { size: 20, weight: 700, color: '#1f2937' },
+                      x: 0.5,
+                      xanchor: 'center'
+                    },
+                    yaxis: { 
+                      ...plotlyLayout.yaxis, 
+                      title: { 
+                        text: 'Y-Axis Value', 
+                        standoff: 15,
+                        font: { size: 16, weight: 700, color: '#374151' }
+                      },
+                      range: (() => {
+                        const range = getYAxisRange(yValues, getThresholdsFromSettings(instrumentSettings));
+                        return [range.min, range.max];
+                      })()
+                    },
+                    shapes: getReferenceShapesAndAnnotations().shapes,
+                    annotations: getReferenceShapesAndAnnotations().annotations,
+                  };
+                  openChartInWindow(
+                    `Y-Axis Tilt - Node ${selectedNode}`,
+                    yChartData,
+                    chartLayout,
+                    chartConfig,
+                    availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location
+                  );
+                }}
+                variant="outlined"
+                size="small"
+              >
+                Open in Popup
+              </Button>
+            </Tooltip>
+          </Box>
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <Plot
               data={yChartData}
@@ -690,9 +847,58 @@ const Tiltmeter30846: React.FC = () => {
         </Paper>
         {/* Z-Axis Chart */}
         <Paper elevation={3} sx={{ p: 3, mb: 10 }}>
-          <Typography variant="h6" gutterBottom>
-            Z-Axis Tilt (Channel 2)
-          </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6" gutterBottom>
+              Z-Axis Tilt (Channel 2)
+            </Typography>
+            <Tooltip title="Open in Popup">
+              <Button
+                startIcon={<OpenInNew />}
+                onClick={() => {
+                  const chartConfig = {
+                    responsive: true,
+                    displayModeBar: true,
+                    scrollZoom: true,
+                    displaylogo: false,
+                  };
+                  const chartLayout = {
+                    ...plotlyLayout,
+                    title: { 
+                      text: `${project ? project.name + ' - ' : ''}Z-Axis Tilt - Node ${selectedNode} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location : 'Location: None'}`,
+                      font: { size: 20, weight: 700, color: '#1f2937' },
+                      x: 0.5,
+                      xanchor: 'center'
+                    },
+                    yaxis: { 
+                      ...plotlyLayout.yaxis, 
+                      title: { 
+                        text: 'Z-Axis Value', 
+                        standoff: 15,
+                        font: { size: 16, weight: 700, color: '#374151' }
+                      },
+                      range: (() => {
+                        const range = getYAxisRange(zValues, getThresholdsFromSettings(instrumentSettings));
+                        return [range.min, range.max];
+                      })()
+                    },
+                    shapes: getReferenceShapesAndAnnotations().shapes,
+                    annotations: getReferenceShapesAndAnnotations().annotations,
+                  };
+                  openChartInWindow(
+                    `Z-Axis Tilt - Node ${selectedNode}`,
+                    zChartData,
+                    chartLayout,
+                    chartConfig,
+                    availableInstruments.find(inst => inst.instrument_id === 'TILTMETER-30846')?.instrument_location
+                  );
+                }}
+                variant="outlined"
+                size="small"
+              >
+                Open in Popup
+              </Button>
+            </Tooltip>
+          </Box>
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <Plot
               data={zChartData}

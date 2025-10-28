@@ -3,7 +3,8 @@ import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import BackButton from '../components/Back';
-import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import { OpenInNew } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -331,6 +332,76 @@ const AncSeismograph: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openChartInWindow = (
+    chartTitle: string,
+    chartData: any[],
+    layout: any,
+    config: any,
+    location: string | undefined
+  ) => {
+    const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
+    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    
+    const newWindow = window.open('', '_blank', windowFeatures);
+    if (!newWindow) {
+      alert('Popup blocked! Please allow popups for this site.');
+      return;
+    }
+
+    newWindow.document.title = windowTitle;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${windowTitle}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+              background-color: #f5f5f5;
+            }
+            .chart-container {
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+              padding: 20px;
+              height: calc(100vh - 40px);
+            }
+            .plotly-graph-div {
+              width: 100% !important;
+              height: 100% !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="chart-container">
+            <div id="plotly-chart"></div>
+          </div>
+          
+          <script>
+            const chartData = ${JSON.stringify(chartData)};
+            const chartLayout = ${JSON.stringify(layout)};
+            const chartConfig = ${JSON.stringify(config)};
+            
+            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig);
+            
+            window.addEventListener('resize', function() {
+              Plotly.Plots.resize('plotly-chart');
+            });
+          </script>
+        </body>
+      </html>
+    `;
+
+    newWindow.document.write(htmlContent);
+    newWindow.document.close();
   };
 
   const createSinglePlot = (data: { time: Date[]; values: number[] }, axis: string, color: string) => {
@@ -1064,20 +1135,177 @@ const AncSeismograph: React.FC = () => {
             <>
               {processedData.x.values.length > 0 && (
                 <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">X Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const chartData = [{
+                            x: processedData.x.time,
+                            y: processedData.x.values,
+                            type: 'scatter' as const,
+                            mode: 'lines' as const,
+                            name: 'X [in/s]',
+                            line: { color: '#FF6384', shape: 'spline', width: 1.5 }
+                          }];
+                          const chartLayout = {
+                            title: { text: `${project?.name || 'Project'} - X Axis Vibration Data` },
+                            xaxis: { title: { text: 'Time' }, type: 'date' },
+                            yaxis: { title: { text: 'Vibration (in/s)' } }
+                          };
+                          const chartConfig = {
+                            responsive: true,
+                            displayModeBar: true,
+                            scrollZoom: true,
+                            displaylogo: false,
+                          };
+                          openChartInWindow(
+                            'X Axis Vibration Data',
+                            chartData,
+                            chartLayout,
+                            chartConfig,
+                            availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location
+                          );
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
                   {createSinglePlot(processedData.x, 'X', '#FF6384')}
                 </Box>
               )}
               {processedData.y.values.length > 0 && (
                 <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Y Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const chartData = [{
+                            x: processedData.y.time,
+                            y: processedData.y.values,
+                            type: 'scatter' as const,
+                            mode: 'lines' as const,
+                            name: 'Y [in/s]',
+                            line: { color: '#36A2EB', shape: 'spline', width: 1.5 }
+                          }];
+                          const chartLayout = {
+                            title: { text: `${project?.name || 'Project'} - Y Axis Vibration Data` },
+                            xaxis: { title: { text: 'Time' }, type: 'date' },
+                            yaxis: { title: { text: 'Vibration (in/s)' } }
+                          };
+                          const chartConfig = {
+                            responsive: true,
+                            displayModeBar: true,
+                            scrollZoom: true,
+                            displaylogo: false,
+                          };
+                          openChartInWindow(
+                            'Y Axis Vibration Data',
+                            chartData,
+                            chartLayout,
+                            chartConfig,
+                            availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location
+                          );
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
                   {createSinglePlot(processedData.y, 'Y', '#36A2EB')}
                 </Box>
               )}
               {processedData.z.values.length > 0 && (
                 <Box mb={10} width="100%">
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">Z Axis Vibration Data</Typography>
+                    <Tooltip title="Open in Popup">
+                      <Button
+                        startIcon={<OpenInNew />}
+                        onClick={() => {
+                          const chartData = [{
+                            x: processedData.z.time,
+                            y: processedData.z.values,
+                            type: 'scatter' as const,
+                            mode: 'lines' as const,
+                            name: 'Z [in/s]',
+                            line: { color: '#FFCE56', shape: 'spline', width: 1.5 }
+                          }];
+                          const chartLayout = {
+                            title: { text: `${project?.name || 'Project'} - Z Axis Vibration Data` },
+                            xaxis: { title: { text: 'Time' }, type: 'date' },
+                            yaxis: { title: { text: 'Vibration (in/s)' } }
+                          };
+                          const chartConfig = {
+                            responsive: true,
+                            displayModeBar: true,
+                            scrollZoom: true,
+                            displaylogo: false,
+                          };
+                          openChartInWindow(
+                            'Z Axis Vibration Data',
+                            chartData,
+                            chartLayout,
+                            chartConfig,
+                            availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location
+                          );
+                        }}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Open in Popup
+                      </Button>
+                    </Tooltip>
+                  </Box>
                   {createSinglePlot(processedData.z, 'Z', '#FFCE56')}
                 </Box>
               )}
               <Box mb={4} width="100%">
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">Combined Vibration Data</Typography>
+                  <Tooltip title="Open in Popup">
+                    <Button
+                      startIcon={<OpenInNew />}
+                      onClick={() => {
+                        const chartData = [
+                          { x: processedData.combined.time, y: processedData.combined.x, type: 'scatter', mode: 'lines', name: 'X' },
+                          { x: processedData.combined.time, y: processedData.combined.y, type: 'scatter', mode: 'lines', name: 'Y' },
+                          { x: processedData.combined.time, y: processedData.combined.z, type: 'scatter', mode: 'lines', name: 'Z' }
+                        ];
+                        const chartLayout = {
+                          title: { text: `${project?.name || 'Project'} - Combined Vibration Data` },
+                          xaxis: { title: { text: 'Time' }, type: 'date' },
+                          yaxis: { title: { text: 'Vibration (in/s)' } }
+                        };
+                        const chartConfig = {
+                          responsive: true,
+                          displayModeBar: true,
+                          scrollZoom: true,
+                          displaylogo: false,
+                        };
+                        openChartInWindow(
+                          'Combined Vibration Data',
+                          chartData,
+                          chartLayout,
+                          chartConfig,
+                          availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location
+                        );
+                      }}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Open in Popup
+                    </Button>
+                  </Tooltip>
+                </Box>
                 {createCombinedPlot(processedData.combined)}
               </Box>
             </>
