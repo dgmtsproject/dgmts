@@ -76,6 +76,8 @@ interface Instrument {
 type DataType = 'ppv' | 'frequency' | 'metric';
 
 const Instantel1Seismograph: React.FC = () => {
+  const INSTRUMENT_ID = 'Instantel 1';
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { permissions } = useAdminContext();
@@ -441,7 +443,7 @@ const Instantel1Seismograph: React.FC = () => {
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -689,7 +691,7 @@ const Instantel1Seismograph: React.FC = () => {
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -902,7 +904,7 @@ const Instantel1Seismograph: React.FC = () => {
                             },
                             xaxis: {
                               title: { 
-                                text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`,
+                                text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
                                 font: { size: 18, weight: 700, color: '#374151' },
                                 standoff: 20
                               },
@@ -1013,7 +1015,7 @@ const Instantel1Seismograph: React.FC = () => {
                             },
                             xaxis: {
                               title: { 
-                                text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`,
+                                text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
                                 font: { size: 18, weight: 700, color: '#374151' },
                                 standoff: 20
                               },
@@ -1124,7 +1126,7 @@ const Instantel1Seismograph: React.FC = () => {
                             },
                             xaxis: {
                               title: { 
-                                text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`,
+                                text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
                                 font: { size: 18, weight: 700, color: '#374151' },
                                 standoff: 20
                               },
@@ -1252,7 +1254,7 @@ const Instantel1Seismograph: React.FC = () => {
                           },
                           xaxis: {
                             title: { 
-                              text: `Time<br><span style="font-size:12px;color:#666;">INSTANTEL-1</span>`,
+                              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
                               font: { size: 18, weight: 700, color: '#374151' },
                               standoff: 20
                             },

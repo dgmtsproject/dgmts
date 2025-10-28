@@ -35,6 +35,8 @@ interface Instrument {
 }
 
 const RockSmg2Seismograph: React.FC = () => {
+  const INSTRUMENT_ID = 'ROCKSMG-2';
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { permissions } = useAdminContext();
@@ -416,9 +418,9 @@ const RockSmg2Seismograph: React.FC = () => {
             x: 0.5,
             xanchor: 'center'
           },
-          xaxis: {
+            xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">${availableInstruments.length > 0 ? availableInstruments[0].instrument_id : 'ROCKSMG-2'}</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -675,9 +677,9 @@ const RockSmg2Seismograph: React.FC = () => {
             x: 0.5,
             xanchor: 'center'
           },
-          xaxis: {
+            xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">${availableInstruments.length > 0 ? availableInstruments[0].instrument_id : 'ROCKSMG-2'}</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },

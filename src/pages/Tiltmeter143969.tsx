@@ -114,6 +114,7 @@ const Tiltmeter143969: React.FC = () => {
   const [project, setProject] = useState<Project | null>(location.state?.project || null);
   const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   const nodeId = 143969; // Hardcoded node ID
+  const INSTRUMENT_ID = 'TILT-143969';
   const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
   const [downloadingRaw, setDownloadingRaw] = useState(false);
 
@@ -556,7 +557,7 @@ const Tiltmeter143969: React.FC = () => {
     },
     xaxis: {
       title: { 
-        text: `Time<br><span style="font-size:12px;color:#666;">TILTMETER-143969</span>`, 
+        text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
         font: { size: 16, weight: 700, color: '#374151' },
         standoff: 20
       },
