@@ -138,16 +138,18 @@ export const createSeismographChartData = (
       }] : [])
     ];
 
-    const chartLayout = {
-      title: { 
-        text: `${axis} Axis Vibration Data`,
-      font: { size: 20, weight: 700, color: '#003087' },
-      x: 0.5,
-      xanchor: 'center'
-    },
+  const currentInstrument = availableInstruments.find(inst => inst.instrument_id === instrumentId);
+  
+  const chartLayout = {
+    title: { 
+      text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data${currentInstrument?.instrument_location ? ` - ${currentInstrument.instrument_location}` : ''}`,
+    font: { size: 20, weight: 700, color: '#003087' },
+    x: 0.5,
+    xanchor: 'center'
+  },
     xaxis: {
       title: { 
-        text: `Time<br><span style="font-size:12px;color:#666;">${availableInstruments.length > 0 ? availableInstruments[0].instrument_id : instrumentId}</span>`, 
+        text: `Time<br><span style="font-size:12px;color:#666;">${instrumentId}</span>`, 
         font: { size: 18, weight: 700, color: '#374151' },
         standoff: 20
       },
@@ -188,9 +190,9 @@ export const createSeismographChartData = (
     },
     showlegend: true,
     legend: {
-      x: 0.02,
-      xanchor: 'left',
-      y: -0.30,
+      x: 0.5,
+      xanchor: 'center',
+      y: -0.40,
       yanchor: 'top',
       orientation: 'h',
       font: { size: 12, weight: 700 },
@@ -200,7 +202,7 @@ export const createSeismographChartData = (
       traceorder: 'normal'
     },
     height: 550,
-    margin: { t: 60, b: 100, l: 80, r: 80 },
+    margin: { t: 60, b: 150, l: 80, r: 80 },
     hovermode: 'closest',
     plot_bgcolor: 'white',
     paper_bgcolor: 'white',
@@ -364,16 +366,18 @@ export const createSeismographCombinedChartData = (
       }] : [])
   ];
 
+  const currentInstrument = availableInstruments.find(inst => inst.instrument_id === instrumentId);
+  
   const chartLayout = {
     title: { 
-      text: `Combined Vibration Data`, 
+      text: `${project?.name || 'Project'} - Combined Vibration Data${currentInstrument?.instrument_location ? ` - ${currentInstrument.instrument_location}` : ''}`, 
       font: { size: 20, weight: 700, color: '#003087' },
       x: 0.5,
       xanchor: 'center'
     },
     xaxis: {
       title: { 
-        text: `Time<br><span style="font-size:12px;color:#666;">${availableInstruments.length > 0 ? availableInstruments[0].instrument_id : instrumentId}</span>`, 
+        text: `Time<br><span style="font-size:12px;color:#666;">${instrumentId}</span>`, 
         font: { size: 18, weight: 700, color: '#374151' },
         standoff: 20
       },
@@ -414,9 +418,9 @@ export const createSeismographCombinedChartData = (
     },
     showlegend: true,
     legend: {
-      x: 0.02,
-      xanchor: 'left',
-      y: -0.30,
+      x: 0.5,
+      xanchor: 'center',
+      y: -0.40,
       yanchor: 'top',
       orientation: 'h',
       font: { size: 12, weight: 700 },

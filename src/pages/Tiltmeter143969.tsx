@@ -586,8 +586,8 @@ const Tiltmeter143969: React.FC = () => {
     },
     showlegend: true,
     legend: {
-      x: 0.02,
-      xanchor: 'left',
+      x: 0.5,
+      xanchor: 'center',
       y: -0.30,
       yanchor: 'top',
       orientation: 'h' as const,
