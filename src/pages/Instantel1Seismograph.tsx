@@ -167,7 +167,7 @@ const Instantel1Seismograph: React.FC = () => {
         .from('instruments')
         .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
-        .in('instrument_id', ['Instantel 1'])
+        .in('instrument_id', ['Instantel 1', 'Instantel 2'])
         .order('instrument_id');
 
       if (instrumentsError) {
@@ -184,7 +184,10 @@ const Instantel1Seismograph: React.FC = () => {
   const handleInstrumentChange = (instrumentId: string) => {
     switch (instrumentId) {
       case 'Instantel 1':
-        navigate('/instantel1-seismograph');
+        navigate('/instantel1-seismograph', { state: { project } });
+        break;
+      case 'Instantel 2':
+        navigate('/instantel2-seismograph', { state: { project } });
         break;
       default:
         break;

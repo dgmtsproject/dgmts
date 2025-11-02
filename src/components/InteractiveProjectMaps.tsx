@@ -280,6 +280,7 @@ const InteractiveProjectMaps: React.FC = () => {
       'TILT-143969': '/tiltmeter-143969',
       'TILTMETER-30846': '/tiltmeter-30846',
       'Instantel 1': '/instantel1-seismograph',
+      'Instantel 2': '/instantel2-seismograph',
       'ROCKSMG-1': '/rocksmg1-seismograph',
       'ROCKSMG-2': '/rocksmg2-seismograph'
     };

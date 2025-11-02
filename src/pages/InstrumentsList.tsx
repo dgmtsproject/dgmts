@@ -332,6 +332,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                     instrument.instrument_id === 'TILT-142939' ||
                                     instrument.instrument_id === 'TILT-143969' ||
                                     instrument.instrument_id === 'Instantel 1' ||
+                                    instrument.instrument_id === 'Instantel 2' ||
                                     instrument.instrument_name === 'Tiltmeter' ||
                                     // Enable for any seismograph instrument with syscom_device_id
                                     instrument.syscom_device_id
@@ -359,6 +360,8 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                     navigate('/tiltmeter-143969', { state: { project: selectedProject } });
                                   } else if (instrument.instrument_id === 'Instantel 1') {
                                     navigate('/instantel1-seismograph', { state: { project: selectedProject } });
+                                  } else if (instrument.instrument_id === 'Instantel 2') {
+                                    navigate('/instantel2-seismograph', { state: { project: selectedProject } });
                                   } else if (instrument.instrument_name === 'Tiltmeter') {
                                     navigate('/tiltmeter', { state: { project: selectedProject } });
                                   } else if (instrument.syscom_device_id) {
