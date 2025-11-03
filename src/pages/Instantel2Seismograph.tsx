@@ -924,7 +924,39 @@ const Instantel2Seismograph: React.FC = () => {
                               line: { color: '#4CAF50', shape: 'linear', width: 1.5 },
                               hovertemplate: '<b>Geophone PVS</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.3~f}<extra></extra>',
                               connectgaps: true
-                            }];
+                            },
+                            // Add reference line traces for legend
+                            ...(instrumentSettings?.alert_value ? [{
+                              x: [null],
+                              y: [null],
+                              type: 'scatter' as const,
+                              mode: 'lines' as const,
+                              name: `Alert (${instrumentSettings.alert_value} ${processedData.unit})`,
+                              line: { color: 'orange', width: 2, dash: 'dash' as const },
+                              showlegend: true,
+                              legendgroup: 'reference-lines'
+                            }] : []),
+                            ...(instrumentSettings?.warning_value ? [{
+                              x: [null],
+                              y: [null],
+                              type: 'scatter' as const,
+                              mode: 'lines' as const,
+                              name: `Warning (${instrumentSettings.warning_value} ${processedData.unit})`,
+                              line: { color: 'red', width: 2, dash: 'dash' as const },
+                              showlegend: true,
+                              legendgroup: 'reference-lines'
+                            }] : []),
+                            ...(instrumentSettings?.shutdown_value ? [{
+                              x: [null],
+                              y: [null],
+                              type: 'scatter' as const,
+                              mode: 'lines' as const,
+                              name: `Shutdown (${instrumentSettings.shutdown_value} ${processedData.unit})`,
+                              line: { color: 'darkred', width: 3, dash: 'solid' as const },
+                              showlegend: true,
+                              legendgroup: 'reference-lines'
+                            }] : [])
+                          ];
                             
                             const allValues = processedData.geophone.values;
                             const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
@@ -971,7 +1003,7 @@ const Instantel2Seismograph: React.FC = () => {
                               legend: {
                                 x: 0.5,
                                 xanchor: 'center',
-                                y: -0.30,
+                                y: -0.45,
                                 yanchor: 'top',
                                 orientation: 'h',
                                 font: { size: 12, weight: 700 },
@@ -981,7 +1013,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 traceorder: 'normal'
                               },
                               height: 550,
-                              margin: { t: 60, b: 150, l: 80, r: 80 },
+                              margin: { t: 60, b: 180, l: 80, r: 80 },
                               hovermode: 'closest',
                               plot_bgcolor: 'white',
                               paper_bgcolor: 'white',
@@ -1038,7 +1070,39 @@ const Instantel2Seismograph: React.FC = () => {
                                 line: { color: '#FF6384', shape: 'linear', width: 1.5 },
                                 hovertemplate: '<b>X</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.3~f}<extra></extra>',
                                 connectgaps: true
-                              }];
+                              },
+                              // Add reference line traces for legend
+                              ...(instrumentSettings?.alert_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Alert (${instrumentSettings.alert_value} ${processedData.unit})`,
+                                line: { color: 'orange', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.warning_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Warning (${instrumentSettings.warning_value} ${processedData.unit})`,
+                                line: { color: 'red', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.shutdown_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Shutdown (${instrumentSettings.shutdown_value} ${processedData.unit})`,
+                                line: { color: 'darkred', width: 3, dash: 'solid' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : [])
+                            ];
                               
                               const allValues = processedData.x.values;
                               const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
@@ -1085,7 +1149,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 legend: {
                                   x: 0.5,
                                   xanchor: 'center',
-                                  y: -0.30,
+                                  y: -0.45,
                                   yanchor: 'top',
                                   orientation: 'h',
                                   font: { size: 12, weight: 700 },
@@ -1095,7 +1159,7 @@ const Instantel2Seismograph: React.FC = () => {
                                   traceorder: 'normal'
                                 },
                                 height: 550,
-                                margin: { t: 60, b: 150, l: 80, r: 80 },
+                                margin: { t: 60, b: 180, l: 80, r: 80 },
                                 hovermode: 'closest',
                                 plot_bgcolor: 'white',
                                 paper_bgcolor: 'white',
@@ -1149,7 +1213,39 @@ const Instantel2Seismograph: React.FC = () => {
                                 line: { color: '#36A2EB', shape: 'linear', width: 1.5 },
                                 hovertemplate: '<b>Y</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.3~f}<extra></extra>',
                                 connectgaps: true
-                              }];
+                              },
+                              // Add reference line traces for legend
+                              ...(instrumentSettings?.alert_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Alert (${instrumentSettings.alert_value} ${processedData.unit})`,
+                                line: { color: 'orange', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.warning_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Warning (${instrumentSettings.warning_value} ${processedData.unit})`,
+                                line: { color: 'red', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.shutdown_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Shutdown (${instrumentSettings.shutdown_value} ${processedData.unit})`,
+                                line: { color: 'darkred', width: 3, dash: 'solid' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : [])
+                            ];
                               
                               const allValues = processedData.y.values;
                               const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
@@ -1196,7 +1292,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 legend: {
                                   x: 0.5,
                                   xanchor: 'center',
-                                  y: -0.30,
+                                  y: -0.45,
                                   yanchor: 'top',
                                   orientation: 'h',
                                   font: { size: 12, weight: 700 },
@@ -1206,7 +1302,7 @@ const Instantel2Seismograph: React.FC = () => {
                                   traceorder: 'normal'
                                 },
                                 height: 550,
-                                margin: { t: 60, b: 150, l: 80, r: 80 },
+                                margin: { t: 60, b: 180, l: 80, r: 80 },
                                 hovermode: 'closest',
                                 plot_bgcolor: 'white',
                                 paper_bgcolor: 'white',
@@ -1260,7 +1356,39 @@ const Instantel2Seismograph: React.FC = () => {
                                 line: { color: '#FFCE56', shape: 'linear', width: 1.5 },
                                 hovertemplate: '<b>Z</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.3~f}<extra></extra>',
                                 connectgaps: true
-                              }];
+                              },
+                              // Add reference line traces for legend
+                              ...(instrumentSettings?.alert_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Alert (${instrumentSettings.alert_value} ${processedData.unit})`,
+                                line: { color: 'orange', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.warning_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Warning (${instrumentSettings.warning_value} ${processedData.unit})`,
+                                line: { color: 'red', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.shutdown_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Shutdown (${instrumentSettings.shutdown_value} ${processedData.unit})`,
+                                line: { color: 'darkred', width: 3, dash: 'solid' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : [])
+                            ];
                               
                               const allValues = processedData.z.values;
                               const zones = instrumentSettings ? createReferenceLinesOnly(getThresholdsFromSettings(instrumentSettings)) : { shapes: [], annotations: [] };
@@ -1307,7 +1435,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 legend: {
                                   x: 0.5,
                                   xanchor: 'center',
-                                  y: -0.30,
+                                  y: -0.45,
                                   yanchor: 'top',
                                   orientation: 'h',
                                   font: { size: 12, weight: 700 },
@@ -1317,7 +1445,7 @@ const Instantel2Seismograph: React.FC = () => {
                                   traceorder: 'normal'
                                 },
                                 height: 550,
-                                margin: { t: 60, b: 150, l: 80, r: 80 },
+                                margin: { t: 60, b: 180, l: 80, r: 80 },
                                 hovermode: 'closest',
                                 plot_bgcolor: 'white',
                                 paper_bgcolor: 'white',
@@ -1387,7 +1515,38 @@ const Instantel2Seismograph: React.FC = () => {
                                 line: { color: '#FFCE56', shape: 'linear', width: 1.2 },
                                 hovertemplate: '<b>Z</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.3~f}<extra></extra>',
                                 connectgaps: true
-                              }
+                              },
+                              // Add reference line traces for legend
+                              ...(instrumentSettings?.alert_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Alert (${instrumentSettings.alert_value} ${processedData.unit})`,
+                                line: { color: 'orange', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.warning_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Warning (${instrumentSettings.warning_value} ${processedData.unit})`,
+                                line: { color: 'red', width: 2, dash: 'dash' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : []),
+                              ...(instrumentSettings?.shutdown_value ? [{
+                                x: [null],
+                                y: [null],
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: `Shutdown (${instrumentSettings.shutdown_value} ${processedData.unit})`,
+                                line: { color: 'darkred', width: 3, dash: 'solid' as const },
+                                showlegend: true,
+                                legendgroup: 'reference-lines'
+                              }] : [])
                             ];
                             
                             const allValues = [...processedData.combined.x, ...processedData.combined.y, ...processedData.combined.z];
@@ -1435,7 +1594,7 @@ const Instantel2Seismograph: React.FC = () => {
                               legend: {
                                 x: 0.5,
                                 xanchor: 'center',
-                                y: -0.30,
+                                y: -0.45,
                                 yanchor: 'top',
                                 orientation: 'h',
                                 font: { size: 12, weight: 700 },
@@ -1445,7 +1604,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 traceorder: 'normal'
                               },
                               height: 550,
-                              margin: { t: 60, b: 150, l: 80, r: 80 },
+                              margin: { t: 60, b: 180, l: 80, r: 80 },
                               hovermode: 'closest',
                               plot_bgcolor: 'white',
                               paper_bgcolor: 'white',

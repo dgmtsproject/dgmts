@@ -249,7 +249,7 @@ const Tiltmeter30846: React.FC = () => {
   const plotlyLayout = {
     autosize: true,
     height: 550,
-    margin: { t: 60, b: 100, l: 80, r: 80 },
+    margin: { t: 60, b: 180, l: 80, r: 80 },
     title: {
       font: { size: 20, weight: 700, color: '#1f2937' },
       x: 0.5,
@@ -288,7 +288,7 @@ const Tiltmeter30846: React.FC = () => {
     legend: {
       x: 0.02,
       xanchor: 'left' as const,
-      y: -0.30,
+      y: -0.45,
       yanchor: 'top' as const,
       orientation: 'h' as const,
       font: { size: 12, weight: 700 },

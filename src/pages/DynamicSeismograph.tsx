@@ -877,7 +877,7 @@ const DynamicSeismograph: React.FC = () => {
                             legend: {
                               x: 0.5,
                               xanchor: 'center',
-                              y: -0.30,
+                              y: -0.45,
                               yanchor: 'top',
                               orientation: 'h',
                               font: { size: 12, weight: 700 },
@@ -887,7 +887,7 @@ const DynamicSeismograph: React.FC = () => {
                               traceorder: 'normal'
                             },
                             height: 550,
-                            margin: { t: 60, b: 150, l: 80, r: 80 },
+                            margin: { t: 60, b: 180, l: 80, r: 80 },
                             hovermode: 'closest',
                             plot_bgcolor: 'white',
                             paper_bgcolor: 'white',
@@ -1000,7 +1000,7 @@ const DynamicSeismograph: React.FC = () => {
                             legend: {
                               x: 0.5,
                               xanchor: 'center',
-                              y: -0.30,
+                              y: -0.45,
                               yanchor: 'top',
                               orientation: 'h',
                               font: { size: 12, weight: 700 },
@@ -1010,7 +1010,7 @@ const DynamicSeismograph: React.FC = () => {
                               traceorder: 'normal'
                             },
                             height: 550,
-                            margin: { t: 60, b: 150, l: 80, r: 80 },
+                            margin: { t: 60, b: 180, l: 80, r: 80 },
                             hovermode: 'closest',
                             plot_bgcolor: 'white',
                             paper_bgcolor: 'white',
@@ -1123,7 +1123,7 @@ const DynamicSeismograph: React.FC = () => {
                             legend: {
                               x: 0.5,
                               xanchor: 'center',
-                              y: -0.30,
+                              y: -0.45,
                               yanchor: 'top',
                               orientation: 'h',
                               font: { size: 12, weight: 700 },
@@ -1133,7 +1133,7 @@ const DynamicSeismograph: React.FC = () => {
                               traceorder: 'normal'
                             },
                             height: 550,
-                            margin: { t: 60, b: 150, l: 80, r: 80 },
+                            margin: { t: 60, b: 180, l: 80, r: 80 },
                             hovermode: 'closest',
                             plot_bgcolor: 'white',
                             paper_bgcolor: 'white',
@@ -1265,7 +1265,7 @@ const DynamicSeismograph: React.FC = () => {
                           legend: {
                             x: 0.5,
                             xanchor: 'center',
-                            y: -0.30,
+                            y: -0.45,
                             yanchor: 'top',
                             orientation: 'h',
                             font: { size: 12, weight: 700 },
@@ -1275,7 +1275,7 @@ const DynamicSeismograph: React.FC = () => {
                             traceorder: 'normal'
                           },
                           height: 550,
-                          margin: { t: 60, b: 150, l: 80, r: 80 },
+                          margin: { t: 60, b: 180, l: 80, r: 80 },
                           hovermode: 'closest',
                           plot_bgcolor: 'white',
                           paper_bgcolor: 'white',
