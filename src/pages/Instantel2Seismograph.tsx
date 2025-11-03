@@ -316,26 +316,55 @@ const Instantel2Seismograph: React.FC = () => {
         ? 'https://imsite.dullesgeotechnical.com/api/micromate/UM16368/readings'
         : '/api/fetchMicromateReadings?device=UM16368';
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+      let response: Response;
+      try {
+        response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (fetchError) {
+        // Handle network errors
+        throw new Error(`Network error: ${fetchError instanceof Error ? fetchError.message : 'Unknown network error'}`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        // Try to get error message from response
+        let errorMessage = `HTTP error! Status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = `HTTP error! Status: ${response.status} ${response.statusText || ''}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      let data: any;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error(`Failed to parse response: ${jsonError instanceof Error ? jsonError.message : 'Unknown JSON parse error'}`);
+      }
+
+      // Validate that we got the expected data structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format received');
+      }
+
       setRawData(data);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? `Failed to fetch UM16368 readings: ${err.message}`
-          : "An unknown error occurred"
-      );
+      const errorMessage = err instanceof Error
+        ? `Failed to fetch UM16368 readings: ${err.message}`
+        : "An unknown error occurred";
+      
+      setError(errorMessage);
+      console.error('Error in fetchData:', err);
     } finally {
       setLoading(false);
     }
