@@ -378,6 +378,10 @@ const AncSeismograph: React.FC = () => {
               width: 100% !important;
               height: 100% !important;
             }
+            /* Force bold font weight for all Plotly text elements */
+            .js-plotly-plot svg text {
+              font-weight: 700 !important;
+            }
           </style>
         </head>
         <body>
@@ -390,7 +394,17 @@ const AncSeismograph: React.FC = () => {
             const chartLayout = ${JSON.stringify(layout)};
             const chartConfig = ${JSON.stringify(config)};
             
-            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig);
+            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig).then(function() {
+              // Force bold font weight on all text elements after plot renders
+              const plotDiv = document.getElementById('plotly-chart');
+              if (plotDiv) {
+                const textElements = plotDiv.querySelectorAll('svg text');
+                textElements.forEach(function(text) {
+                  text.setAttribute('font-weight', '700');
+                  text.style.fontWeight = '700';
+                });
+              }
+            });
             
             window.addEventListener('resize', function() {
               Plotly.Plots.resize('plotly-chart');
@@ -645,10 +659,7 @@ const AncSeismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
@@ -983,10 +994,7 @@ const AncSeismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
@@ -1150,9 +1158,57 @@ const AncSeismograph: React.FC = () => {
                             line: { color: '#FF6384', shape: 'spline', width: 1.5 }
                           }];
                           const chartLayout = {
-                            title: { text: `${project?.name || 'Project'} - X Axis Vibration Data` },
-                            xaxis: { title: { text: 'Time' }, type: 'date' },
-                            yaxis: { title: { text: 'Vibration (in/s)' } }
+                            title: { 
+                              text: `${project?.name || 'Project'} - X Axis Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location : 'Location: None'}`, 
+                              font: { size: 20, weight: 'bold', color: '#003087' },
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            xaxis: {
+                              title: { 
+                                text: `Time<br><span style="font-size:12px;color:#666;">SMG-2</span>`, 
+                                font: { size: 18, weight: 'bold', color: '#374151' },
+                                standoff: 20
+                              },
+                              type: 'date',
+                              tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                              gridcolor: '#f0f0f0',
+                              showgrid: true,
+                              tickfont: { size: 14, color: '#374151', weight: 'bold' },
+                              tickangle: 0,
+                              tickmode: 'auto'
+                            },
+                            yaxis: {
+                              title: { 
+                                text: 'Vibration (in/s)', 
+                                font: { size: 18, weight: 'bold', color: '#374151' },
+                                standoff: 25
+                              },
+                              fixedrange: false,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              tickfont: { size: 16, color: '#374151', weight: 'bold' },
+                              tickformat: '.3~f'
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 0.02,
+                              xanchor: 'left',
+                              y: -0.30,
+                              yanchor: 'top',
+                              orientation: 'h',
+                              font: { size: 12, weight: 'bold' },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1,
+                              traceorder: 'normal'
+                            },
+                            height: 550,
+                            margin: { t: 60, b: 100, l: 80, r: 80 },
+                            hovermode: 'closest',
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white'
                           };
                           const chartConfig = {
                             responsive: true,
@@ -1195,9 +1251,57 @@ const AncSeismograph: React.FC = () => {
                             line: { color: '#36A2EB', shape: 'spline', width: 1.5 }
                           }];
                           const chartLayout = {
-                            title: { text: `${project?.name || 'Project'} - Y Axis Vibration Data` },
-                            xaxis: { title: { text: 'Time' }, type: 'date' },
-                            yaxis: { title: { text: 'Vibration (in/s)' } }
+                            title: { 
+                              text: `${project?.name || 'Project'} - Y Axis Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location : 'Location: None'}`, 
+                              font: { size: 20, weight: 'bold', color: '#003087' },
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            xaxis: {
+                              title: { 
+                                text: `Time<br><span style="font-size:12px;color:#666;">SMG-2</span>`, 
+                                font: { size: 18, weight: 'bold', color: '#374151' },
+                                standoff: 20
+                              },
+                              type: 'date',
+                              tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                              gridcolor: '#f0f0f0',
+                              showgrid: true,
+                              tickfont: { size: 14, color: '#374151', weight: 'bold' },
+                              tickangle: 0,
+                              tickmode: 'auto'
+                            },
+                            yaxis: {
+                              title: { 
+                                text: 'Vibration (in/s)', 
+                                font: { size: 18, weight: 'bold', color: '#374151' },
+                                standoff: 25
+                              },
+                              fixedrange: false,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              tickfont: { size: 16, color: '#374151', weight: 'bold' },
+                              tickformat: '.3~f'
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 0.02,
+                              xanchor: 'left',
+                              y: -0.30,
+                              yanchor: 'top',
+                              orientation: 'h',
+                              font: { size: 12, weight: 'bold' },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1,
+                              traceorder: 'normal'
+                            },
+                            height: 550,
+                            margin: { t: 60, b: 100, l: 80, r: 80 },
+                            hovermode: 'closest',
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white'
                           };
                           const chartConfig = {
                             responsive: true,
@@ -1240,9 +1344,57 @@ const AncSeismograph: React.FC = () => {
                             line: { color: '#FFCE56', shape: 'spline', width: 1.5 }
                           }];
                           const chartLayout = {
-                            title: { text: `${project?.name || 'Project'} - Z Axis Vibration Data` },
-                            xaxis: { title: { text: 'Time' }, type: 'date' },
-                            yaxis: { title: { text: 'Vibration (in/s)' } }
+                            title: { 
+                              text: `${project?.name || 'Project'} - Z Axis Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location : 'Location: None'}`, 
+                              font: { size: 20, weight: 'bold', color: '#003087' },
+                              x: 0.5,
+                              xanchor: 'center'
+                            },
+                            xaxis: {
+                              title: { 
+                                text: `Time<br><span style="font-size:12px;color:#666;">SMG-2</span>`, 
+                                font: { size: 18, weight: 'bold', color: '#374151' },
+                                standoff: 20
+                              },
+                              type: 'date',
+                              tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                              gridcolor: '#f0f0f0',
+                              showgrid: true,
+                              tickfont: { size: 14, color: '#374151', weight: 'bold' },
+                              tickangle: 0,
+                              tickmode: 'auto'
+                            },
+                            yaxis: {
+                              title: { 
+                                text: 'Vibration (in/s)', 
+                                font: { size: 18, weight: 'bold', color: '#374151' },
+                                standoff: 25
+                              },
+                              fixedrange: false,
+                              gridcolor: '#f0f0f0',
+                              zeroline: true,
+                              zerolinecolor: '#f0f0f0',
+                              tickfont: { size: 16, color: '#374151', weight: 'bold' },
+                              tickformat: '.3~f'
+                            },
+                            showlegend: true,
+                            legend: {
+                              x: 0.02,
+                              xanchor: 'left',
+                              y: -0.30,
+                              yanchor: 'top',
+                              orientation: 'h',
+                              font: { size: 12, weight: 'bold' },
+                              bgcolor: 'rgba(255,255,255,0.8)',
+                              bordercolor: '#CCC',
+                              borderwidth: 1,
+                              traceorder: 'normal'
+                            },
+                            height: 550,
+                            margin: { t: 60, b: 100, l: 80, r: 80 },
+                            hovermode: 'closest',
+                            plot_bgcolor: 'white',
+                            paper_bgcolor: 'white'
                           };
                           const chartConfig = {
                             responsive: true,
@@ -1281,9 +1433,57 @@ const AncSeismograph: React.FC = () => {
                           { x: processedData.combined.time, y: processedData.combined.z, type: 'scatter', mode: 'lines', name: 'Z' }
                         ];
                         const chartLayout = {
-                          title: { text: `${project?.name || 'Project'} - Combined Vibration Data` },
-                          xaxis: { title: { text: 'Time' }, type: 'date' },
-                          yaxis: { title: { text: 'Vibration (in/s)' } }
+                          title: { 
+                            text: `${project?.name || 'Project'} - Combined Vibration Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'SMG-2')?.instrument_location : 'Location: None'}`, 
+                            font: { size: 20, weight: 700, color: '#003087' },
+                            x: 0.5,
+                            xanchor: 'center'
+                          },
+                          xaxis: {
+                            title: { 
+                              text: `Time<br><span style="font-size:12px;color:#666;">SMG-2</span>`, 
+                              font: { size: 18, weight: 700, color: '#374151' },
+                              standoff: 20
+                            },
+                            type: 'date',
+                            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                            gridcolor: '#f0f0f0',
+                            showgrid: true,
+                            tickfont: { size: 14, color: '#374151', weight: 700 },
+                            tickangle: 0,
+                            tickmode: 'auto'
+                          },
+                          yaxis: {
+                            title: { 
+                              text: 'Vibration (in/s)', 
+                              font: { size: 18, weight: 700, color: '#374151' },
+                              standoff: 25
+                            },
+                            fixedrange: false,
+                            gridcolor: '#f0f0f0',
+                            zeroline: true,
+                            zerolinecolor: '#f0f0f0',
+                            tickfont: { size: 16, color: '#374151', weight: 700 },
+                            tickformat: '.3~f'
+                          },
+                          showlegend: true,
+                          legend: {
+                            x: 0.02,
+                            xanchor: 'left',
+                            y: -0.30,
+                            yanchor: 'top',
+                            orientation: 'h',
+                            font: { size: 12, weight: 700 },
+                            bgcolor: 'rgba(255,255,255,0.8)',
+                            bordercolor: '#CCC',
+                            borderwidth: 1,
+                            traceorder: 'normal'
+                          },
+                          height: 550,
+                          margin: { t: 60, b: 100, l: 80, r: 80 },
+                          hovermode: 'closest',
+                          plot_bgcolor: 'white',
+                          paper_bgcolor: 'white'
                         };
                         const chartConfig = {
                           responsive: true,

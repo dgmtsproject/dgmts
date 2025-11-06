@@ -430,10 +430,7 @@ const RockSmg2Seismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 
@@ -536,6 +533,10 @@ const RockSmg2Seismograph: React.FC = () => {
               width: 100% !important;
               height: 100% !important;
             }
+            /* Force bold font weight for all Plotly text elements */
+            .js-plotly-plot svg text {
+              font-weight: 700 !important;
+            }
           </style>
         </head>
         <body>
@@ -548,7 +549,17 @@ const RockSmg2Seismograph: React.FC = () => {
             const chartLayout = ${JSON.stringify(layout)};
             const chartConfig = ${JSON.stringify(config)};
             
-            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig);
+            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig).then(function() {
+              // Force bold font weight on all text elements after plot renders
+              const plotDiv = document.getElementById('plotly-chart');
+              if (plotDiv) {
+                const textElements = plotDiv.querySelectorAll('svg text');
+                textElements.forEach(function(text) {
+                  text.setAttribute('font-weight', '700');
+                  text.style.fontWeight = '700';
+                });
+              }
+            });
             
             window.addEventListener('resize', function() {
               Plotly.Plots.resize('plotly-chart');
@@ -689,10 +700,7 @@ const RockSmg2Seismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 10,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: { 

@@ -398,6 +398,10 @@ const Background: React.FC = () => {
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
+            /* Force bold font weight for all Plotly text elements */
+            .js-plotly-plot svg text {
+              font-weight: 700 !important;
+            }
           </style>
         </head>
         <body>
@@ -406,7 +410,17 @@ const Background: React.FC = () => {
             const data = ${JSON.stringify(chartData)};
             const layout = ${JSON.stringify(layout)};
             const config = ${JSON.stringify(config)};
-            Plotly.newPlot('chart', data, layout, config);
+            Plotly.newPlot('chart', data, layout, config).then(function() {
+              // Force bold font weight on all text elements after plot renders
+              const plotDiv = document.getElementById('chart');
+              if (plotDiv) {
+                const textElements = plotDiv.querySelectorAll('svg text');
+                textElements.forEach(function(text) {
+                  text.setAttribute('font-weight', '700');
+                  text.style.fontWeight = '700';
+                });
+              }
+            });
           </script>
         </body>
       </html>
@@ -496,7 +510,7 @@ const Background: React.FC = () => {
             title: { 
               text: `Time<br><span style="font-size:12px;color:#666;">SMG1</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
-              standoff: 10
+              standoff: 20
             },
             type: 'date',
             tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
@@ -504,10 +518,7 @@ const Background: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 15,
-            tickmode: 'linear',
-            dtick: 'D1',
-            tick0: 'D1'
+            tickmode: 'auto'
           },
           yaxis: {
             title: {
@@ -692,7 +703,6 @@ const Background: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            nticks: 10,
             tickmode: 'auto'
           },
           yaxis: {
@@ -874,7 +884,7 @@ const Background: React.FC = () => {
                               title: { 
                                 text: `Time<br><span style="font-size:12px;color:#666;">SMG1</span>`,
                                 font: { size: 18, weight: 700, color: '#374151' },
-                                standoff: 10
+                                standoff: 20
                               },
                               type: 'date',
                               tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
@@ -882,10 +892,7 @@ const Background: React.FC = () => {
                               showgrid: true,
                               tickfont: { size: 14, color: '#374151', weight: 700 },
                               tickangle: 0,
-                              nticks: 15,
-                              tickmode: 'linear',
-                              dtick: 'D1',
-                              tick0: 'D1'
+                              tickmode: 'auto'
                             },
                             yaxis: {
                               title: {
@@ -990,7 +997,7 @@ const Background: React.FC = () => {
                               title: { 
                                 text: `Time<br><span style="font-size:12px;color:#666;">SMG1</span>`,
                                 font: { size: 18, weight: 700, color: '#374151' },
-                                standoff: 10
+                                standoff: 20
                               },
                               type: 'date',
                               tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
@@ -998,10 +1005,7 @@ const Background: React.FC = () => {
                               showgrid: true,
                               tickfont: { size: 14, color: '#374151', weight: 700 },
                               tickangle: 0,
-                              nticks: 15,
-                              tickmode: 'linear',
-                              dtick: 'D1',
-                              tick0: 'D1'
+                              tickmode: 'auto'
                             },
                             yaxis: {
                               title: {
@@ -1106,7 +1110,7 @@ const Background: React.FC = () => {
                               title: { 
                                 text: `Time<br><span style="font-size:12px;color:#666;">SMG1</span>`,
                                 font: { size: 18, weight: 700, color: '#374151' },
-                                standoff: 10
+                                standoff: 20
                               },
                               type: 'date',
                               tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
@@ -1114,10 +1118,7 @@ const Background: React.FC = () => {
                               showgrid: true,
                               tickfont: { size: 14, color: '#374151', weight: 700 },
                               tickangle: 0,
-                              nticks: 15,
-                              tickmode: 'linear',
-                              dtick: 'D1',
-                              tick0: 'D1'
+                              tickmode: 'auto'
                             },
                             yaxis: {
                               title: {

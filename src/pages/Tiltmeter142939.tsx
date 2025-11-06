@@ -567,10 +567,7 @@ const Tiltmeter142939: React.FC = () => {
       showgrid: true,
       tickfont: { size: 14, color: '#374151', weight: 700 },
       tickangle: 0,
-      nticks: 10,
-      tickmode: 'linear' as const,
-      dtick: 'D1',
-      tick0: 'D1'
+      tickmode: 'auto' as const
     },
     yaxis: {
       title: { 
@@ -647,6 +644,10 @@ const Tiltmeter142939: React.FC = () => {
               width: 100% !important;
               height: 100% !important;
             }
+            /* Force bold font weight for all Plotly text elements */
+            .js-plotly-plot svg text {
+              font-weight: 700 !important;
+            }
           </style>
         </head>
         <body>
@@ -659,7 +660,17 @@ const Tiltmeter142939: React.FC = () => {
             const chartLayout = ${JSON.stringify(layout)};
             const chartConfig = ${JSON.stringify(config)};
             
-            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig);
+            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig).then(function() {
+              // Force bold font weight on all text elements after plot renders
+              const plotDiv = document.getElementById('plotly-chart');
+              if (plotDiv) {
+                const textElements = plotDiv.querySelectorAll('svg text');
+                textElements.forEach(function(text) {
+                  text.setAttribute('font-weight', '700');
+                  text.style.fontWeight = '700';
+                });
+              }
+            });
             
             window.addEventListener('resize', function() {
               Plotly.Plots.resize('plotly-chart');
@@ -1387,9 +1398,18 @@ const Tiltmeter142939: React.FC = () => {
                         ...plotlyLayout,
                         title: { 
                           text: `${project ? project.name + ' - ' : ''}X-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
-                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          font: { size: 20, weight: 'bold', color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
+                        },
+                        xaxis: {
+                          ...plotlyLayout.xaxis,
+                          title: { 
+                            text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+                            font: { size: 16, weight: 'bold', color: '#374151' },
+                            standoff: 20
+                          },
+                          tickfont: { size: 14, color: '#374151', weight: 'bold' }
                         },
                         yaxis: { 
                           ...plotlyLayout.yaxis, 
@@ -1398,6 +1418,7 @@ const Tiltmeter142939: React.FC = () => {
                             standoff: 15,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
+                          tickfont: { size: 14, color: '#374151', weight: 'bold' },
                           range: (() => {
                             const range = getYAxisRange(xValues, getThresholdsFromSettings(instrumentSettings, 'x'));
                             return [range.min, range.max];
@@ -1471,9 +1492,18 @@ const Tiltmeter142939: React.FC = () => {
                         ...plotlyLayout,
                         title: { 
                           text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
-                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          font: { size: 20, weight: 'bold', color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
+                        },
+                        xaxis: {
+                          ...plotlyLayout.xaxis,
+                          title: { 
+                            text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+                            font: { size: 16, weight: 'bold', color: '#374151' },
+                            standoff: 20
+                          },
+                          tickfont: { size: 14, color: '#374151', weight: 'bold' }
                         },
                         yaxis: { 
                           ...plotlyLayout.yaxis, 
@@ -1482,6 +1512,7 @@ const Tiltmeter142939: React.FC = () => {
                             standoff: 15,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
+                          tickfont: { size: 14, color: '#374151', weight: 'bold' },
                           range: (() => {
                             const range = getYAxisRange(yValues, getThresholdsFromSettings(instrumentSettings, 'y'));
                             return [range.min, range.max];
@@ -1555,9 +1586,18 @@ const Tiltmeter142939: React.FC = () => {
                         ...plotlyLayout,
                         title: { 
                           text: `${project ? project.name + ' - ' : ''}Z-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
-                          font: { size: 20, weight: 700, color: '#1f2937' },
+                          font: { size: 20, weight: 'bold', color: '#1f2937' },
                           x: 0.5,
                           xanchor: 'center'
+                        },
+                        xaxis: {
+                          ...plotlyLayout.xaxis,
+                          title: { 
+                            text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+                            font: { size: 16, weight: 'bold', color: '#374151' },
+                            standoff: 20
+                          },
+                          tickfont: { size: 14, color: '#374151', weight: 'bold' }
                         },
                         yaxis: { 
                           ...plotlyLayout.yaxis, 
@@ -1566,6 +1606,7 @@ const Tiltmeter142939: React.FC = () => {
                             standoff: 15,
                             font: { size: 16, weight: 700, color: '#374151' }
                           },
+                          tickfont: { size: 14, color: '#374151', weight: 'bold' },
                           range: (() => {
                             const range = getYAxisRange(zValues, getThresholdsFromSettings(instrumentSettings, 'z'));
                             return [range.min, range.max];
