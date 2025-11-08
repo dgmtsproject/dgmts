@@ -143,31 +143,31 @@ export const createSeismographChartData = (
   const chartLayout = {
     title: { 
       text: `${project?.name || 'Project'} - ${axis} Axis Vibration Data${currentInstrument?.instrument_location ? ` - ${currentInstrument.instrument_location}` : ''}`,
-    font: { size: 20, weight: 700, color: '#003087' },
+    font: { size: 20, weight: 700, color: '#003087', family: 'Arial, sans-serif' },
     x: 0.5,
     xanchor: 'center'
   },
     xaxis: {
       title: { 
         text: `Time<br><span style="font-size:12px;color:#666;">${instrumentId}</span>`, 
-        font: { size: 18, weight: 700, color: '#374151' },
+        font: { size: 18, weight: 700, color: '#374151', family: 'Arial, sans-serif' },
         standoff: 20
       },
       type: 'date',
-      tickformat: '<span style="font-size:12px;">%m/%d</span><br><span style="font-size:8px;">%H:%M</span>',
+      tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
       tickmode: 'auto',
       nticks: 16,
       dtick: undefined,
       tick0: undefined,
       gridcolor: '#f0f0f0',
       showgrid: true,
-      tickfont: { size: 11, color: '#374151', weight: 700 },
+      tickfont: { size: 14, color: '#374151', weight: 700, family: 'Arial, sans-serif' },
       tickangle: 0
     },
     yaxis: {
       title: { 
         text: 'Vibration (in/s)', 
-        font: { size: 18, weight: 700, color: '#374151' },
+        font: { size: 18, weight: 700, color: '#374151', family: 'Arial, sans-serif' },
         standoff: 25 
       },
       fixedrange: false,
@@ -175,7 +175,7 @@ export const createSeismographChartData = (
       gridcolor: '#f0f0f0',
       zeroline: true,
       zerolinecolor: '#f0f0f0',
-      tickfont: { size: 11, color: '#374151', weight: 700 },
+      tickfont: { size: 14, color: '#374151', weight: 700, family: 'Arial, sans-serif' },
       range: (() => {
         const allValues = filtered.map(pair => pair.v);
         const maxAbsValue = Math.max(...allValues.map(v => Math.abs(v)));
@@ -195,7 +195,7 @@ export const createSeismographChartData = (
       y: -0.40,
       yanchor: 'top',
       orientation: 'h',
-      font: { size: 12, weight: 700 },
+      font: { size: 12, weight: 700, family: 'Arial, sans-serif' },
       bgcolor: 'rgba(255,255,255,0.8)',
       bordercolor: '#CCC',
       borderwidth: 1,
@@ -371,31 +371,31 @@ export const createSeismographCombinedChartData = (
   const chartLayout = {
     title: { 
       text: `${project?.name || 'Project'} - Combined Vibration Data${currentInstrument?.instrument_location ? ` - ${currentInstrument.instrument_location}` : ''}`, 
-      font: { size: 20, weight: 700, color: '#003087' },
+      font: { size: 20, weight: 700, color: '#003087', family: 'Arial, sans-serif' },
       x: 0.5,
       xanchor: 'center'
     },
     xaxis: {
       title: { 
         text: `Time<br><span style="font-size:12px;color:#666;">${instrumentId}</span>`, 
-        font: { size: 18, weight: 700, color: '#374151' },
+        font: { size: 18, weight: 700, color: '#374151', family: 'Arial, sans-serif' },
         standoff: 20
       },
       type: 'date',
-      tickformat: '<span style="font-size:12px;">%m/%d</span><br><span style="font-size:8px;">%H:%M</span>',
+      tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
       tickmode: 'auto',
       nticks: 16,
       dtick: undefined,
       tick0: undefined,
       gridcolor: '#f0f0f0',
       showgrid: true,
-      tickfont: { size: 11, color: '#374151', weight: 700 },
+      tickfont: { size: 14, color: '#374151', weight: 700, family: 'Arial, sans-serif' },
       tickangle: 0
     },
     yaxis: {
       title: { 
         text: 'Vibration (in/s)', 
-        font: { size: 18, weight: 700, color: '#374151' },
+        font: { size: 18, weight: 700, color: '#374151', family: 'Arial, sans-serif' },
         standoff: 25 
       },
       fixedrange: false,
@@ -403,7 +403,7 @@ export const createSeismographCombinedChartData = (
       gridcolor: '#f0f0f0',
       zeroline: true,
       zerolinecolor: '#f0f0f0',
-      tickfont: { size: 11, color: '#374151', weight: 700 },
+      tickfont: { size: 14, color: '#374151', weight: 700, family: 'Arial, sans-serif' },
       range: (() => {
         const allValues = [...combined.x, ...combined.y, ...combined.z];
         const maxAbsValue = Math.max(...allValues.map(v => Math.abs(v)));
@@ -423,7 +423,7 @@ export const createSeismographCombinedChartData = (
       y: -0.40,
       yanchor: 'top',
       orientation: 'h',
-      font: { size: 12, weight: 700 },
+      font: { size: 12, weight: 700, family: 'Arial, sans-serif' },
       bgcolor: 'rgba(255,255,255,0.8)',
       bordercolor: '#CCC',
       borderwidth: 1,

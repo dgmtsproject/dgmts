@@ -658,7 +658,8 @@ const Tiltmeter143969: React.FC = () => {
           <title>${windowTitle}</title>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+          <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
           <style>
             body {
               margin: 0;
@@ -671,6 +672,15 @@ const Tiltmeter143969: React.FC = () => {
               padding: 20px;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              overflow: visible !important;
+              width: 100% !important;
+              min-width: 100% !important;
+            }
+            .plotly-graph-div {
+              overflow: visible !important;
+            }
+            .js-plotly-plot {
+              overflow: visible !important;
             }
             /* Force bold font weight for all Plotly text elements */
             .js-plotly-plot svg text {
@@ -685,14 +695,128 @@ const Tiltmeter143969: React.FC = () => {
             const layout = ${JSON.stringify(layout)};
             const config = ${JSON.stringify(config)};
             Plotly.newPlot('chart', data, layout, config).then(function() {
-              // Force bold font weight on all text elements after plot renders
               const plotDiv = document.getElementById('chart');
               if (plotDiv) {
-                const textElements = plotDiv.querySelectorAll('svg text');
-                textElements.forEach(function(text) {
-                  text.setAttribute('font-weight', '700');
-                  text.style.fontWeight = '700';
+                // Function to make all text bold in SVG (for display)
+                function makeTextBold() {
+                  const textElements = plotDiv.querySelectorAll('svg text');
+                  textElements.forEach(function(text) {
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('font-weight', '700');
+                    text.style.fontWeight = '700';
+                  });
+                }
+                
+                makeTextBold();
+                
+                // Override download button to capture SVG with bold fonts and convert to image
+                setTimeout(function() {
+                  const modeBar = plotDiv.querySelector('.modebar');
+                  if (modeBar) {
+                    const downloadBtn = modeBar.querySelector('[data-title="Download plot as a png"]');
+                    if (downloadBtn) {
+                      // Clone button to remove existing handlers
+                      const newDownloadBtn = downloadBtn.cloneNode(true);
+                      downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
+                      
+                      newDownloadBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Ensure all SVG text elements have bold font-weight
+                        makeTextBold();
+                        
+                        // Wait a moment for fonts to be applied
+                        setTimeout(function() {
+                          // Use html2canvas to capture the rendered chart with bold fonts
+                          if (typeof html2canvas !== 'undefined') {
+                            // Get the SVG element to determine actual chart dimensions
+                            const svgElement = plotDiv.querySelector('svg');
+                            let targetWidth = config.toImageButtonOptions?.width || 1200;
+                            let targetHeight = config.toImageButtonOptions?.height || 600;
+                            
+                            if (svgElement) {
+                              // Use the SVG's viewBox or actual dimensions
+                              const viewBox = svgElement.getAttribute('viewBox');
+                              if (viewBox) {
+                                const viewBoxValues = viewBox.split(' ');
+                                if (viewBoxValues.length >= 4) {
+                                  targetWidth = Math.max(targetWidth, parseFloat(viewBoxValues[2]));
+                                  targetHeight = Math.max(targetHeight, parseFloat(viewBoxValues[3]));
+                                }
+                              }
+                              // Also check actual rendered size
+                              targetWidth = Math.max(targetWidth, svgElement.scrollWidth || svgElement.clientWidth);
+                              targetHeight = Math.max(targetHeight, svgElement.scrollHeight || svgElement.clientHeight);
+                            }
+                            
+                            // Temporarily set explicit width to ensure full capture
+                            const originalWidth = plotDiv.style.width;
+                            const originalOverflow = plotDiv.style.overflow;
+                            plotDiv.style.width = targetWidth + 'px';
+                            plotDiv.style.overflow = 'visible';
+                            
+                            // Capture the chart at full width
+                            html2canvas(plotDiv, {
+                              scale: config.toImageButtonOptions?.scale || 2,
+                              useCORS: true,
+                              logging: false,
+                              backgroundColor: '#ffffff',
+                              allowTaint: true,
+                              width: targetWidth,
+                              height: targetHeight
+                            }).then(function(canvas) {
+                              // Restore original styles
+                              plotDiv.style.width = originalWidth;
+                              plotDiv.style.overflow = originalOverflow;
+                              // Convert canvas to blob and download
+                              canvas.toBlob(function(blob) {
+                                if (blob) {
+                                  const url = URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.download = (config.toImageButtonOptions?.filename || 'chart') + '.png';
+                                  link.href = url;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  URL.revokeObjectURL(url);
+                                }
+                              }, 'image/png');
+                            }).catch(function(err) {
+                              // Restore original styles on error
+                              plotDiv.style.width = originalWidth;
+                              plotDiv.style.overflow = originalOverflow;
+                              console.error('Error with html2canvas:', err);
+                              // Fallback to Plotly's download
+                              Plotly.downloadImage(plotDiv, {
+                                format: 'png',
+                                filename: config.toImageButtonOptions?.filename || 'chart',
+                                height: config.toImageButtonOptions?.height || 600,
+                                width: config.toImageButtonOptions?.width || 1200,
+                                scale: config.toImageButtonOptions?.scale || 2
+                              });
+                            });
+                          } else {
+                            // Fallback if html2canvas not loaded
+                            Plotly.downloadImage(plotDiv, {
+                              format: 'png',
+                              filename: config.toImageButtonOptions?.filename || 'chart',
+                              height: config.toImageButtonOptions?.height || 600,
+                              width: config.toImageButtonOptions?.width || 1200,
+                              scale: config.toImageButtonOptions?.scale || 2
+                            });
+                          }
+                        }, 100);
+                      }, true);
+                    }
+                  }
+                }, 500);
+                
+                // Make text bold on any updates
+                const observer = new MutationObserver(function() {
+                  makeTextBold();
                 });
+                observer.observe(plotDiv, { childList: true, subtree: true });
               }
             });
           </script>
