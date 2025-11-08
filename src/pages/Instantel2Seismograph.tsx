@@ -194,7 +194,8 @@ const Instantel2Seismograph: React.FC = () => {
         x: { time: [], values: [] },
         y: { time: [], values: [] },
         z: { time: [], values: [] },
-        geophone: { time: [], values: [] }
+        geophone: { time: [], values: [] },
+        unit: 'in/s'
       };
     }
 
@@ -203,6 +204,13 @@ const Instantel2Seismograph: React.FC = () => {
       const readingTime = formatUTCTime(reading.Time);
       return (!fromDate || readingTime >= fromDate) && (!toDate || readingTime <= toDate);
     });
+
+    // Limit the number of readings to prevent stack overflow
+    // Process maximum 10000 points to avoid performance issues
+    const MAX_POINTS = 10000;
+    const readingsToProcess = filteredReadings.length > MAX_POINTS
+      ? filteredReadings.filter((_, index) => index % Math.ceil(filteredReadings.length / MAX_POINTS) === 0)
+      : filteredReadings;
 
     // Get data based on selected type
     const getDataValue = (reading: UM16368Reading, axis: 'Longitudinal_PPV' | 'Transverse_PPV' | 'Vertical_PPV' | 'Geophone_PVS') => {
@@ -220,24 +228,24 @@ const Instantel2Seismograph: React.FC = () => {
       }
     };
 
-    // Process data for each axis (PPV)
-    const xData = filteredReadings.map(reading => ({
+    // Process data for each axis (PPV) - use limited readings
+    const xData = readingsToProcess.map(reading => ({
       time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Longitudinal_PPV')
     }));
 
-    const yData = filteredReadings.map(reading => ({
+    const yData = readingsToProcess.map(reading => ({
       time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Transverse_PPV')
     }));
 
-    const zData = filteredReadings.map(reading => ({
+    const zData = readingsToProcess.map(reading => ({
       time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Vertical_PPV')
     }));
 
     // Process Geophone_PVS data
-    const geophoneData = filteredReadings.map(reading => ({
+    const geophoneData = readingsToProcess.map(reading => ({
       time: formatUTCTime(reading.Time),
       value: getDataValue(reading, 'Geophone_PVS')
     }));
@@ -257,7 +265,7 @@ const Instantel2Seismograph: React.FC = () => {
     const validGeophoneData = filterValidData(geophoneData);
 
     // Create combined data (all axes with same timestamps) for PPV
-    const combinedData = filteredReadings
+    const combinedData = readingsToProcess
       .map(reading => ({
         time: formatUTCTime(reading.Time),
         x: getDataValue(reading, 'Longitudinal_PPV'),
