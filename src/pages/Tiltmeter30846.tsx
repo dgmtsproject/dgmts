@@ -267,7 +267,19 @@ const Tiltmeter30846: React.FC = () => {
       showgrid: true,
       tickfont: { size: 14, color: '#374151', weight: 700 },
       tickangle: 0,
-      tickmode: 'auto' as const
+      tickmode: 'auto' as const,
+      ticks: 'outside',
+      ticklen: 8,
+      tickwidth: 1,
+      tickcolor: '#666666',
+      showticklabels: true,
+      minor: {
+        nticks: 4,
+        ticklen: 4,
+        tickwidth: 0.5,
+        tickcolor: '#999999',
+        showgrid: false
+      }
     },
     yaxis: {
       title: { 
@@ -324,13 +336,17 @@ const Tiltmeter30846: React.FC = () => {
   };
 
   function getReferenceShapesAndAnnotations() {
-    if (!instrumentSettings) return { shapes: [], annotations: [] };
+    if (!instrumentSettings) return { shapes: [createZeroReferenceLine()], annotations: [] };
     
     // Get thresholds (this tiltmeter uses general values, not axis-specific)
     const thresholds = getThresholdsFromSettings(instrumentSettings);
     
     // Create colored zones and threshold lines
-    return createReferenceLinesOnly(thresholds);
+    const referenceLines = createReferenceLinesOnly(thresholds);
+    return {
+      shapes: [createZeroReferenceLine(), ...referenceLines.shapes],
+      annotations: referenceLines.annotations
+    };
   }
 
   const openChartInWindow = (

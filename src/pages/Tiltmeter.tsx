@@ -462,7 +462,19 @@ const Tiltmeter: React.FC = () => {
                           nticks: 10,
                           tickmode: 'linear' as const,
                           dtick: 'D1',
-                          tick0: 'D1'
+                          tick0: 'D1',
+                          ticks: 'outside',
+                          ticklen: 8,
+                          tickwidth: 1,
+                          tickcolor: '#666666',
+                          showticklabels: true,
+                          minor: {
+                            nticks: 4,
+                            ticklen: 4,
+                            tickwidth: 0.5,
+                            tickcolor: '#999999',
+                            showgrid: false
+                          }
                         },
                         yaxis: {
                           title: {
@@ -491,7 +503,8 @@ const Tiltmeter: React.FC = () => {
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
-                        paper_bgcolor: 'white'
+                        paper_bgcolor: 'white',
+                        shapes: [createZeroReferenceLine()]
                       }}
                       config={{ responsive: true }}
                       style={{ width: '100%', height: 550 }}
@@ -545,7 +558,19 @@ const Tiltmeter: React.FC = () => {
                           nticks: 10,
                           tickmode: 'linear' as const,
                           dtick: 'D1',
-                          tick0: 'D1'
+                          tick0: 'D1',
+                          ticks: 'outside',
+                          ticklen: 8,
+                          tickwidth: 1,
+                          tickcolor: '#666666',
+                          showticklabels: true,
+                          minor: {
+                            nticks: 4,
+                            ticklen: 4,
+                            tickwidth: 0.5,
+                            tickcolor: '#999999',
+                            showgrid: false
+                          }
                         },
                         yaxis: {
                           title: {
@@ -574,7 +599,8 @@ const Tiltmeter: React.FC = () => {
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
-                        paper_bgcolor: 'white'
+                        paper_bgcolor: 'white',
+                        shapes: [createZeroReferenceLine()]
                       }}
                       config={{ responsive: true }}
                       style={{ width: '100%', height: 550 }}
@@ -628,7 +654,19 @@ const Tiltmeter: React.FC = () => {
                           nticks: 10,
                           tickmode: 'linear' as const,
                           dtick: 'D1',
-                          tick0: 'D1'
+                          tick0: 'D1',
+                          ticks: 'outside',
+                          ticklen: 8,
+                          tickwidth: 1,
+                          tickcolor: '#666666',
+                          showticklabels: true,
+                          minor: {
+                            nticks: 4,
+                            ticklen: 4,
+                            tickwidth: 0.5,
+                            tickcolor: '#999999',
+                            showgrid: false
+                          }
                         },
                         yaxis: {
                           title: {
@@ -657,7 +695,8 @@ const Tiltmeter: React.FC = () => {
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
-                        paper_bgcolor: 'white'
+                        paper_bgcolor: 'white',
+                        shapes: [createZeroReferenceLine()]
                       }}
                       config={{ responsive: true }}
                       style={{ width: '100%', height: 550 }}
@@ -739,7 +778,19 @@ const Tiltmeter: React.FC = () => {
                           nticks: 10,
                           tickmode: 'linear' as const,
                           dtick: 'D1',
-                          tick0: 'D1'
+                          tick0: 'D1',
+                          ticks: 'outside',
+                          ticklen: 8,
+                          tickwidth: 1,
+                          tickcolor: '#666666',
+                          showticklabels: true,
+                          minor: {
+                            nticks: 4,
+                            ticklen: 4,
+                            tickwidth: 0.5,
+                            tickcolor: '#999999',
+                            showgrid: false
+                          }
                         },
                         yaxis: {
                           title: {
@@ -768,7 +819,8 @@ const Tiltmeter: React.FC = () => {
                         },
                         hovermode: 'closest',
                         plot_bgcolor: 'white',
-                        paper_bgcolor: 'white'
+                        paper_bgcolor: 'white',
+                        shapes: [createZeroReferenceLine()]
                       }}
                       config={{ responsive: true }}
                       style={{ width: '100%', height: 550 }}

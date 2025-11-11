@@ -11,7 +11,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
-import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 
 // const MAX_POINTS = 1000;
 
@@ -665,7 +665,19 @@ const Smg3Seismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            tickmode: 'auto'
+            tickmode: 'auto',
+            ticks: 'outside',
+            ticklen: 8,
+            tickwidth: 1,
+            tickcolor: '#666666',
+            showticklabels: true,
+            minor: {
+              nticks: 4,
+              ticklen: 4,
+              tickwidth: 0.5,
+              tickcolor: '#999999',
+              showgrid: false
+            }
           },
           yaxis: {
             title: { 
@@ -702,7 +714,7 @@ const Smg3Seismograph: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: zones.shapes,
+          shapes: [createZeroReferenceLine(), ...zones.shapes],
           annotations: zones.annotations
         }}
         config={{
@@ -1018,7 +1030,19 @@ const Smg3Seismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            tickmode: 'auto'
+            tickmode: 'auto',
+            ticks: 'outside',
+            ticklen: 8,
+            tickwidth: 1,
+            tickcolor: '#666666',
+            showticklabels: true,
+            minor: {
+              nticks: 4,
+              ticklen: 4,
+              tickwidth: 0.5,
+              tickcolor: '#999999',
+              showgrid: false
+            }
           },
           yaxis: {
             title: { 
@@ -1055,7 +1079,7 @@ const Smg3Seismograph: React.FC = () => {
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: zones.shapes,
+          shapes: [createZeroReferenceLine(), ...zones.shapes],
           annotations: zones.annotations
         }}
         config={{
@@ -1204,7 +1228,12 @@ const Smg3Seismograph: React.FC = () => {
                               showgrid: true,
                               tickfont: { size: 14, color: '#374151', weight: 'bold' },
                               tickangle: 0,
-                              tickmode: 'auto'
+                              tickmode: 'auto',
+                              ticks: 'outside',
+                              ticklen: 8,
+                              tickwidth: 1,
+                              tickcolor: '#666666',
+                              showticklabels: true
                             },
                             yaxis: {
                               title: { 
@@ -1296,7 +1325,12 @@ const Smg3Seismograph: React.FC = () => {
                               showgrid: true,
                               tickfont: { size: 14, color: '#374151', weight: 'bold' },
                               tickangle: 0,
-                              tickmode: 'auto'
+                              tickmode: 'auto',
+                              ticks: 'outside',
+                              ticklen: 8,
+                              tickwidth: 1,
+                              tickcolor: '#666666',
+                              showticklabels: true
                             },
                             yaxis: {
                               title: { 
@@ -1388,7 +1422,12 @@ const Smg3Seismograph: React.FC = () => {
                               showgrid: true,
                               tickfont: { size: 14, color: '#374151', weight: 'bold' },
                               tickangle: 0,
-                              tickmode: 'auto'
+                              tickmode: 'auto',
+                              ticks: 'outside',
+                              ticklen: 8,
+                              tickwidth: 1,
+                              tickcolor: '#666666',
+                              showticklabels: true
                             },
                             yaxis: {
                               title: { 

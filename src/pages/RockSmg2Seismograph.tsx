@@ -12,7 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createSeismographChartData, createSeismographCombinedChartData } from '../utils/seismographCharts';
-import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 
 // const MAX_POINTS = 1000;
 
@@ -430,7 +430,19 @@ const RockSmg2Seismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            tickmode: 'auto'
+            tickmode: 'auto',
+            ticks: 'outside',
+            ticklen: 8,
+            tickwidth: 1,
+            tickcolor: '#666666',
+            showticklabels: true,
+            minor: {
+              nticks: 4,
+              ticklen: 4,
+              tickwidth: 0.5,
+              tickcolor: '#999999',
+              showgrid: false
+            }
           },
           yaxis: {
             title: { 
@@ -453,7 +465,7 @@ const RockSmg2Seismograph: React.FC = () => {
           legend: {
             x: 0.5,
             xanchor: 'center',
-            y: -0.30,
+            y: -0.40,
             yanchor: 'top',
             orientation: 'h',
             font: { size: 12, weight: 700 },
@@ -463,11 +475,11 @@ const RockSmg2Seismograph: React.FC = () => {
             traceorder: 'normal'
           },
           height: 550,
-          margin: { t: 60, b: 150, l: 80, r: 80 },
+          margin: { t: 60, b: 180, l: 80, r: 80 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: zones.shapes,
+          shapes: [createZeroReferenceLine(), ...zones.shapes],
           annotations: zones.annotations
         }}
         config={{
@@ -825,7 +837,19 @@ const RockSmg2Seismograph: React.FC = () => {
             showgrid: true,
             tickfont: { size: 14, color: '#374151', weight: 700 },
             tickangle: 0,
-            tickmode: 'auto'
+            tickmode: 'auto',
+            ticks: 'outside',
+            ticklen: 8,
+            tickwidth: 1,
+            tickcolor: '#666666',
+            showticklabels: true,
+            minor: {
+              nticks: 4,
+              ticklen: 4,
+              tickwidth: 0.5,
+              tickcolor: '#999999',
+              showgrid: false
+            }
           },
           yaxis: {
             title: { 
@@ -848,7 +872,7 @@ const RockSmg2Seismograph: React.FC = () => {
           legend: {
             x: 0.5,
             xanchor: 'center',
-            y: -0.30,
+            y: -0.40,
             yanchor: 'top',
             orientation: 'h',
             font: { size: 12, weight: 700 },
@@ -858,11 +882,11 @@ const RockSmg2Seismograph: React.FC = () => {
             traceorder: 'normal'
           },
           height: 600,
-          margin: { t: 60, b: 150, l: 80, r: 80 },
+          margin: { t: 60, b: 180, l: 80, r: 80 },
           hovermode: 'closest',
           plot_bgcolor: 'white',
           paper_bgcolor: 'white',
-          shapes: zones.shapes,
+          shapes: [createZeroReferenceLine(), ...zones.shapes],
           annotations: zones.annotations
         }}
         config={{

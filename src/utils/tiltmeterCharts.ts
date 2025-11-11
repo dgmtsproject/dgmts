@@ -1,4 +1,4 @@
-import { getThresholdsFromSettings } from '../utils/graphZones';
+import { getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 
 interface ChartData {
   data: any[];
@@ -100,7 +100,19 @@ export const createTiltmeterChartData = (
       gridcolor: '#f0f0f0',
       showgrid: true,
       tickfont: { size: 12, color: '#374151', weight: 600 },
-      tickangle: 0
+      tickangle: 0,
+      ticks: 'outside',
+      ticklen: 8,
+      tickwidth: 1,
+      tickcolor: '#666666',
+      showticklabels: true,
+      minor: {
+        nticks: 4,
+        ticklen: 4,
+        tickwidth: 0.5,
+        tickcolor: '#999999',
+        showgrid: false
+      }
     },
     yaxis: {
       title: { 
@@ -137,9 +149,11 @@ export const createTiltmeterChartData = (
     paper_bgcolor: 'white'
   };
 
+  const referenceShapes = getReferenceShapesAndAnnotations(axis);
   const chartLayout = {
     ...plotlyLayout,
-    ...getReferenceShapesAndAnnotations(axis)
+    shapes: [createZeroReferenceLine(), ...(referenceShapes.shapes || [])],
+    annotations: referenceShapes.annotations || []
   };
 
   const chartConfig = {
@@ -228,7 +242,19 @@ export const createTiltmeterCombinedChartData = (
       gridcolor: '#f0f0f0',
       showgrid: true,
       tickfont: { size: 12, color: '#374151', weight: 600 },
-      tickangle: 0
+      tickangle: 0,
+      ticks: 'outside',
+      ticklen: 8,
+      tickwidth: 1,
+      tickcolor: '#666666',
+      showticklabels: true,
+      minor: {
+        nticks: 4,
+        ticklen: 4,
+        tickwidth: 0.5,
+        tickcolor: '#999999',
+        showgrid: false
+      }
     },
     yaxis: {
       title: { 
@@ -266,9 +292,11 @@ export const createTiltmeterCombinedChartData = (
     paper_bgcolor: 'white'
   };
 
+  const referenceShapes = getReferenceShapesAndAnnotations('y');
   const chartLayout = {
     ...plotlyLayout,
-    ...getReferenceShapesAndAnnotations('y')
+    shapes: [createZeroReferenceLine(), ...(referenceShapes.shapes || [])],
+    annotations: referenceShapes.annotations || []
   };
 
   const chartConfig = {

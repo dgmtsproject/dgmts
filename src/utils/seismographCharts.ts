@@ -1,4 +1,4 @@
-import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 
 interface ChartData {
   data: any[];
@@ -162,7 +162,19 @@ export const createSeismographChartData = (
       gridcolor: '#f0f0f0',
       showgrid: true,
       tickfont: { size: 14, color: '#374151', weight: 700, family: 'Arial, sans-serif' },
-      tickangle: 0
+      tickangle: 0,
+      ticks: 'outside',
+      ticklen: 8,
+      tickwidth: 1,
+      tickcolor: '#666666',
+      showticklabels: true,
+      minor: {
+        nticks: 4,
+        ticklen: 4,
+        tickwidth: 0.5,
+        tickcolor: '#999999',
+        showgrid: false
+      }
     },
     yaxis: {
       title: { 
@@ -206,7 +218,7 @@ export const createSeismographChartData = (
     hovermode: 'closest',
     plot_bgcolor: 'white',
     paper_bgcolor: 'white',
-    shapes: zones.shapes,
+    shapes: [createZeroReferenceLine(), ...zones.shapes],
     annotations: zones.annotations
   };
 
@@ -390,7 +402,19 @@ export const createSeismographCombinedChartData = (
       gridcolor: '#f0f0f0',
       showgrid: true,
       tickfont: { size: 14, color: '#374151', weight: 700, family: 'Arial, sans-serif' },
-      tickangle: 0
+      tickangle: 0,
+      ticks: 'outside',
+      ticklen: 8,
+      tickwidth: 1,
+      tickcolor: '#666666',
+      showticklabels: true,
+      minor: {
+        nticks: 4,
+        ticklen: 4,
+        tickwidth: 0.5,
+        tickcolor: '#999999',
+        showgrid: false
+      }
     },
     yaxis: {
       title: { 
@@ -434,7 +458,7 @@ export const createSeismographCombinedChartData = (
     hovermode: 'closest',
     plot_bgcolor: 'white',
     paper_bgcolor: 'white',
-    shapes: zones.shapes,
+    shapes: [createZeroReferenceLine(), ...zones.shapes],
     annotations: zones.annotations
   };
 

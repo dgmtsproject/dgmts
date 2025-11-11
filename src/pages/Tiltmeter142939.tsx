@@ -31,7 +31,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useAdminContext } from '../context/AdminContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 
 interface SensorData {
   id: number;
@@ -567,7 +567,19 @@ const Tiltmeter142939: React.FC = () => {
       showgrid: true,
       tickfont: { size: 14, color: '#374151', weight: 700 },
       tickangle: 0,
-      tickmode: 'auto' as const
+      tickmode: 'auto' as const,
+      ticks: 'outside',
+      ticklen: 8,
+      tickwidth: 1,
+      tickcolor: '#666666',
+      showticklabels: true,
+      minor: {
+        nticks: 4,
+        ticklen: 4,
+        tickwidth: 0.5,
+        tickcolor: '#999999',
+        showgrid: false
+      }
     },
     yaxis: {
       title: { 
@@ -834,13 +846,17 @@ const Tiltmeter142939: React.FC = () => {
   };
 
   function getReferenceShapesAndAnnotations(axis: 'x' | 'y' | 'z' = 'x') {
-    if (!instrumentSettings) return { shapes: [], annotations: [] };
+    if (!instrumentSettings) return { shapes: [createZeroReferenceLine()], annotations: [] };
     
     // Get thresholds for the specific axis
     const thresholds = getThresholdsFromSettings(instrumentSettings, axis);
     
     // Create colored zones and threshold lines
-    return createReferenceLinesOnly(thresholds);
+    const referenceLines = createReferenceLinesOnly(thresholds);
+    return {
+      shapes: [createZeroReferenceLine(), ...referenceLines.shapes],
+      annotations: referenceLines.annotations
+    };
   }
   
   // Axis-specific thresholds for legend display

@@ -493,3 +493,20 @@ export function getThresholdsFromSettings(
     shutdown: instrumentSettings.shutdown_value
   };
 }
+
+/**
+ * Creates a horizontal reference line at y=0.0
+ * @returns Shape object for Plotly zero reference line
+ */
+export function createZeroReferenceLine(): any {
+  return {
+    type: 'line',
+    xref: 'paper',
+    yref: 'y',
+    x0: 0,
+    y0: 0,
+    x1: 1,
+    y1: 0,
+    line: { color: '#808080', width: 0.5 }
+  };
+}
