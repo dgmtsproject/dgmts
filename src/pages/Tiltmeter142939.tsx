@@ -568,7 +568,7 @@ const Tiltmeter142939: React.FC = () => {
       tickfont: { size: 14, color: '#374151', weight: 700 },
       tickangle: 0,
       tickmode: 'auto' as const,
-      ticks: 'outside',
+      ticks: 'outside' as const,
       ticklen: 8,
       tickwidth: 1,
       tickcolor: '#666666',
@@ -1679,28 +1679,32 @@ const Tiltmeter142939: React.FC = () => {
               <div style={{ width: '100%', overflowX: 'auto' }}>
                 <Plot
                   data={yChartData}
-                  layout={{
-                    ...plotlyLayout,
-                    title: { 
-                      text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
-                      font: { size: 20, weight: 700, color: '#1f2937' },
-                      x: 0.5,
-                      xanchor: 'center'
-                    },
-                    yaxis: { 
-                      ...plotlyLayout.yaxis, 
+                  layout={(() => {
+                    const referenceData = getReferenceShapesAndAnnotations('y');
+                    return {
+                      ...plotlyLayout,
                       title: { 
-                        text: 'Y-Axis Value (°)', 
-                        standoff: 15,
-                        font: { size: 16, weight: 700, color: '#374151' }
+                        text: `${project ? project.name + ' - ' : ''}Y-Axis Tilt - Node ${nodeId} - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'TILT-142939')?.instrument_location : 'Location: None'}`,
+                        font: { size: 20, weight: 700, color: '#1f2937' },
+                        x: 0.5,
+                        xanchor: 'center'
                       },
-                      range: (() => {
-                        const range = getYAxisRange(yValues, getThresholdsFromSettings(instrumentSettings, 'y'));
-                        return [range.min, range.max];
-                      })()
-                    },
-                    ...getReferenceShapesAndAnnotations('y'),
-                  }}
+                      yaxis: { 
+                        ...plotlyLayout.yaxis, 
+                        title: { 
+                          text: 'Y-Axis Value (°)', 
+                          standoff: 15,
+                          font: { size: 16, weight: 700, color: '#374151' }
+                        },
+                        range: (() => {
+                          const range = getYAxisRange(yValues, getThresholdsFromSettings(instrumentSettings, 'y'));
+                          return [range.min, range.max];
+                        })()
+                      },
+                      shapes: referenceData.shapes,
+                      annotations: referenceData.annotations,
+                    };
+                  })()}
                   config={{ responsive: true, displayModeBar: true, scrollZoom: true, displaylogo: false }}
                   style={{ width: '100%', height: 550 }}
                   useResizeHandler={true}

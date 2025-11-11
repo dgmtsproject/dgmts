@@ -21,7 +21,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { API_BASE_URL } from '../config';
 import { supabase } from '../supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createReferenceLinesOnly, getThresholdsFromSettings } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 
 interface SensorData {
   id: number;
@@ -268,7 +268,7 @@ const Tiltmeter30846: React.FC = () => {
       tickfont: { size: 14, color: '#374151', weight: 700 },
       tickangle: 0,
       tickmode: 'auto' as const,
-      ticks: 'outside',
+      ticks: 'outside' as const,
       ticklen: 8,
       tickwidth: 1,
       tickcolor: '#666666',
