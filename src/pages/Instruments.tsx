@@ -316,11 +316,11 @@ const handleSubmit = async (e: React.FormEvent) => {
           fullWidth
         />
         <TextField
-          label="Instrument SNo."
-          type="number"
+          label="Serial Number"
+          required
           value={instrumentSno}
           onChange={(e) => setInstrumentSno(e.target.value)}
-          style={{width: '100%'}}
+          fullWidth
         />
       </Box>
 

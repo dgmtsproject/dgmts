@@ -353,6 +353,15 @@ const AncSeismograph: React.FC = () => {
 
     newWindow.document.title = windowTitle;
 
+    // Update layout for popup window - ensure it uses the same font settings
+    const popupLayout = {
+      ...layout,
+      height: 650,
+      autosize: true
+    };
+
+    // Set up the HTML structure with Plotly from CDN
+    // Using the exact same layout ensures fonts appear correctly
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -360,7 +369,8 @@ const AncSeismograph: React.FC = () => {
           <title>${windowTitle}</title>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+          <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
           <style>
             body {
               margin: 0;
@@ -368,16 +378,20 @@ const AncSeismograph: React.FC = () => {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
               background-color: #f5f5f5;
             }
-            .chart-container {
+            .chart-wrapper {
               background: white;
               border-radius: 8px;
               box-shadow: 0 4px 12px rgba(0,0,0,0.1);
               padding: 20px;
               height: calc(100vh - 40px);
+              box-sizing: border-box;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
-            .plotly-graph-div {
-              width: 100% !important;
-              height: 100% !important;
+            #plotly-chart {
+              width: 100%;
+              height: 100%;
             }
             /* Force bold font weight for all Plotly text elements */
             .js-plotly-plot svg text {
@@ -386,30 +400,220 @@ const AncSeismograph: React.FC = () => {
           </style>
         </head>
         <body>
-          <div class="chart-container">
+          <div class="chart-wrapper">
             <div id="plotly-chart"></div>
           </div>
-          
           <script>
             const chartData = ${JSON.stringify(chartData)};
-            const chartLayout = ${JSON.stringify(layout)};
+            const chartLayout = ${JSON.stringify(popupLayout)};
             const chartConfig = ${JSON.stringify(config)};
             
-            Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig).then(function() {
-              // Force bold font weight on all text elements after plot renders
-              const plotDiv = document.getElementById('plotly-chart');
-              if (plotDiv) {
-                const textElements = plotDiv.querySelectorAll('svg text');
-                textElements.forEach(function(text) {
-                  text.setAttribute('font-weight', '700');
-                  text.style.fontWeight = '700';
-                });
+            // Wait for Plotly to load
+            function initChart() {
+              if (typeof Plotly === 'undefined') {
+                setTimeout(initChart, 100);
+                return;
               }
-            });
+              
+              // Function to make all text bold in SVG by setting font-weight as SVG attribute
+              function makeTextBold() {
+                const plotDiv = document.getElementById('plotly-chart');
+                if (plotDiv) {
+                  const textElements = plotDiv.querySelectorAll('svg text');
+                  textElements.forEach(function(text) {
+                    // Set as SVG attribute so it's preserved
+                    text.setAttribute('font-weight', '700');
+                    text.style.fontWeight = '700';
+                  });
+                }
+              }
+              
+              // Create the plot with the exact same data, layout, and config
+              Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig).then(function() {
+                // Apply bold fonts after initial render
+                makeTextBold();
+                
+                // Override download button to ensure fonts are preserved
+                setTimeout(function() {
+                  const plotDiv = document.getElementById('plotly-chart');
+                  if (plotDiv) {
+                    const modeBar = plotDiv.querySelector('.modebar');
+                    if (modeBar) {
+                      const downloadBtn = modeBar.querySelector('[data-title="Download plot as a png"]');
+                      if (downloadBtn) {
+                        // Clone button to remove existing handlers
+                        const newDownloadBtn = downloadBtn.cloneNode(true);
+                        downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
+                        
+                        newDownloadBtn.addEventListener('click', function(e) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          // Force all text to be bold before download
+                          makeTextBold();
+                          
+                          // Also set font-weight on all text elements more aggressively
+                          const textElements = plotDiv.querySelectorAll('svg text');
+                          textElements.forEach(function(text) {
+                            text.setAttribute('font-weight', '700');
+                            text.setAttribute('font-weight', 'bold');
+                            text.style.fontWeight = '700';
+                            text.style.fontWeight = 'bold';
+                            // Also try setting it on the parent if needed
+                            if (text.parentElement) {
+                              text.parentElement.setAttribute('font-weight', '700');
+                            }
+                          });
+                          
+                          // Hide hover elements and modebar before download
+                          const hoverElements = plotDiv.querySelectorAll('.hoverlayer, .hovertext, [class*="hover"]');
+                          const modebar = plotDiv.querySelector('.modebar');
+                          const hiddenElements = [];
+                          
+                          // Hide hover elements
+                          hoverElements.forEach(function(el) {
+                            const originalDisplay = el.style.display;
+                            el.style.display = 'none';
+                            hiddenElements.push({ element: el, display: originalDisplay });
+                          });
+                          
+                          // Hide modebar (toolbar with download button)
+                          if (modebar) {
+                            const originalModebarDisplay = modebar.style.display;
+                            modebar.style.display = 'none';
+                            hiddenElements.push({ element: modebar, display: originalModebarDisplay });
+                          }
+                          
+                          // Function to restore hidden elements
+                          function restoreHiddenElements() {
+                            hiddenElements.forEach(function(item) {
+                              if (item.element && item.element.parentNode) {
+                                item.element.style.display = item.display || '';
+                              }
+                            });
+                          }
+                          
+                          // Get actual chart dimensions from SVG
+                          const svgElement = plotDiv.querySelector('svg');
+                          let targetWidth = chartConfig.toImageButtonOptions?.width || 1200;
+                          let targetHeight = chartConfig.toImageButtonOptions?.height || 600;
+                          
+                          if (svgElement) {
+                            // Get actual SVG dimensions
+                            const viewBox = svgElement.getAttribute('viewBox');
+                            if (viewBox) {
+                              const viewBoxValues = viewBox.split(' ');
+                              if (viewBoxValues.length >= 4) {
+                                targetWidth = Math.max(targetWidth, parseFloat(viewBoxValues[2]));
+                                targetHeight = Math.max(targetHeight, parseFloat(viewBoxValues[3]));
+                              }
+                            }
+                            // Also check actual rendered size
+                            targetWidth = Math.max(targetWidth, svgElement.scrollWidth || svgElement.clientWidth);
+                            targetHeight = Math.max(targetHeight, svgElement.scrollHeight || svgElement.clientHeight);
+                          }
+                          
+                          // Wait a moment for changes to apply, then use html2canvas
+                          setTimeout(function() {
+                            if (typeof html2canvas !== 'undefined') {
+                              // Temporarily set explicit dimensions to ensure full capture
+                              const originalWidth = plotDiv.style.width;
+                              const originalHeight = plotDiv.style.height;
+                              const originalOverflow = plotDiv.style.overflow;
+                              
+                              plotDiv.style.width = targetWidth + 'px';
+                              plotDiv.style.height = targetHeight + 'px';
+                              plotDiv.style.overflow = 'visible';
+                              
+                              // Use html2canvas to capture the rendered chart with bold fonts
+                              html2canvas(plotDiv, {
+                                scale: chartConfig.toImageButtonOptions?.scale || 2,
+                                useCORS: true,
+                                logging: false,
+                                backgroundColor: '#ffffff',
+                                allowTaint: true,
+                                width: targetWidth,
+                                height: targetHeight,
+                                windowWidth: targetWidth,
+                                windowHeight: targetHeight
+                              }).then(function(canvas) {
+                                // Restore hidden elements
+                                restoreHiddenElements();
+                                
+                                // Restore original styles
+                                plotDiv.style.width = originalWidth;
+                                plotDiv.style.height = originalHeight;
+                                plotDiv.style.overflow = originalOverflow;
+                                
+                                // Convert canvas to blob and download
+                                canvas.toBlob(function(blob) {
+                                  if (blob) {
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.download = (chartConfig.toImageButtonOptions?.filename || 'chart') + '.png';
+                                    link.href = url;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(url);
+                                  }
+                                }, 'image/png');
+                              }).catch(function(err) {
+                                // Restore hidden elements on error
+                                restoreHiddenElements();
+                                
+                                // Restore original styles on error
+                                plotDiv.style.width = originalWidth;
+                                plotDiv.style.height = originalHeight;
+                                plotDiv.style.overflow = originalOverflow;
+                                
+                                console.error('Error with html2canvas:', err);
+                                // Fallback to Plotly's download
+                                Plotly.downloadImage(plotDiv, {
+                                  format: 'png',
+                                  filename: chartConfig.toImageButtonOptions?.filename || 'chart',
+                                  height: chartConfig.toImageButtonOptions?.height || 600,
+                                  width: chartConfig.toImageButtonOptions?.width || 1200,
+                                  scale: chartConfig.toImageButtonOptions?.scale || 2
+                                });
+                              });
+                            } else {
+                              // Fallback if html2canvas not loaded
+                              restoreHiddenElements();
+                              Plotly.downloadImage(plotDiv, {
+                                format: 'png',
+                                filename: chartConfig.toImageButtonOptions?.filename || 'chart',
+                                height: chartConfig.toImageButtonOptions?.height || 600,
+                                width: chartConfig.toImageButtonOptions?.width || 1200,
+                                scale: chartConfig.toImageButtonOptions?.scale || 2
+                              });
+                            }
+                          }, 150);
+                        }, true);
+                      }
+                    }
+                  }
+                }, 500);
+                
+                // Use MutationObserver to keep fonts bold when Plotly redraws
+                const plotDiv = document.getElementById('plotly-chart');
+                if (plotDiv) {
+                  const observer = new MutationObserver(function() {
+                    makeTextBold();
+                  });
+                  observer.observe(plotDiv, { childList: true, subtree: true });
+                }
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                  Plotly.Plots.resize('plotly-chart');
+                  // Reapply bold fonts after resize
+                  setTimeout(makeTextBold, 100);
+                });
+              });
+            }
             
-            window.addEventListener('resize', function() {
-              Plotly.Plots.resize('plotly-chart');
-            });
+            initChart();
           </script>
         </body>
       </html>
