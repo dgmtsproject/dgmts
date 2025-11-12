@@ -188,17 +188,70 @@ const InstrumentsList: React.FC = () => {
 const handleDeleteInstrument = async (instrumentId: string) => {  
   console.log('Deleting instrument with ID:', instrumentId);
 
-  const { error } = await supabase
-    .from('instruments')
-    .delete()
-    .eq('instrument_id', instrumentId);  
+  try {
+    // Step 1: Count and delete all related records from sent_alert_logs first
+    console.log('Counting related alert logs...');
+    const { count: logsCount } = await supabase
+      .from('sent_alert_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('for_instrument', instrumentId);
 
-  if (error) {
-    console.error('Error deleting instrument:', error);
-  } else {
-    setInstrumentsData(instrumentsData.filter(instrument => instrument.instrument_id !== instrumentId));
-    toast.success('Instrument deleted successfully');
+    console.log('Deleting related alert logs...');
+    const { error: logsError } = await supabase
+      .from('sent_alert_logs')
+      .delete()
+      .eq('for_instrument', instrumentId);
+
+    if (logsError) {
+      console.error('Error deleting alert logs:', logsError);
+      toast.error(`Failed to delete related alert logs: ${logsError.message}`);
+      setOpenDialogId(null);
+      return;
+    }
+
+    console.log(`Deleted ${logsCount || 0} alert log records`);
+
+    // Step 2: Count and delete all related records from sent_alerts (if any)
+    console.log('Counting related sent alerts...');
+    const { count: alertsCount } = await supabase
+      .from('sent_alerts')
+      .select('*', { count: 'exact', head: true })
+      .eq('instrument_id', instrumentId);
+
+    console.log('Deleting related sent alerts...');
+    const { error: alertsError } = await supabase
+      .from('sent_alerts')
+      .delete()
+      .eq('instrument_id', instrumentId);
+
+    if (alertsError) {
+      console.error('Error deleting sent alerts:', alertsError);
+      toast.error(`Failed to delete related sent alerts: ${alertsError.message}`);
+      setOpenDialogId(null);
+      return;
+    }
+
+    console.log(`Deleted ${alertsCount || 0} sent alert records`);
+
+    // Step 3: Now delete the instrument itself
+    console.log('Deleting instrument...');
+    const { error } = await supabase
+      .from('instruments')
+      .delete()
+      .eq('instrument_id', instrumentId);  
+
+    if (error) {
+      console.error('Error deleting instrument:', error);
+      toast.error(`Failed to delete instrument: ${error.message}`);
+    } else {
+      setInstrumentsData(instrumentsData.filter(instrument => instrument.instrument_id !== instrumentId));
+      toast.success(`Instrument deleted successfully. Removed ${logsCount || 0} log records and ${alertsCount || 0} alert records.`);
+    }
+  } catch (error) {
+    console.error('Unexpected error during deletion:', error);
+    toast.error(`Unexpected error: ${(error as Error).message}`);
   }
+  
   setOpenDialogId(null);
 }
 
