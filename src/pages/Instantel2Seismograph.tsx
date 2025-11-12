@@ -573,7 +573,8 @@ const Instantel2Seismograph: React.FC = () => {
     location: string | undefined
   ) => {
     const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
-    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    // Popup window size - reduced height
+    const windowFeatures = 'width=1400,height=750,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
     
     const newWindow = window.open('', '_blank', windowFeatures);
     if (!newWindow) {
@@ -583,6 +584,15 @@ const Instantel2Seismograph: React.FC = () => {
 
     newWindow.document.title = windowTitle;
 
+    // Update layout for popup window - ensure it uses the same font settings
+    const popupLayout = {
+      ...layout,
+      height: 650,
+      autosize: true
+    };
+
+    // Set up the HTML structure with Plotly from CDN
+    // Using the exact same layout ensures fonts appear correctly
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -633,7 +643,7 @@ const Instantel2Seismograph: React.FC = () => {
           
           <script>
             const chartData = ${JSON.stringify(chartData)};
-            const chartLayout = ${JSON.stringify(layout)};
+            const chartLayout = ${JSON.stringify(popupLayout)};
             const chartConfig = ${JSON.stringify(config)};
             
             Plotly.newPlot('plotly-chart', chartData, chartLayout, chartConfig).then(function() {
@@ -672,6 +682,34 @@ const Instantel2Seismograph: React.FC = () => {
                         setTimeout(function() {
                           // Use html2canvas to capture the rendered chart with bold fonts
                           if (typeof html2canvas !== 'undefined') {
+                            // Hide hover elements and modebar before download
+                            const hoverElements = plotDiv.querySelectorAll('.hoverlayer, .hovertext, [class*="hover"]');
+                            const modebar = plotDiv.querySelector('.modebar');
+                            const hiddenElements = [];
+                            
+                            // Hide hover elements
+                            hoverElements.forEach(function(el) {
+                              const originalDisplay = el.style.display;
+                              el.style.display = 'none';
+                              hiddenElements.push({ element: el, display: originalDisplay });
+                            });
+                            
+                            // Hide modebar (toolbar with download button)
+                            if (modebar) {
+                              const originalModebarDisplay = modebar.style.display;
+                              modebar.style.display = 'none';
+                              hiddenElements.push({ element: modebar, display: originalModebarDisplay });
+                            }
+                            
+                            // Function to restore hidden elements
+                            function restoreHiddenElements() {
+                              hiddenElements.forEach(function(item) {
+                                if (item.element && item.element.parentNode) {
+                                  item.element.style.display = item.display || '';
+                                }
+                              });
+                            }
+                            
                             // Get the SVG element to determine actual chart dimensions
                             const svgElement = plotDiv.querySelector('svg');
                             let targetWidth = chartConfig.toImageButtonOptions?.width || 1200;
@@ -692,13 +730,16 @@ const Instantel2Seismograph: React.FC = () => {
                               targetHeight = Math.max(targetHeight, svgElement.scrollHeight || svgElement.clientHeight);
                             }
                             
-                            // Temporarily set explicit width to ensure full capture
+                            // Temporarily set explicit dimensions to ensure full capture
                             const originalWidth = plotDiv.style.width;
+                            const originalHeight = plotDiv.style.height;
                             const originalOverflow = plotDiv.style.overflow;
+                            
                             plotDiv.style.width = targetWidth + 'px';
+                            plotDiv.style.height = targetHeight + 'px';
                             plotDiv.style.overflow = 'visible';
                             
-                            // Capture the chart at full width
+                            // Use html2canvas to capture the rendered chart with bold fonts
                             html2canvas(plotDiv, {
                               scale: chartConfig.toImageButtonOptions?.scale || 2,
                               useCORS: true,
@@ -706,10 +747,16 @@ const Instantel2Seismograph: React.FC = () => {
                               backgroundColor: '#ffffff',
                               allowTaint: true,
                               width: targetWidth,
-                              height: targetHeight
+                              height: targetHeight,
+                              windowWidth: targetWidth,
+                              windowHeight: targetHeight
                             }).then(function(canvas) {
+                              // Restore hidden elements
+                              restoreHiddenElements();
+                              
                               // Restore original styles
                               plotDiv.style.width = originalWidth;
+                              plotDiv.style.height = originalHeight;
                               plotDiv.style.overflow = originalOverflow;
                               // Convert canvas to blob and download
                               canvas.toBlob(function(blob) {
@@ -725,8 +772,12 @@ const Instantel2Seismograph: React.FC = () => {
                                 }
                               }, 'image/png');
                             }).catch(function(err) {
+                              // Restore hidden elements on error
+                              restoreHiddenElements();
+                              
                               // Restore original styles on error
                               plotDiv.style.width = originalWidth;
+                              plotDiv.style.height = originalHeight;
                               plotDiv.style.overflow = originalOverflow;
                               console.error('Error with html2canvas:', err);
                               // Fallback to Plotly's download

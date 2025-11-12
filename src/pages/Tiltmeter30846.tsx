@@ -357,7 +357,8 @@ const Tiltmeter30846: React.FC = () => {
     location: string | undefined
   ) => {
     const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
-    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    // Popup window size - reduced height
+    const windowFeatures = 'width=1400,height=750,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
     
     const newWindow = window.open('', '_blank', windowFeatures);
     if (!newWindow) {
@@ -367,6 +368,15 @@ const Tiltmeter30846: React.FC = () => {
 
     newWindow.document.title = windowTitle;
 
+    // Update layout for popup window - ensure it uses the same font settings
+    const popupLayout = {
+      ...layout,
+      height: 650,
+      autosize: true
+    };
+
+    // Set up the HTML structure with Plotly from CDN
+    // Using the exact same layout ensures fonts appear correctly
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -446,6 +456,35 @@ const Tiltmeter30846: React.FC = () => {
                         setTimeout(function() {
                           // Use html2canvas to capture the rendered chart with bold fonts
                           if (typeof html2canvas !== 'undefined') {
+                            // Hide all Plotly hover elements before capture
+                            const hoverElements = plotDiv.querySelectorAll('.hoverlayer, .hovertext, [class*="hover"]');
+                            const hiddenElements = [];
+                            
+                            hoverElements.forEach(function(el) {
+                              const originalDisplay = el.style.display;
+                              el.style.display = 'none';
+                              hiddenElements.push({ element: el, display: originalDisplay });
+                            });
+                            
+                            // Also hide any tooltip elements
+                            const tooltips = document.querySelectorAll('.plotly .hoverlayer, .plotly .hovertext');
+                            tooltips.forEach(function(el) {
+                              if (!hiddenElements.some(item => item.element === el)) {
+                                const originalDisplay = el.style.display;
+                                el.style.display = 'none';
+                                hiddenElements.push({ element: el, display: originalDisplay });
+                              }
+                            });
+                            
+                            // Function to restore hover elements
+                            function restoreHoverElements() {
+                              hiddenElements.forEach(function(item) {
+                                if (item.element && item.element.parentNode) {
+                                  item.element.style.display = item.display || '';
+                                }
+                              });
+                            }
+                            
                             // Get the SVG element to determine actual chart dimensions
                             const svgElement = plotDiv.querySelector('svg');
                             let targetWidth = config.toImageButtonOptions?.width || 1200;
@@ -482,6 +521,9 @@ const Tiltmeter30846: React.FC = () => {
                               width: targetWidth,
                               height: targetHeight
                             }).then(function(canvas) {
+                              // Restore hover elements
+                              restoreHoverElements();
+                              
                               // Restore original styles
                               plotDiv.style.width = originalWidth;
                               plotDiv.style.overflow = originalOverflow;
@@ -499,6 +541,9 @@ const Tiltmeter30846: React.FC = () => {
                                 }
                               }, 'image/png');
                             }).catch(function(err) {
+                              // Restore hover elements on error
+                              restoreHoverElements();
+                              
                               // Restore original styles on error
                               plotDiv.style.width = originalWidth;
                               plotDiv.style.overflow = originalOverflow;

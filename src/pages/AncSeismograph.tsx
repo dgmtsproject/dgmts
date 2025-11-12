@@ -342,7 +342,8 @@ const AncSeismograph: React.FC = () => {
     location: string | undefined
   ) => {
     const windowTitle = `${project?.name || 'Project'} - ${chartTitle}${location ? ` - ${location}` : ''}`;
-    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    // Popup window size - reduced height
+    const windowFeatures = 'width=1400,height=750,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
     
     const newWindow = window.open('', '_blank', windowFeatures);
     if (!newWindow) {
