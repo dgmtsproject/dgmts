@@ -276,17 +276,27 @@ const Instantel2Seismograph: React.FC = () => {
     const validGeophoneData = filterValidData(geophoneData);
 
     // Process Sound DB data
-    const soundDbData = readingsToProcess
+    type SoundDbPoint = {
+      time: Date;
+      l10: number;
+      l90: number;
+      lMax: number;
+    };
+    
+    const soundDbData: SoundDbPoint[] = readingsToProcess
       .map(reading => ({
         time: formatUTCTime(reading.Time),
         l10: reading['Mic_L10_db(A)'],
         l90: reading['Mic_L90_db(A)'],
         lMax: reading['Mic_LMax_db(A)']
       }))
-      .filter(point => 
-        point.time && 
+      .filter((point): point is SoundDbPoint => 
+        point.time !== null && 
+        point.l10 !== undefined &&
         typeof point.l10 === 'number' && !isNaN(point.l10) &&
+        point.l90 !== undefined &&
         typeof point.l90 === 'number' && !isNaN(point.l90) &&
+        point.lMax !== undefined &&
         typeof point.lMax === 'number' && !isNaN(point.lMax)
       );
 
