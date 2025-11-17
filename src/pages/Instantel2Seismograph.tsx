@@ -32,6 +32,9 @@ interface UM16368Reading {
   Transverse_PPV: number;
   Vertical_PPV: number;
   source_file: string;
+  'Mic_L10_db(A)'?: number;
+  'Mic_L90_db(A)'?: number;
+  'Mic_LMax_db(A)'?: number;
 }
 
 interface UM16368Data {
@@ -66,7 +69,7 @@ interface Instrument {
   instrument_location?: string;
 }
 
-type DataType = 'ppv' | 'geophone_pvs';
+type DataType = 'ppv' | 'geophone_pvs' | 'sound_db';
 
 const Instantel2Seismograph: React.FC = () => {
   const INSTRUMENT_ID = 'Instantel 2';
@@ -195,6 +198,12 @@ const Instantel2Seismograph: React.FC = () => {
         y: { time: [], values: [] },
         z: { time: [], values: [] },
         geophone: { time: [], values: [] },
+        soundDb: { 
+          time: [], 
+          l10: [], 
+          l90: [], 
+          lMax: [] 
+        },
         unit: 'in/s'
       };
     }
@@ -223,6 +232,8 @@ const Instantel2Seismograph: React.FC = () => {
           return 'in/s';
         case 'geophone_pvs':
           return 'in/s';
+        case 'sound_db':
+          return 'db';
         default:
           return 'in/s';
       }
@@ -264,6 +275,21 @@ const Instantel2Seismograph: React.FC = () => {
     const validZData = filterValidData(zData);
     const validGeophoneData = filterValidData(geophoneData);
 
+    // Process Sound DB data
+    const soundDbData = readingsToProcess
+      .map(reading => ({
+        time: formatUTCTime(reading.Time),
+        l10: reading['Mic_L10_db(A)'],
+        l90: reading['Mic_L90_db(A)'],
+        lMax: reading['Mic_LMax_db(A)']
+      }))
+      .filter(point => 
+        point.time && 
+        typeof point.l10 === 'number' && !isNaN(point.l10) &&
+        typeof point.l90 === 'number' && !isNaN(point.l90) &&
+        typeof point.lMax === 'number' && !isNaN(point.lMax)
+      );
+
     // Create combined data (all axes with same timestamps) for PPV
     const combinedData = readingsToProcess
       .map(reading => ({
@@ -301,6 +327,12 @@ const Instantel2Seismograph: React.FC = () => {
       geophone: {
         time: validGeophoneData.map(point => point.time),
         values: validGeophoneData.map(point => parseFloat(point.value.toFixed(3)))
+      },
+      soundDb: {
+        time: soundDbData.map(point => point.time),
+        l10: soundDbData.map(point => parseFloat(point.l10.toFixed(1))),
+        l90: soundDbData.map(point => parseFloat(point.l90.toFixed(1))),
+        lMax: soundDbData.map(point => parseFloat(point.lMax.toFixed(1)))
       },
       unit: getUnit()
     };
@@ -825,6 +857,152 @@ const Instantel2Seismograph: React.FC = () => {
     newWindow.document.close();
   };
 
+  const createSoundDbPlot = (soundDb: { time: Date[]; l10: number[]; l90: number[]; lMax: number[] }) => {
+    if (!soundDb.time.length) return null;
+
+    return (
+      <Plot
+        key={`sound-db-plot-${project?.name || 'default'}`}
+        data={[
+          {
+            x: soundDb.time,
+            y: soundDb.l10,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'L10',
+            line: {
+              color: 'darkblue',
+              shape: 'linear',
+              width: 1.5
+            },
+            hovertemplate: `
+              <b>L10</b><br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Value: %{y:.1f} db<extra></extra>
+            `,
+            connectgaps: true
+          },
+          {
+            x: soundDb.time,
+            y: soundDb.l90,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'L90',
+            line: {
+              color: 'pink',
+              shape: 'linear',
+              width: 1.5
+            },
+            hovertemplate: `
+              <b>L90</b><br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Value: %{y:.1f} db<extra></extra>
+            `,
+            connectgaps: true
+          },
+          {
+            x: soundDb.time,
+            y: soundDb.lMax,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'LMax',
+            line: {
+              color: 'black',
+              shape: 'linear',
+              width: 1.5
+            },
+            hovertemplate: `
+              <b>LMax</b><br>
+              Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>
+              Value: %{y:.1f} db<extra></extra>
+            `,
+            connectgaps: true
+          }
+        ]}
+        layout={{
+          title: { 
+            text: `${project?.name || 'Project'} - Sound (db) Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`, 
+            font: { size: 20, weight: 700, color: '#003087' },
+            x: 0.5,
+            xanchor: 'center'
+          },
+          xaxis: {
+            title: { 
+              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+              font: { size: 18, weight: 700, color: '#374151' },
+              standoff: 20
+            },
+            type: 'date',
+            tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+            gridcolor: '#f0f0f0',
+            showgrid: true,
+            tickfont: { size: 14, color: '#374151', weight: 700 },
+            tickangle: 0,
+            tickmode: 'auto',
+            ticks: 'outside' as const,
+            ticklen: 8,
+            tickwidth: 1,
+            tickcolor: '#666666',
+            showticklabels: true,
+            minor: {
+              nticks: 4,
+              ticklen: 4,
+              tickwidth: 0.5,
+              tickcolor: '#999999',
+              showgrid: false
+            }
+          },
+          yaxis: {
+            title: { 
+              text: 'sound(db)', 
+              font: { size: 18, weight: 700, color: '#374151' },
+              standoff: 25 
+            },
+            fixedrange: false,
+            gridcolor: '#f0f0f0',
+            zeroline: true,
+            zerolinecolor: '#f0f0f0',
+            tickfont: { size: 14, color: '#374151', weight: 700 }
+          },
+          showlegend: true,
+          legend: {
+            x: 0.5,
+            xanchor: 'center',
+            y: -0.40,
+            yanchor: 'top',
+            orientation: 'h',
+            font: { size: 12, weight: 700 },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#CCC',
+            borderwidth: 1,
+            traceorder: 'normal'
+          },
+          height: 550,
+          margin: { t: 60, b: 180, l: 80, r: 80 },
+          hovermode: 'closest',
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          shapes: [createZeroReferenceLine()]
+        }}
+        config={{
+          responsive: true,
+          displayModeBar: true,
+          scrollZoom: true,
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: `${project?.name || 'Project'}_Sound_DB_${new Date().toISOString().split('T')[0]}`,
+            height: 600,
+            width: 1200,
+            scale: 2
+          }
+        }}
+        style={{ width: '100%', height: 550 }}
+        useResizeHandler={true}
+      />
+    );
+  };
+
   const createCombinedPlot = (combined: { time: Date[]; x: number[]; y: number[]; z: number[] }) => {
     if (!combined.time.length) return null;
 
@@ -1075,6 +1253,7 @@ const Instantel2Seismograph: React.FC = () => {
                 >
                   <MenuItem value="ppv">PPV</MenuItem>
                   <MenuItem value="geophone_pvs">Geophone PVS</MenuItem>
+                  <MenuItem value="sound_db">Sound (db)</MenuItem>
                 </Select>
               </FormControl>
               <Button 
@@ -1101,7 +1280,7 @@ const Instantel2Seismograph: React.FC = () => {
                     });
                   }}
                   sx={{ height: 40 }}
-                  disabled={dataType === 'geophone_pvs'}
+                  disabled={dataType === 'geophone_pvs' || dataType === 'sound_db'}
                 >
                   View Data Table
                 </Button>
@@ -1117,7 +1296,141 @@ const Instantel2Seismograph: React.FC = () => {
 
           {rawData && rawData.UM16368Readings.length > 0 && (
             <>
-              {dataType === 'geophone_pvs' ? (
+              {dataType === 'sound_db' ? (
+                // Show only Sound DB chart when sound_db is selected
+                processedData.soundDb.time.length > 0 && (
+                  <Box mb={10} width="100%">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                      <Typography variant="h6">Sound (db) Data</Typography>
+                      <Tooltip title="Open in Popup">
+                        <Button
+                          startIcon={<OpenInNew />}
+                          onClick={() => {
+                            const chartData = [
+                              {
+                                x: processedData.soundDb.time,
+                                y: processedData.soundDb.l10,
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: 'L10',
+                                line: { color: 'darkblue', shape: 'linear', width: 1.5 },
+                                hovertemplate: '<b>L10</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.1f} db<extra></extra>',
+                                connectgaps: true
+                              },
+                              {
+                                x: processedData.soundDb.time,
+                                y: processedData.soundDb.l90,
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: 'L90',
+                                line: { color: 'pink', shape: 'linear', width: 1.5 },
+                                hovertemplate: '<b>L90</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.1f} db<extra></extra>',
+                                connectgaps: true
+                              },
+                              {
+                                x: processedData.soundDb.time,
+                                y: processedData.soundDb.lMax,
+                                type: 'scatter' as const,
+                                mode: 'lines' as const,
+                                name: 'LMax',
+                                line: { color: 'black', shape: 'linear', width: 1.5 },
+                                hovertemplate: '<b>LMax</b><br>Time: %{x|%Y-%m-%d %I:%M:%S.%L %p}<br>Value: %{y:.1f} db<extra></extra>',
+                                connectgaps: true
+                              }
+                            ];
+                            
+                            const chartLayout = {
+                              title: { 
+                                text: `${project?.name || 'Project'} - Sound (db) Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                font: { size: 20, weight: 'bold', color: '#003087' },
+                                x: 0.5,
+                                xanchor: 'center'
+                              },
+                              xaxis: {
+                                title: { 
+                                  text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                  font: { size: 18, weight: 'bold', color: '#374151' },
+                                  standoff: 20
+                                },
+                                type: 'date',
+                                tickformat: '<span style="font-size:10px;font-weight:700;">%m/%d</span><br><span style="font-size:8px;font-weight:700;">%H:%M</span>',
+                                gridcolor: '#f0f0f0',
+                                showgrid: true,
+                                tickfont: { size: 14, color: '#374151', weight: 'bold' },
+                                tickangle: 0,
+                                tickmode: 'auto',
+                                ticks: 'outside' as const,
+                                ticklen: 8,
+                                tickwidth: 1,
+                                tickcolor: '#666666',
+                                showticklabels: true,
+                                minor: {
+                                  nticks: 4,
+                                  ticklen: 4,
+                                  tickwidth: 0.5,
+                                  tickcolor: '#999999',
+                                  showgrid: false
+                                }
+                              },
+                              yaxis: {
+                                title: {
+                                  text: 'sound(db)',
+                                  font: { size: 18, weight: 'bold', color: '#374151' },
+                                  standoff: 25
+                                },
+                                fixedrange: false,
+                                gridcolor: '#f0f0f0',
+                                zeroline: true,
+                                zerolinecolor: '#f0f0f0',
+                                tickfont: { size: 14, color: '#374151', weight: 'bold' }
+                              },
+                              showlegend: true,
+                              legend: {
+                                x: 0.5,
+                                xanchor: 'center',
+                                y: -0.45,
+                                yanchor: 'top',
+                                orientation: 'h',
+                                font: { size: 12, weight: 700 },
+                                bgcolor: 'rgba(255,255,255,0.8)',
+                                bordercolor: '#CCC',
+                                borderwidth: 1,
+                                traceorder: 'normal'
+                              },
+                              height: 550,
+                              margin: { t: 60, b: 180, l: 80, r: 80 },
+                              hovermode: 'closest',
+                              plot_bgcolor: 'white',
+                              paper_bgcolor: 'white',
+                              shapes: [createZeroReferenceLine()]
+                            };
+                            
+                            const chartConfig = {
+                              responsive: true,
+                              displayModeBar: true,
+                              scrollZoom: true,
+                              displaylogo: false,
+                            };
+                            
+                            openChartInWindow(
+                              'Sound (db) Data',
+                              chartData,
+                              chartLayout,
+                              chartConfig,
+                              availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                            );
+                          }}
+                          variant="outlined"
+                          size="small"
+                        >
+                          Open in Popup
+                        </Button>
+                      </Tooltip>
+                    </Box>
+                    {createSoundDbPlot(processedData.soundDb)}
+                  </Box>
+                )
+              ) : dataType === 'geophone_pvs' ? (
                 // Show only Geophone PVS chart when geophone_pvs is selected
                 processedData.geophone.values.length > 0 && (
                   <Box mb={10} width="100%">
