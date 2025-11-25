@@ -216,10 +216,57 @@ const Instantel2Seismograph: React.FC = () => {
 
     // Limit the number of readings to prevent stack overflow
     // Process maximum 10000 points to avoid performance issues
+    // Smart sampling: ALWAYS keep threshold violations, then sample uniformly from the rest
     const MAX_POINTS = 10000;
-    const readingsToProcess = filteredReadings.length > MAX_POINTS
-      ? filteredReadings.filter((_, index) => index % Math.ceil(filteredReadings.length / MAX_POINTS) === 0)
-      : filteredReadings;
+    let readingsToProcess: typeof filteredReadings;
+    
+    if (filteredReadings.length > MAX_POINTS) {
+      // Get thresholds from instrument settings
+      const thresholds = instrumentSettings ? {
+        alert: instrumentSettings.alert_value || 0,
+        warning: instrumentSettings.warning_value || 0,
+        shutdown: instrumentSettings.shutdown_value || 0
+      } : { alert: 0, warning: 0, shutdown: 0 };
+      
+      // Separate readings into threshold violations and regular
+      const thresholdViolations: typeof filteredReadings = [];
+      const regularReadings: typeof filteredReadings = [];
+      
+      filteredReadings.forEach(reading => {
+        const x = Math.abs(Number(reading.Longitudinal_PPV) || 0);
+        const y = Math.abs(Number(reading.Transverse_PPV) || 0);
+        const z = Math.abs(Number(reading.Vertical_PPV) || 0);
+        
+        // If any axis exceeds any threshold, add to violations (ALWAYS KEEP)
+        if (x >= thresholds.alert || y >= thresholds.alert || z >= thresholds.alert ||
+            x >= thresholds.warning || y >= thresholds.warning || z >= thresholds.warning ||
+            x >= thresholds.shutdown || y >= thresholds.shutdown || z >= thresholds.shutdown) {
+          thresholdViolations.push(reading);
+        } else {
+          regularReadings.push(reading);
+        }
+      });
+      
+      // Always keep ALL threshold violations (no limit)
+      // Sample from regular readings to fill remaining slots
+      const remainingSlots = Math.max(0, MAX_POINTS - thresholdViolations.length);
+      const sampleRate = regularReadings.length > 0 
+        ? Math.max(1, Math.ceil(regularReadings.length / remainingSlots))
+        : 1;
+      
+      const sampledRegular = regularReadings.filter((_, index) => 
+        index % sampleRate === 0
+      ).slice(0, remainingSlots);
+      
+      // Combine threshold violations and sampled regular readings, sorted by time
+      readingsToProcess = [...thresholdViolations, ...sampledRegular].sort((a, b) => {
+        const timeA = formatUTCTime(a.Time).getTime();
+        const timeB = formatUTCTime(b.Time).getTime();
+        return timeA - timeB;
+      });
+    } else {
+      readingsToProcess = filteredReadings;
+    }
 
     // Get data based on selected type
     const getDataValue = (reading: UM16368Reading, axis: 'Longitudinal_PPV' | 'Transverse_PPV' | 'Vertical_PPV' | 'Geophone_PVS') => {
@@ -346,7 +393,7 @@ const Instantel2Seismograph: React.FC = () => {
       },
       unit: getUnit()
     };
-  }, [rawData, fromDate, toDate, dataType]);
+  }, [rawData, fromDate, toDate, dataType, instrumentSettings]);
 
   useEffect(() => {
     if (rawData) {
@@ -424,8 +471,14 @@ const Instantel2Seismograph: React.FC = () => {
   const getYAxisRange = (values: number[], thresholds: any) => {
     if (values.length === 0) return { min: -0.1, max: 0.1 };
     
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    // Use loop-based approach to avoid stack overflow with large arrays
+    let minValue = values[0];
+    let maxValue = values[0];
+    for (let i = 1; i < values.length; i++) {
+      if (values[i] < minValue) minValue = values[i];
+      if (values[i] > maxValue) maxValue = values[i];
+    }
+    
     const range = maxValue - minValue;
     
     // Add 20% padding
