@@ -27,7 +27,8 @@ import {
   Person as UserIcon,
   VerifiedUser as AdminProfileIcon,
   AccountTree as ProjectIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  Payment as PaymentIcon
 } from '@mui/icons-material';
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
@@ -472,6 +473,12 @@ useEffect(() => {
                   <AdminIcon />
                 </ListItemIcon>
                 <ListItemText primary="Admin Setup" />
+              </ListItemButton>
+              <ListItemButton component={Link} to="/payment">
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <PaymentIcon />
+                </ListItemIcon>
+                <ListItemText primary="Payment" />
               </ListItemButton>
               {/* <ListItemButton component={Link} to="/seismograph">
                 <ListItemIcon sx={{ color: 'inherit' }}>

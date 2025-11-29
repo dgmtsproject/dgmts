@@ -56,6 +56,7 @@ import EditUsers from "../pages/EditUsers";
 import AddSyscomGraph from "../pages/AddSyscomGraph";
 import DynamicSeismograph from "../pages/DynamicSeismograph";
 import DeviceManagement from "../pages/DeviceManagement";
+import Payment from "../pages/Payment";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -117,6 +118,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/add-syscom-graph" element={<AddSyscomGraph />} />
         <Route path="/dynamic-seismograph" element={<DynamicSeismograph />} />
         <Route path="/device-management" element={<DeviceManagement />} />
+        <Route path="/payment" element={<Payment />} />
       </Route>
     </Routes>
   );
