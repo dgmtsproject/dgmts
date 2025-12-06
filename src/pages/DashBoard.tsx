@@ -55,6 +55,9 @@ const Dashboard: React.FC = () => {
           <Typography variant="h3" gutterBottom>
             Welcome to DGMTS Monitoring System
           </Typography>
+          <Typography variant="h5" sx={{ mb: 2, opacity: 0.9, fontStyle: 'italic' }}>
+            Integrated Monitoring from Ground to Cloud
+          </Typography>
           <Typography variant="h6">
             {userEmail ? `Logged in as ${userEmail}` : 'Welcome!'}
           </Typography>
