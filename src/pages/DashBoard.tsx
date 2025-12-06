@@ -55,9 +55,44 @@ const Dashboard: React.FC = () => {
           <Typography variant="h3" gutterBottom>
             Welcome to DGMTS Monitoring System
           </Typography>
-          <Typography variant="h5" sx={{ mb: 2, opacity: 0.9, fontStyle: 'italic' }}>
-            Integrated Monitoring from Ground to Cloud
-          </Typography>
+          <Box sx={{ 
+            my: 2.5,
+            position: 'relative',
+            width: '100%'
+          }}>
+            <Box
+              component="span"
+              sx={{
+                display: 'block',
+                width: { xs: '80px', sm: '120px' },
+                height: '2px',
+                background: `linear-gradient(90deg, transparent, ${theme.palette.primary.contrastText}, transparent)`,
+                mx: 'auto',
+                mb: 2
+              }}
+            />
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                mb: 0,
+                opacity: 0.92,
+                px: { xs: 2, sm: 4 }
+              }}
+            >
+              Integrated Monitoring from Ground to Cloud
+            </Typography>
+            <Box
+              component="span"
+              sx={{
+                display: 'block',
+                width: { xs: '80px', sm: '120px' },
+                height: '2px',
+                background: `linear-gradient(90deg, transparent, ${theme.palette.primary.contrastText}, transparent)`,
+                mx: 'auto',
+                mt: 2
+              }}
+            />
+          </Box>
           <Typography variant="h6">
             {userEmail ? `Logged in as ${userEmail}` : 'Welcome!'}
           </Typography>
