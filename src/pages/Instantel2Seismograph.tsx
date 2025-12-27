@@ -403,15 +403,52 @@ const Instantel2Seismograph: React.FC = () => {
     }
   }, [rawData]);
 
+  // Helper function to format date as YYYY-MM-DD HH:MM:SS
+  const formatDateForAPI = (date: Date | null): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Use direct API call in development, serverless function in production
-      const apiUrl = import.meta.env.DEV
-        ? 'https://imsite.dullesgeotechnical.com/api/micromate/UM16368/readings'
-        : '/api/fetchMicromateReadings?device=UM16368';
+      // Format dates for API
+      const fromDateTime = fromDate ? formatDateForAPI(fromDate) : '';
+      const toDateTime = toDate ? formatDateForAPI(toDate) : '';
+
+      // Build API URL with date parameters
+      let apiUrl: string;
+      if (import.meta.env.DEV) {
+        // Direct API call in development
+        const baseUrl = 'https://imsite.dullesgeotechnical.com/api/micromate/UM16368/readings';
+        const params = new URLSearchParams();
+        if (fromDateTime) {
+          params.append('fromdatetime', fromDateTime);
+        }
+        if (toDateTime) {
+          params.append('todatetime', toDateTime);
+        }
+        apiUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+      } else {
+        // Serverless function in production
+        const params = new URLSearchParams();
+        params.append('device', 'UM16368');
+        if (fromDateTime) {
+          params.append('fromdatetime', fromDateTime);
+        }
+        if (toDateTime) {
+          params.append('todatetime', toDateTime);
+        }
+        apiUrl = `/api/fetchMicromateReadings?${params.toString()}`;
+      }
 
       let response: Response;
       try {
