@@ -28,7 +28,6 @@ import {
   VerifiedUser as AdminProfileIcon,
   AccountTree as ProjectIcon,
   Dashboard as DashboardIcon,
-  Payment as PaymentIcon,
 } from "@mui/icons-material";
 import { useAdminContext } from "../context/AdminContext";
 import { supabase } from "../supabase";
