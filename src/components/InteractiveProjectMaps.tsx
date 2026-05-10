@@ -51,6 +51,7 @@ interface Instrument {
   instrument_name: string;
   project_id: number;
   instrument_location?: string;
+  syscom_device_id?: number | null;
   status?: 'active' | 'inactive' | 'maintenance';
 }
 
@@ -218,7 +219,7 @@ const InteractiveProjectMaps: React.FC = () => {
           // Fetch instruments for the project
           const { data: instruments, error: instrumentsError } = await supabase
             .from('instruments')
-            .select('instrument_id, instrument_name, project_id, instrument_location')
+            .select('instrument_id, instrument_name, project_id, instrument_location, syscom_device_id')
             .eq('project_id', project.id);
 
           if (projectError) {
@@ -264,11 +265,16 @@ const InteractiveProjectMaps: React.FC = () => {
   };
 
   const handleInstrumentClick = (instrument: Instrument) => {
-    // Check if user has view_data permission
-    if (!isAdmin && !permissions.view_data) {
-      console.log('User does not have view_data permission');
+    if (!isAdmin && !permissions.view_graph) {
+      console.log('User does not have view_graph permission');
       return;
     }
+
+    const projectName = projects.find(p => p.id === instrument.project_id)?.name;
+    const navState = {
+      project: { id: instrument.project_id, name: projectName },
+      instrumentId: instrument.instrument_id
+    };
 
     // Navigate to the appropriate instrument page based on instrument_id
     const instrumentRoutes: { [key: string]: string } = {
@@ -285,13 +291,24 @@ const InteractiveProjectMaps: React.FC = () => {
       'ROCKSMG-2': '/rocksmg2-seismograph'
     };
 
-    const route = instrumentRoutes[instrument.instrument_id];
+    let route = instrumentRoutes[instrument.instrument_id];
+
+    // Dynamic Syscom seismographs: numeric or custom IDs with syscom_device_id (not in static map)
+    if (!route && instrument.syscom_device_id) {
+      const idParam = encodeURIComponent(String(instrument.instrument_id));
+      route = `/dynamic-seismograph?instrument=${idParam}`;
+    }
+
+    // Tiltmeter-style IDs not using Syscom
+    if (!route && instrument.instrument_id.includes('TILT')) {
+      const tiltSuffix = instrument.instrument_id.split('-')[1];
+      if (tiltSuffix) {
+        route = `/tiltmeter-${tiltSuffix}`;
+      }
+    }
+
     if (route) {
-      navigate(route, { 
-        state: { 
-          project: { id: instrument.project_id, name: projects.find(p => p.id === instrument.project_id)?.name } 
-        } 
-      });
+      navigate(route, { state: navState });
     }
   };
 
@@ -302,7 +319,7 @@ const InteractiveProjectMaps: React.FC = () => {
   };
 
   const canAccessInstrument = (): boolean => {
-    return isAdmin || permissions.view_data;
+    return isAdmin || permissions.view_graph;
   };
 
   const getInstrumentCardStyle = (_instrument: Instrument) => {
