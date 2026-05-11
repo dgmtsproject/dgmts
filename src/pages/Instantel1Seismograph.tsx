@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import BackButton from '../components/Back';
-import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip, Alert } from '@mui/material';
 import { OpenInNew } from '@mui/icons-material';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -303,6 +303,29 @@ const Instantel1Seismograph: React.FC = () => {
       unit: getUnit()
     };
   }, [rawData, fromDate, toDate, dataType]);
+
+  /** Earliest/latest reading time in the current API payload (ignores From/To UI filters). */
+  const apiPayloadTimeBounds = useMemo(() => {
+    const readings = rawData?.MicromateReadings;
+    if (!readings?.length) return { min: null as Date | null, max: null as Date | null };
+    let minMs = Infinity;
+    let maxMs = -Infinity;
+    for (const r of readings) {
+      const t = formatUTCTime(r.Time).getTime();
+      if (!Number.isNaN(t)) {
+        minMs = Math.min(minMs, t);
+        maxMs = Math.max(maxMs, t);
+      }
+    }
+    if (minMs === Infinity) return { min: null, max: null };
+    return { min: new Date(minMs), max: new Date(maxMs) };
+  }, [rawData]);
+
+  const dateRangeExcludesAllPoints =
+    !!rawData?.MicromateReadings?.length &&
+    processedData.x.values.length === 0 &&
+    !!apiPayloadTimeBounds.min &&
+    !!apiPayloadTimeBounds.max;
 
   useEffect(() => {
     if (rawData) {
@@ -1075,6 +1098,30 @@ const Instantel1Seismograph: React.FC = () => {
             <Box mb={4}>
               <Typography color="error">{error}</Typography>
             </Box>
+          )}
+
+          {dateRangeExcludesAllPoints && (
+            <Alert
+              severity="warning"
+              sx={{ mb: 3 }}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    setFromDate(apiPayloadTimeBounds.min);
+                    setToDate(apiPayloadTimeBounds.max);
+                  }}
+                >
+                  Use data range
+                </Button>
+              }
+            >
+              No readings fall in the selected <strong>From</strong> / <strong>To</strong> window, so the charts are empty even though data loaded.
+              This dataset spans{' '}
+              {apiPayloadTimeBounds.min.toLocaleString()} — {apiPayloadTimeBounds.max.toLocaleString()}.
+              Widen the range or click &quot;Use data range&quot;.
+            </Alert>
           )}
 
           {rawData && rawData.MicromateReadings.length > 0 && (
