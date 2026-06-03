@@ -31,6 +31,20 @@ import {
 } from "@mui/icons-material";
 import { useAdminContext } from "../context/AdminContext";
 import { supabase } from "../supabase";
+import {
+  getInstrumentGraphRoute,
+  getInstrumentGraphLabel,
+} from "../utils/instrumentRoutes";
+
+const ANC_DAR_BC_PROJECT_ID = 24429;
+const YELLOW_LINE_ANC_PROJECT_ID = 25304;
+
+interface SidebarInstrumentLink {
+  instrument_id: string;
+  instrument_name: string;
+  project_id: number;
+  route: string;
+}
 
 const NavSidebar: React.FC = () => {
   const theme = useTheme();
@@ -49,6 +63,12 @@ const NavSidebar: React.FC = () => {
     dgmtsTesting: "DGMTS Testing",
     ancDarBc: "ANC DAR-BC",
     yellowLineAnc: "Yellow Line ANC",
+  });
+  const [projectInstrumentLinks, setProjectInstrumentLinks] = useState<
+    Record<number, SidebarInstrumentLink[]>
+  >({
+    [ANC_DAR_BC_PROJECT_ID]: [],
+    [YELLOW_LINE_ANC_PROJECT_ID]: [],
   });
   const { isAdmin, setIsAdmin, userEmail, permissions } = useAdminContext();
 
@@ -172,12 +192,73 @@ const NavSidebar: React.FC = () => {
       }
     };
 
+    const fetchSidebarInstruments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("instruments")
+          .select(
+            "instrument_id, instrument_name, project_id, syscom_device_id"
+          )
+          .in("project_id", [
+            ANC_DAR_BC_PROJECT_ID,
+            YELLOW_LINE_ANC_PROJECT_ID,
+          ])
+          .order("instrument_name", { ascending: true });
+
+        if (error) {
+          console.error("Error fetching sidebar instruments:", error);
+          return;
+        }
+
+        const linksByProject: Record<number, SidebarInstrumentLink[]> = {
+          [ANC_DAR_BC_PROJECT_ID]: [],
+          [YELLOW_LINE_ANC_PROJECT_ID]: [],
+        };
+
+        data?.forEach((instrument) => {
+          const route = getInstrumentGraphRoute(instrument);
+          if (!route) return;
+
+          linksByProject[instrument.project_id]?.push({
+            instrument_id: instrument.instrument_id,
+            instrument_name: getInstrumentGraphLabel(instrument),
+            project_id: instrument.project_id,
+            route,
+          });
+        });
+
+        setProjectInstrumentLinks(linksByProject);
+      } catch (err) {
+        console.error("Error fetching sidebar instruments:", err);
+      }
+    };
+
     checkProjectAccess();
     checkDgmtsTestingAccess();
     checkAncDarBcAccess();
     checkYellowLineAncAccess();
     fetchProjectNames();
+    fetchSidebarInstruments();
   }, [userEmail, isAdmin]);
+
+  const renderProjectInstrumentLinks = (
+    projectId: number,
+    projectLabel: string
+  ) =>
+    (projectInstrumentLinks[projectId] ?? []).map((instrument) => (
+      <ListItemButton
+        key={instrument.instrument_id}
+        component={Link}
+        to={instrument.route}
+        state={{
+          project: { id: projectId, name: projectLabel },
+          instrumentId: instrument.instrument_id,
+        }}
+        sx={{ pl: 4 }}
+      >
+        <ListItemText primary={instrument.instrument_name} />
+      </ListItemButton>
+    ));
 
   const handleGraphsClick = () => {
     setOpenGraphs(!openGraphs);
@@ -421,41 +502,10 @@ const NavSidebar: React.FC = () => {
                           disablePadding
                           sx={{ bgcolor: "#002366" }}
                         >
-                          {/* <ListItemButton
-                              // component={Link}
-                              // to="/tiltmeter"
-                              sx={{ pl: 4 }}
-                            >
-                              <ListItemText primary="Tiltmeter" />
-                            </ListItemButton> */}
-                          <ListItemButton
-                            component={Link}
-                            to="/anc-seismograph"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Seismograph" />
-                          </ListItemButton>
-                          <ListItemButton
-                            component={Link}
-                            to="/smg3-seismograph"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Seismograph 2 (SMG-3)" />
-                          </ListItemButton>
-                          <ListItemButton
-                            component={Link}
-                            to="/tiltmeter-142939"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Tiltmeter-Node-142939" />
-                          </ListItemButton>
-                          <ListItemButton
-                            component={Link}
-                            to="/tiltmeter-143969"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Tiltmeter-Node-143969" />
-                          </ListItemButton>
+                          {renderProjectInstrumentLinks(
+                            ANC_DAR_BC_PROJECT_ID,
+                            projectNames.ancDarBc
+                          )}
                         </List>
                       </Collapse>
                     </>
@@ -484,20 +534,10 @@ const NavSidebar: React.FC = () => {
                           disablePadding
                           sx={{ bgcolor: "#002366" }}
                         >
-                          <ListItemButton
-                            component={Link}
-                            to="/rocksmg1-seismograph"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Rock Seismograph 1 (ROCKSMG-1)" />
-                          </ListItemButton>
-                          <ListItemButton
-                            component={Link}
-                            to="/rocksmg2-seismograph"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Rock Seismograph 2 (ROCKSMG-2)" />
-                          </ListItemButton>
+                          {renderProjectInstrumentLinks(
+                            YELLOW_LINE_ANC_PROJECT_ID,
+                            projectNames.yellowLineAnc
+                          )}
                         </List>
                       </Collapse>
                     </>

@@ -8,6 +8,7 @@ import { Box, Typography, Paper, Card, CardContent, Chip, Button, Grid, Tooltip,
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
+import { getInstrumentGraphRoute } from '../utils/instrumentRoutes';
 
 // Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -276,36 +277,7 @@ const InteractiveProjectMaps: React.FC = () => {
       instrumentId: instrument.instrument_id
     };
 
-    // Navigate to the appropriate instrument page based on instrument_id
-    const instrumentRoutes: { [key: string]: string } = {
-      'SMG1': '/background',
-      'SMG-1': '/dynamic-seismograph?instrument=SMG-1',
-      'SMG-2': '/anc-seismograph',
-      'SMG-3': '/smg3-seismograph',
-      'TILT-142939': '/tiltmeter-142939',
-      'TILT-143969': '/tiltmeter-143969',
-      'TILTMETER-30846': '/tiltmeter-30846',
-      'Instantel 1': '/instantel1-seismograph',
-      'Instantel 2': '/instantel2-seismograph',
-      'ROCKSMG-1': '/rocksmg1-seismograph',
-      'ROCKSMG-2': '/rocksmg2-seismograph'
-    };
-
-    let route = instrumentRoutes[instrument.instrument_id];
-
-    // Dynamic Syscom seismographs: numeric or custom IDs with syscom_device_id (not in static map)
-    if (!route && instrument.syscom_device_id) {
-      const idParam = encodeURIComponent(String(instrument.instrument_id));
-      route = `/dynamic-seismograph?instrument=${idParam}`;
-    }
-
-    // Tiltmeter-style IDs not using Syscom
-    if (!route && instrument.instrument_id.includes('TILT')) {
-      const tiltSuffix = instrument.instrument_id.split('-')[1];
-      if (tiltSuffix) {
-        route = `/tiltmeter-${tiltSuffix}`;
-      }
-    }
+    const route = getInstrumentGraphRoute(instrument);
 
     if (route) {
       navigate(route, { state: navState });

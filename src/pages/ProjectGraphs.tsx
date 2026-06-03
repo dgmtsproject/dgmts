@@ -123,7 +123,7 @@ const ProjectGraphs: React.FC = () => {
         const { data: allProjects, error: projectsError } = await supabase
           .from('Projects')
           .select('id, name')
-          .in('id', [24637, 20151, 24429]);
+          .in('id', [24637, 20151, 24429, 25304]);
 
         if (projectsError) throw projectsError;
         if (!allProjects) return;
