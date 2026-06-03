@@ -1434,7 +1434,9 @@ const Instantel2Seismograph: React.FC = () => {
             </Alert>
           )}
 
-          {dateRangeExcludesAllPoints && (
+          {dateRangeExcludesAllPoints &&
+            apiPayloadTimeBounds.min &&
+            apiPayloadTimeBounds.max && (
             <Alert
               severity="warning"
               sx={{ mb: 3 }}
@@ -1443,8 +1445,12 @@ const Instantel2Seismograph: React.FC = () => {
                   color="inherit"
                   size="small"
                   onClick={() => {
-                    setFromDate(apiPayloadTimeBounds.min);
-                    setToDate(apiPayloadTimeBounds.max);
+                    const min = apiPayloadTimeBounds.min;
+                    const max = apiPayloadTimeBounds.max;
+                    if (min && max) {
+                      setFromDate(min);
+                      setToDate(max);
+                    }
                   }}
                 >
                   Use data range
