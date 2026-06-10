@@ -111,6 +111,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   // Prepare instrument data
   const instrumentData: any = {
     instrument_id: instrumentId,
+    instrument_id_second: instrumentId,
     instrument_name: instrumentName,
     instrument_location: instrumentLocation || null,
     project_id: project.id,
@@ -156,7 +157,15 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   if (error) {
     console.error('Error adding instrument:', error.message);
-    toast.error('Error adding instrument!');
+    if (error.code === '23505') {
+      if (error.message.includes('instrument_id_second')) {
+        toast.error('Instrument ID already exists. Please choose a different Instrument ID.');
+      } else {
+        toast.error('Instrument ID already exists! Please use a different ID.');
+      }
+    } else {
+      toast.error('Error adding instrument!');
+    }
   } else {
     console.log('Instrument added successfully:', data);
     toast.success('Instrument added successfully!');

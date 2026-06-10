@@ -15,7 +15,9 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Tabs,
+    Tab
 } from '@mui/material';
 import logo from '../assets/logo.jpg';
 import HeaNavLogo from '../components/HeaNavLogo';
@@ -57,13 +59,24 @@ const EditInstrument: React.FC = () => {
     const [ShutEmailsForAlert, setShutEmailsForAlert] = useState<string[]>(
         parseEmails(instrument?.shutdown_emails)
     );
-    const [instrumentId, setInstrumentId] = useState(instrument?.instrument_id || '');
+    const [instrumentIdSecond, setInstrumentIdSecond] = useState(
+        instrument?.instrument_id_second || instrument?.instrument_id || ''
+    );
     const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
     const [instrumentLocation, setInstrumentLocation] = useState(instrument?.instrument_location || '');
     const [serialNumber, setSerialNumber] = useState(instrument?.sno || '');
     const [alertValue, setAlertValue] = useState<number | string>(instrument?.alert_value || '');
     const [warningValue, setWarningValue] = useState<number | string>(instrument?.warning_value || '');
     const [shutdownValue, setShutdownValue] = useState<number | string>(instrument?.shutdown_value || '');
+    const [alertTab, setAlertTab] = useState(0);
+
+    const [durationSeconds, setDurationSeconds] = useState<number | string>(instrument?.duration_seconds || '');
+    const [durationAlertValue, setDurationAlertValue] = useState<number | string>(instrument?.duration_alert_value || '');
+    const [durationWarningValue, setDurationWarningValue] = useState<number | string>(instrument?.duration_warning_value || '');
+    const [durationShutdownValue, setDurationShutdownValue] = useState<number | string>(instrument?.duration_shutdown_value || '');
+    const [DurationEmailsForAlert, setDurationEmailsForAlert] = useState<string[]>(parseEmails(instrument?.duration_alert_emails));
+    const [DurationEmailsForWarning, setDurationEmailsForWarning] = useState<string[]>(parseEmails(instrument?.duration_warning_emails));
+    const [DurationShutEmailsForAlert, setDurationShutEmailsForAlert] = useState<string[]>(parseEmails(instrument?.duration_shutdown_emails));
 
     // Restrict access to only admins
     useEffect(() => {
@@ -79,13 +92,20 @@ const EditInstrument: React.FC = () => {
             setEmailsForAlert(parseEmails(instrument.alert_emails));
             setEmailsForWarning(parseEmails(instrument.warning_emails));
             setShutEmailsForAlert(parseEmails(instrument.shutdown_emails));
-            setInstrumentId(instrument.instrument_id || '');
+            setInstrumentIdSecond(instrument.instrument_id_second || instrument.instrument_id || '');
             setInstrumentName(instrument.instrument_name || '');
             setInstrumentLocation(instrument.instrument_location || '');
             setSerialNumber(instrument.sno || '');
             setAlertValue(instrument.alert_value || '');
             setWarningValue(instrument.warning_value || '');
             setShutdownValue(instrument.shutdown_value || '');
+            setDurationSeconds(instrument.duration_seconds || '');
+            setDurationAlertValue(instrument.duration_alert_value || '');
+            setDurationWarningValue(instrument.duration_warning_value || '');
+            setDurationShutdownValue(instrument.duration_shutdown_value || '');
+            setDurationEmailsForAlert(parseEmails(instrument.duration_alert_emails));
+            setDurationEmailsForWarning(parseEmails(instrument.duration_warning_emails));
+            setDurationShutEmailsForAlert(parseEmails(instrument.duration_shutdown_emails));
         } else {
             fetchProjects();
         }
@@ -136,10 +156,24 @@ const EditInstrument: React.FC = () => {
         const filteredWarningEmails = EmailsForWarning.filter(email => email.trim() !== '');
         const filteredShutdownEmails = ShutEmailsForAlert.filter(email => email.trim() !== '');
 
+        const filteredDurationAlertEmails = DurationEmailsForAlert.filter(email => email.trim() !== '');
+        const filteredDurationWarningEmails = DurationEmailsForWarning.filter(email => email.trim() !== '');
+        const filteredDurationShutdownEmails = DurationShutEmailsForAlert.filter(email => email.trim() !== '');
+
         const emailData = {
             alert_emails: filteredAlertEmails.length > 0 ? filteredAlertEmails : null,
             warning_emails: filteredWarningEmails.length > 0 ? filteredWarningEmails : null,
             shutdown_emails: filteredShutdownEmails.length > 0 ? filteredShutdownEmails : null,
+        };
+
+        const durationData = {
+            duration_seconds: durationSeconds ? Number(durationSeconds) : null,
+            duration_alert_value: durationAlertValue ? Number(durationAlertValue) : null,
+            duration_warning_value: durationWarningValue ? Number(durationWarningValue) : null,
+            duration_shutdown_value: durationShutdownValue ? Number(durationShutdownValue) : null,
+            duration_alert_emails: filteredDurationAlertEmails.length > 0 ? filteredDurationAlertEmails : null,
+            duration_warning_emails: filteredDurationWarningEmails.length > 0 ? filteredDurationWarningEmails : null,
+            duration_shutdown_emails: filteredDurationShutdownEmails.length > 0 ? filteredDurationShutdownEmails : null,
         };
 
         if (instrument) {
@@ -151,7 +185,7 @@ const EditInstrument: React.FC = () => {
             const { error } = await supabase
                 .from('instruments')
                 .update({
-                    instrument_id: instrumentId,
+                    instrument_id_second: instrumentIdSecond,
                     instrument_name: instrumentName,
                     instrument_location: instrumentLocation || null,
                     sno: serialNumber,
@@ -162,12 +196,15 @@ const EditInstrument: React.FC = () => {
                     alert_value: alertValue ? Number(alertValue) : null,
                     warning_value: warningValue ? Number(warningValue) : null,
                     shutdown_value: shutdownValue ? Number(shutdownValue) : null,
+                    ...durationData,
                 })
                 .eq('instrument_id', instrument.instrument_id);
 
             if (error) {
                 console.error('Error updating instrument:', error.message);
-                if (error.code === '23505' || error.message.includes('duplicate key value violates unique constraint')) {
+                if (error.code === '23505' && error.message.includes('instrument_id_second')) {
+                    toast.error('Instrument ID already exists. Please choose a different Instrument ID.');
+                } else if (error.code === '23505' || error.message.includes('duplicate key value violates unique constraint')) {
                     toast.error('Instrument ID already exists! Please use a different ID.');
                 } else {
                     toast.error('Error updating instrument!');
@@ -187,7 +224,8 @@ const EditInstrument: React.FC = () => {
             
             const { error } = await supabase.from('instruments').insert([
                 {
-                    instrument_id: instrumentId,
+                    instrument_id: instrumentIdSecond,
+                    instrument_id_second: instrumentIdSecond,
                     instrument_name: instrumentName,
                     sno: serialNumber,
                     alert_value: alertValue ? Number(alertValue) : null,
@@ -197,6 +235,7 @@ const EditInstrument: React.FC = () => {
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
                     shutdown_emails: emailData.shutdown_emails,
+                    ...durationData,
                 },
             ]);
 
@@ -244,6 +283,34 @@ const EditInstrument: React.FC = () => {
         updatedEmails.splice(index, 1);
         setShutEmailsForAlert(updatedEmails);
     };
+
+    const renderEmailFields = (
+        emails: string[],
+        setEmails: React.Dispatch<React.SetStateAction<string[]>>,
+        labelPrefix: string,
+        onRemove: (index: number) => void,
+        onAdd: () => void
+    ) => (
+        <Box display="flex" flexDirection="column" gap={1} width="100%">
+            {emails.map((email, i) => (
+                <Box key={i} display="flex" alignItems="center" gap={1} width="100%">
+                    <TextField
+                        label={`${labelPrefix} Email ${i + 1} (optional)`}
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                            const updatedEmails = [...emails];
+                            updatedEmails[i] = e.target.value;
+                            setEmails(updatedEmails);
+                        }}
+                        fullWidth
+                    />
+                    <Button size="small" color="error" onClick={() => onRemove(i)}>❌</Button>
+                </Box>
+            ))}
+            <Button variant="outlined" onClick={onAdd}>Add {labelPrefix} Email</Button>
+        </Box>
+    );
 
     if (!project && !instrument) {
         return (
@@ -350,8 +417,8 @@ const EditInstrument: React.FC = () => {
                                 <TextField
                                     label="Instrument ID"
                                     required
-                                    value={instrumentId}
-                                    onChange={(e) => setInstrumentId(e.target.value)}
+                                    value={instrumentIdSecond}
+                                    onChange={(e) => setInstrumentIdSecond(e.target.value)}
                                     fullWidth
                                 />
                                 <TextField
@@ -376,7 +443,14 @@ const EditInstrument: React.FC = () => {
                                 />
                             </Box>
 
-                            {/* Alert Values */}
+                            <Tabs value={alertTab} onChange={(_, v) => setAlertTab(v)} sx={{ width: '100%', mb: 2 }}>
+                                <Tab label="Instant Threshold Alerts" />
+                                <Tab label="Duration Achieved Alerts" />
+                            </Tabs>
+
+                            {alertTab === 0 && (
+                            <>
+                            {/* Instant Alert Values */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
                                     label="Alert Value (optional)"
@@ -413,7 +487,7 @@ const EditInstrument: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
-                            {/* Warning Values */}
+                            {/* Warning Values - instant */}
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
                                 <TextField
                                     label="Warning Value (optional)"
@@ -487,6 +561,74 @@ const EditInstrument: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
+                            </>
+                            )}
+
+                            {alertTab === 1 && (
+                            <>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, width: '100%' }}>
+                                Send a separate email when vibration stays above a threshold for the configured duration (seconds).
+                            </Typography>
+                            <Box width="100%" mb={2}>
+                                <TextField
+                                    label="Duration (seconds)"
+                                    type="number"
+                                    value={durationSeconds}
+                                    onChange={(e) => setDurationSeconds(e.target.value)}
+                                    fullWidth
+                                    helperText="How long the value must remain above threshold before alerting"
+                                />
+                            </Box>
+                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+                                <TextField
+                                    label="Duration Alert Value (optional)"
+                                    type="number"
+                                    value={durationAlertValue}
+                                    onChange={(e) => setDurationAlertValue(e.target.value)}
+                                    fullWidth
+                                />
+                                {renderEmailFields(
+                                    DurationEmailsForAlert,
+                                    setDurationEmailsForAlert,
+                                    'Duration Alert',
+                                    (i) => setDurationEmailsForAlert(DurationEmailsForAlert.filter((_, idx) => idx !== i)),
+                                    () => setDurationEmailsForAlert([...DurationEmailsForAlert, ''])
+                                )}
+                            </Box>
+                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+                                <TextField
+                                    label="Duration Warning Value (optional)"
+                                    type="number"
+                                    value={durationWarningValue}
+                                    onChange={(e) => setDurationWarningValue(e.target.value)}
+                                    fullWidth
+                                />
+                                {renderEmailFields(
+                                    DurationEmailsForWarning,
+                                    setDurationEmailsForWarning,
+                                    'Duration Warning',
+                                    (i) => setDurationEmailsForWarning(DurationEmailsForWarning.filter((_, idx) => idx !== i)),
+                                    () => setDurationEmailsForWarning([...DurationEmailsForWarning, ''])
+                                )}
+                            </Box>
+                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} width="100%" mb={2}>
+                                <TextField
+                                    label="Duration Shutdown Value (optional)"
+                                    type="number"
+                                    value={durationShutdownValue}
+                                    onChange={(e) => setDurationShutdownValue(e.target.value)}
+                                    fullWidth
+                                />
+                                {renderEmailFields(
+                                    DurationShutEmailsForAlert,
+                                    setDurationShutEmailsForAlert,
+                                    'Duration Shutdown',
+                                    (i) => setDurationShutEmailsForAlert(DurationShutEmailsForAlert.filter((_, idx) => idx !== i)),
+                                    () => setDurationShutEmailsForAlert([...DurationShutEmailsForAlert, ''])
+                                )}
+                            </Box>
+                            </>
+                            )}
 
                             {/* Submit Button */}
                             <Box mt={4} textAlign="center">

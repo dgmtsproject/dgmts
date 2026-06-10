@@ -238,6 +238,7 @@ const AddSyscomGraph: React.FC = () => {
         .from('instruments')
         .insert([{
           instrument_id: instrumentId,
+          instrument_id_second: instrumentId,
           instrument_name: instrumentName,
           instrument_location: instrumentLocation || null,
           project_id: selectedProject,

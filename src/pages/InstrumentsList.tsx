@@ -24,6 +24,14 @@ import BackButton from '../components/Back';
 type Instrument = {
   id: number;
   instrument_id: string;
+  instrument_id_second?: string;
+  duration_seconds?: number | null;
+  duration_alert_value?: number | null;
+  duration_warning_value?: number | null;
+  duration_shutdown_value?: number | null;
+  x_y_z_duration_alert_values?: { x: number; y: number; z: number } | null;
+  x_y_z_duration_warning_values?: { x: number; y: number; z: number } | null;
+  x_y_z_duration_shutdown_values?: { x: number; y: number; z: number } | null;
   instrument_name: string;
   alert_value: number | null;
   warning_value: number | null;
@@ -113,6 +121,7 @@ const InstrumentsList: React.FC = () => {
         .from('instruments')
         .select(`
           instrument_id,
+          instrument_id_second,
           instrument_name,
           instrument_location,
           alert_value,
@@ -126,7 +135,14 @@ const InstrumentsList: React.FC = () => {
           syscom_device_id,
           alert_emails,
           warning_emails,
-          shutdown_emails
+          shutdown_emails,
+          duration_seconds,
+          duration_alert_value,
+          duration_warning_value,
+          duration_shutdown_value,
+          x_y_z_duration_alert_values,
+          x_y_z_duration_warning_values,
+          x_y_z_duration_shutdown_values
         `)
         .eq('project_id', projectId)
         .order('sno', { ascending: true });
@@ -185,7 +201,30 @@ const InstrumentsList: React.FC = () => {
     };
   };
 
-const handleDeleteInstrument = async (instrumentId: string) => {  
+  const formatDurationValues = (instrument: Instrument) => {
+    const isTiltmeter = instrument.instrument_id === 'TILT-142939' || instrument.instrument_id === 'TILT-143969';
+
+    if (!isTiltmeter) {
+      return {
+        alert: instrument.duration_alert_value ?? '-',
+        warning: instrument.duration_warning_value ?? '-',
+        shutdown: instrument.duration_shutdown_value ?? '-',
+      };
+    }
+
+    const formatXYZ = (values: { x: number; y: number; z: number } | null) => {
+      if (!values) return '-';
+      return `X:${values.x}, Y:${values.y}, Z:${values.z}`;
+    };
+
+    return {
+      alert: formatXYZ(instrument.x_y_z_duration_alert_values || null),
+      warning: formatXYZ(instrument.x_y_z_duration_warning_values || null),
+      shutdown: formatXYZ(instrument.x_y_z_duration_shutdown_values || null),
+    };
+  };
+
+const handleDeleteInstrument = async (instrumentId: string) => {
   console.log('Deleting instrument with ID:', instrumentId);
 
   try {
@@ -327,23 +366,27 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Alert Value</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Warning Value</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Shutdown Value</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Duration (s)</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Dur. Alert</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Dur. Warning</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Dur. Shutdown</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={7} align="center">Loading instruments...</TableCell>
+                      <TableCell colSpan={11} align="center">Loading instruments...</TableCell>
                     </TableRow>
                   ) : instrumentsData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} align="center">No instruments found for this project</TableCell>
+                      <TableCell colSpan={11} align="center">No instruments found for this project</TableCell>
                     </TableRow>
                   ) : (
                     instrumentsData.map((instrument) => (
                       <TableRow key={instrument.id} sx={{ backgroundColor: '#fff' }}>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
-                        <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id_second || instrument.instrument_id}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
                           {instrument.instrument_name}
                         </TableCell>
@@ -364,6 +407,16 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                             const values = formatXYZValues(instrument);
                             return values.shutdown;
                           })()}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>{instrument.duration_seconds ?? '-'}</TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {formatDurationValues(instrument).alert}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {formatDurationValues(instrument).warning}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          {formatDurationValues(instrument).shutdown}
                         </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

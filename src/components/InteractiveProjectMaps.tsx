@@ -49,6 +49,7 @@ interface ProjectLocation {
 
 interface Instrument {
   instrument_id: string;
+  instrument_id_second?: string;
   instrument_name: string;
   project_id: number;
   instrument_location?: string;
@@ -220,7 +221,7 @@ const InteractiveProjectMaps: React.FC = () => {
           // Fetch instruments for the project
           const { data: instruments, error: instrumentsError } = await supabase
             .from('instruments')
-            .select('instrument_id, instrument_name, project_id, instrument_location, syscom_device_id')
+            .select('instrument_id, instrument_id_second, instrument_name, project_id, instrument_location, syscom_device_id')
             .eq('project_id', project.id);
 
           if (projectError) {
@@ -478,7 +479,7 @@ const InteractiveProjectMaps: React.FC = () => {
                           {instrument.instrument_name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          ID: {instrument.instrument_id}
+                          ID: {instrument.instrument_id_second || instrument.instrument_id}
                         </Typography>
                         {instrument.instrument_location && (
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -587,7 +588,7 @@ const InteractiveProjectMaps: React.FC = () => {
                             {instrument.instrument_name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            ID: {instrument.instrument_id}
+                            ID: {instrument.instrument_id_second || instrument.instrument_id}
                           </Typography>
                           {instrument.instrument_location && (
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

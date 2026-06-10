@@ -107,7 +107,7 @@ const Alarms: React.FC = () => {
         // Fetch all instruments at once
         const { data: instrumentsData, error: instrumentsError } = await supabase
           .from('instruments')
-          .select('instrument_id, instrument_name, instrument_location, sno, project_id')
+          .select('instrument_id, instrument_id_second, instrument_name, instrument_location, sno, project_id')
           .in('instrument_id', instrumentIds);
 
         if (instrumentsError) {
@@ -159,7 +159,7 @@ const Alarms: React.FC = () => {
 
               return {
                 id: alert.id,
-                instrument_id: alert.instrument_id,
+                instrument_id: instrument.instrument_id_second || alert.instrument_id,
                 node_id: alert.node_id,
                 timestamp: alert.timestamp,
                 alert_type: alert.alert_type,
