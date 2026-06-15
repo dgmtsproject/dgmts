@@ -1,4 +1,4 @@
-import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
+import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from "../utils/graphZones";
 
 interface ChartData {
   data: any[];
