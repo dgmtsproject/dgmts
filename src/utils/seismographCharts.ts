@@ -31,10 +31,16 @@ interface Project {
 
 interface Instrument {
   instrument_id: string;
+  instrument_id_second?: string;
   instrument_name: string;
   project_id: number;
   instrument_location?: string;
 }
+
+export const getDisplayInstrumentId = (
+  instrument: Pick<Instrument, 'instrument_id' | 'instrument_id_second'> | null | undefined,
+  fallbackId = 'Instrument'
+): string => instrument?.instrument_id_second || instrument?.instrument_id || fallbackId;
 
 export const createSeismographChartData = (
   data: ProcessedData,
@@ -139,6 +145,7 @@ export const createSeismographChartData = (
     ];
 
   const currentInstrument = availableInstruments.find(inst => inst.instrument_id === instrumentId);
+  const displayInstrumentId = getDisplayInstrumentId(currentInstrument, instrumentId);
   
   const chartLayout = {
     title: { 
@@ -149,7 +156,7 @@ export const createSeismographChartData = (
   },
     xaxis: {
       title: { 
-        text: `Time<br><span style="font-size:12px;color:#666;">${instrumentId}</span>`, 
+        text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`, 
         font: { size: 18, weight: 700, color: '#374151', family: 'Arial, sans-serif' },
         standoff: 20
       },
@@ -379,6 +386,7 @@ export const createSeismographCombinedChartData = (
   ];
 
   const currentInstrument = availableInstruments.find(inst => inst.instrument_id === instrumentId);
+  const displayInstrumentId = getDisplayInstrumentId(currentInstrument, instrumentId);
   
   const chartLayout = {
     title: { 
@@ -389,7 +397,7 @@ export const createSeismographCombinedChartData = (
     },
     xaxis: {
       title: { 
-        text: `Time<br><span style="font-size:12px;color:#666;">${instrumentId}</span>`, 
+        text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`, 
         font: { size: 18, weight: 700, color: '#374151', family: 'Arial, sans-serif' },
         standoff: 20
       },
