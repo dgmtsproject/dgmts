@@ -5,6 +5,7 @@ import BackButton from "../components/Back";
 import MainContentWrapper from "../components/MainContentWrapper";
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
+import { isInstrumentActive } from '../utils/instrumentActive';
 import {
   FormControl,
   InputLabel,
@@ -55,7 +56,7 @@ const ProjectGraphs: React.FC = () => {
       // Fetch all instruments with their project information
       const { data: instruments, error: instrumentsError } = await supabase
         .from('instruments')
-        .select('instrument_id, instrument_name, project_id, syscom_device_id');
+        .select('instrument_id, instrument_name, project_id, syscom_device_id, is_active');
 
       if (instrumentsError) throw instrumentsError;
 
@@ -63,6 +64,10 @@ const ProjectGraphs: React.FC = () => {
       const dynamicGraphs: Record<number, GraphOption[]> = {};
       
       instruments?.forEach(instrument => {
+        if (!isInstrumentActive(instrument.is_active)) {
+          return;
+        }
+
         const projectId = instrument.project_id;
         if (!dynamicGraphs[projectId]) {
           dynamicGraphs[projectId] = [];

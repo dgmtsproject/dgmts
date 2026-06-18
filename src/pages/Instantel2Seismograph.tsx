@@ -11,6 +11,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
+import { useInstrumentActiveGuard } from '../hooks/useInstrumentActiveGuard';
 
 // Utility function to format time without timezone conversion
 const formatUTCTime = (timeString: string): Date => {
@@ -86,6 +87,7 @@ const Instantel2Seismograph: React.FC = () => {
   const [project, setProject] = useState<Project | null>(location.state?.project || null);
   const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   const [dataType, setDataType] = useState<DataType>('ppv');
+  const { isInactive, checking: checkingActiveStatus } = useInstrumentActiveGuard(INSTRUMENT_ID);
 
   // Fetch instrument settings and project info on component mount
   useEffect(() => {
@@ -448,6 +450,11 @@ const Instantel2Seismograph: React.FC = () => {
   };
 
   const fetchData = async () => {
+    if (isInactive) {
+      setError('This instrument is inactive. Enable it from the instruments list to load data.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -1394,11 +1401,16 @@ const Instantel2Seismograph: React.FC = () => {
               <Button 
                 variant="contained" 
                 onClick={fetchData}
-                disabled={loading}
+                disabled={loading || isInactive || checkingActiveStatus}
                 sx={{ height: 40 }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Load Data'}
               </Button>
+              {isInactive && (
+                <Alert severity="warning" sx={{ flex: '1 1 100%' }}>
+                  This instrument is inactive. Data loading and alerts are paused. Set status to Active in the instruments list to resume.
+                </Alert>
+              )}
               {rawData && rawData.UM16368Readings.length > 0 && (
                 <Button 
                   variant="outlined" 

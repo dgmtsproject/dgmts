@@ -119,6 +119,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     alert_emails: filteredAlertEmails.length > 0 ? filteredAlertEmails : null,
     warning_emails: filteredWarningEmails.length > 0 ? filteredWarningEmails : null,
     shutdown_emails: filteredShutdownEmails.length > 0 ? filteredShutdownEmails : null,
+    is_active: true,
   };
 
   if (isTiltmeter) {

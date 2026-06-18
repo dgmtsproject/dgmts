@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 import HeaNavLogo from '../components/HeaNavLogo';
 import MainContentWrapper from '../components/MainContentWrapper';
 import BackButton from '../components/Back';
-import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip, Alert } from '@mui/material';
 import { OpenInNew } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createSeismographChartData, createSeismographCombinedChartData, getDisplayInstrumentId } from '../utils/seismographCharts';
+import { useInstrumentActiveGuard } from '../hooks/useInstrumentActiveGuard';
 
 interface InstrumentSettings {
   alert_value: number;
@@ -49,6 +50,7 @@ const DynamicSeismograph: React.FC = () => {
 
   // Get instrument ID from URL params or state
   const instrumentId = new URLSearchParams(location.search).get('instrument') || location.state?.instrumentId;
+  const { isInactive, checking: checkingActiveStatus } = useInstrumentActiveGuard(instrumentId || '');
 
   useEffect(() => {
     if (!permissions.view_graph) {
@@ -296,6 +298,11 @@ const DynamicSeismograph: React.FC = () => {
   }, [rawData]);
 
   const fetchData = async () => {
+    if (isInactive) {
+      setError('This instrument is inactive. Enable it from the instruments list to load data.');
+      return;
+    }
+
     if (!fromDate || !toDate || !syscomDeviceId) {
       setError('Please enter a Syscom Device ID');
       return;
@@ -728,11 +735,16 @@ const DynamicSeismograph: React.FC = () => {
               <Button 
                 variant="contained" 
                 onClick={fetchData}
-                disabled={loading || !fromDate || !toDate || !syscomDeviceId}
+                disabled={loading || isInactive || checkingActiveStatus || !fromDate || !toDate || !syscomDeviceId}
                 sx={{ height: 40 }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Load Data'}
               </Button>
+              {isInactive && (
+                <Alert severity="warning" sx={{ flex: '1 1 100%' }}>
+                  This instrument is inactive. Data loading and alerts are paused. Set status to Active in the instruments list to resume.
+                </Alert>
+              )}
             </Stack>
           </LocalizationProvider>
 

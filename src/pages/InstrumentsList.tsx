@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button,
   FormControl, InputLabel, Select, MenuItem,
-  Typography, Box
+  Typography, Box, Chip
 } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -19,6 +19,7 @@ import { useAdminContext } from '../context/AdminContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BackButton from '../components/Back';
+import { isInstrumentActive } from '../utils/instrumentActive';
 
 
 type Instrument = {
@@ -46,6 +47,7 @@ type Instrument = {
   alert_emails?: string[];
   warning_emails?: string[];
   shutdown_emails?: string[];
+  is_active?: boolean | null;
 };
 
 type Project = {
@@ -62,7 +64,8 @@ const InstrumentsList: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(location.state?.project || null);
   const [loading, setLoading] = useState(false);
 
- const [openDialogId, setOpenDialogId] = useState<string | null>(null); 
+ const [openDialogId, setOpenDialogId] = useState<string | null>(null);
+ const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
 
 
 
@@ -142,7 +145,8 @@ const InstrumentsList: React.FC = () => {
           duration_shutdown_value,
           x_y_z_duration_alert_values,
           x_y_z_duration_warning_values,
-          x_y_z_duration_shutdown_values
+          x_y_z_duration_shutdown_values,
+          is_active
         `)
         .eq('project_id', projectId)
         .order('sno', { ascending: true });
@@ -174,6 +178,37 @@ const InstrumentsList: React.FC = () => {
       navigate('/edit-tiltmeter-instrument', { state: { instrument } });
     } else {
       navigate('/edit-instrument', { state: { instrument } });
+    }
+  };
+
+  const handleStatusChange = async (instrumentId: string, makeActive: boolean) => {
+    setTogglingStatusId(instrumentId);
+    try {
+      const { error } = await supabase
+        .from('instruments')
+        .update({ is_active: makeActive })
+        .eq('instrument_id', instrumentId);
+
+      if (error) {
+        if (error.message.includes('is_active')) {
+          toast.error('Status column missing. Run supabase/add_instrument_is_active.sql in Supabase first.');
+        } else {
+          toast.error(`Failed to update status: ${error.message}`);
+        }
+        return;
+      }
+
+      setInstrumentsData((prev) =>
+        prev.map((item) =>
+          item.instrument_id === instrumentId ? { ...item, is_active: makeActive } : item
+        )
+      );
+      toast.success(`Instrument marked as ${makeActive ? 'Active' : 'Inactive'}`);
+    } catch (err) {
+      console.error('Error updating instrument status:', err);
+      toast.error('Failed to update instrument status');
+    } finally {
+      setTogglingStatusId(null);
     }
   };
 
@@ -370,21 +405,30 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Dur. Alert</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Dur. Warning</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Dur. Shutdown</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={11} align="center">Loading instruments...</TableCell>
+                      <TableCell colSpan={12} align="center">Loading instruments...</TableCell>
                     </TableRow>
                   ) : instrumentsData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={11} align="center">No instruments found for this project</TableCell>
+                      <TableCell colSpan={12} align="center">No instruments found for this project</TableCell>
                     </TableRow>
                   ) : (
-                    instrumentsData.map((instrument) => (
-                      <TableRow key={instrument.id} sx={{ backgroundColor: '#fff' }}>
+                    instrumentsData.map((instrument) => {
+                      const instrumentActive = isInstrumentActive(instrument.is_active);
+                      return (
+                      <TableRow
+                        key={instrument.instrument_id}
+                        sx={{
+                          backgroundColor: instrumentActive ? '#fff' : '#f5f5f5',
+                          opacity: instrumentActive ? 1 : 0.85,
+                        }}
+                      >
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id_second || instrument.instrument_id}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
@@ -419,13 +463,22 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                           {formatDurationValues(instrument).shutdown}
                         </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Chip
+                            label={instrumentActive ? 'Active' : 'Inactive'}
+                            size="small"
+                            color={instrumentActive ? 'success' : 'default'}
+                            variant={instrumentActive ? 'filled' : 'outlined'}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid black' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                               <Button
                                 variant="contained"
                                 color="info"
                                 sx={{ py: 1, fontSize: 14 }}
                                 disabled={
+                                  !instrumentActive ||
                                   !permissions.view_graph ||
                                   !(
                                     instrument.instrument_id === 'SMG1' ||
@@ -490,6 +543,21 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                   Edit
                                 </Button>
                               )}
+                              {isAdmin && (
+                                <FormControl size="small" sx={{ minWidth: 110 }}>
+                                  <Select
+                                    value={instrumentActive ? 'active' : 'inactive'}
+                                    onChange={(e) =>
+                                      handleStatusChange(instrument.instrument_id, e.target.value === 'active')
+                                    }
+                                    disabled={togglingStatusId === instrument.instrument_id}
+                                    sx={{ fontSize: 14, height: 36 }}
+                                  >
+                                    <MenuItem value="active">Active</MenuItem>
+                                    <MenuItem value="inactive">Inactive</MenuItem>
+                                  </Select>
+                                </FormControl>
+                              )}
                             </Box>
                             {isAdmin && (
                               <Button
@@ -534,7 +602,8 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                           )}
                         </TableCell>
                       </TableRow>
-                    ))
+                    );
+                    })
                   )}
                 </TableBody>
               </Table>

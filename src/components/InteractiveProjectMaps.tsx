@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { getInstrumentGraphRoute } from '../utils/instrumentRoutes';
+import { isInstrumentActive } from '../utils/instrumentActive';
 
 // Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -54,7 +55,7 @@ interface Instrument {
   project_id: number;
   instrument_location?: string;
   syscom_device_id?: number | null;
-  status?: 'active' | 'inactive' | 'maintenance';
+  is_active?: boolean | null;
 }
 
 // Individual Project Map Component
@@ -221,7 +222,7 @@ const InteractiveProjectMaps: React.FC = () => {
           // Fetch instruments for the project
           const { data: instruments, error: instrumentsError } = await supabase
             .from('instruments')
-            .select('instrument_id, instrument_id_second, instrument_name, project_id, instrument_location, syscom_device_id')
+            .select('instrument_id, instrument_id_second, instrument_name, project_id, instrument_location, syscom_device_id, is_active')
             .eq('project_id', project.id);
 
           if (projectError) {
@@ -267,6 +268,10 @@ const InteractiveProjectMaps: React.FC = () => {
   };
 
   const handleInstrumentClick = (instrument: Instrument) => {
+    if (!isInstrumentActive(instrument.is_active)) {
+      return;
+    }
+
     if (!isAdmin && !permissions.view_graph) {
       console.log('User does not have view_graph permission');
       return;
@@ -285,18 +290,12 @@ const InteractiveProjectMaps: React.FC = () => {
     }
   };
 
-  const getInstrumentStatusColor = (_instrument: Instrument): string => {
-    // You can implement logic to determine instrument status based on instrument data
-    // For now, we'll use a simple heuristic
-    return 'active'; // Default to active
+  const getInstrumentStatusColor = (instrument: Instrument): string => {
+    return isInstrumentActive(instrument.is_active) ? 'active' : 'inactive';
   };
 
-  const canAccessInstrument = (): boolean => {
-    return isAdmin || permissions.view_graph;
-  };
-
-  const getInstrumentCardStyle = (_instrument: Instrument) => {
-    const canAccess = canAccessInstrument();
+  const getInstrumentCardStyle = (instrument: Instrument) => {
+    const canAccess = canAccessInstrument() && isInstrumentActive(instrument.is_active);
     return {
       cursor: canAccess ? 'pointer' : 'not-allowed',
       opacity: canAccess ? 1 : 0.6,
@@ -307,6 +306,10 @@ const InteractiveProjectMaps: React.FC = () => {
         backgroundColor: '#f5f5f5'
       } : {}
     };
+  };
+
+  const canAccessInstrument = (): boolean => {
+    return isAdmin || permissions.view_graph;
   };
 
   const getStatusColor = (status: string): string => {
