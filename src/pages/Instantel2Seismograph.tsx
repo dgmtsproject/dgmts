@@ -501,8 +501,11 @@ const Instantel2Seismograph: React.FC = () => {
         let errorMessage = `HTTP error! Status: ${response.status}`;
         try {
           const errorData = await response.json();
-          if (errorData && errorData.error) {
-            errorMessage = errorData.error;
+          if (errorData?.error) {
+            errorMessage =
+              typeof errorData.error === 'string'
+                ? errorData.error
+                : errorData.error.message ?? JSON.stringify(errorData.error);
           }
         } catch {
           // If response is not JSON, use status text

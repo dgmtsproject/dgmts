@@ -13,13 +13,25 @@ export default async function handler(
       return res.status(200).end();
     }
 
-    // Get device parameter from query string
     const device = req.query.device as string | undefined;
-    
-    // Build the API URL based on device parameter
+    const fromdatetime = req.query.fromdatetime as string | undefined;
+    const todatetime = req.query.todatetime as string | undefined;
+
     let apiUrl = 'https://imsite.dullesgeotechnical.com/api/micromate/readings';
     if (device) {
       apiUrl = `https://imsite.dullesgeotechnical.com/api/micromate/${device}/readings`;
+    }
+
+    const params = new URLSearchParams();
+    if (fromdatetime) {
+      params.append('fromdatetime', fromdatetime);
+    }
+    if (todatetime) {
+      params.append('todatetime', todatetime);
+    }
+    const query = params.toString();
+    if (query) {
+      apiUrl = `${apiUrl}?${query}`;
     }
 
     const response = await fetch(apiUrl, {
