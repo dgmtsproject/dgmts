@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createSeismographChartData, createSeismographCombinedChartData, getDisplayInstrumentId } from '../utils/seismographCharts';
+import { applySeismographDisplayAdjustments } from '../utils/seismographDisplayAdjustments';
 import { useInstrumentActiveGuard } from '../hooks/useInstrumentActiveGuard';
 
 interface InstrumentSettings {
@@ -192,8 +193,13 @@ const DynamicSeismograph: React.FC = () => {
     }
   };
 
+  const adjustedRawData = useMemo(
+    () => applySeismographDisplayAdjustments(rawData, instrumentId || syscomDeviceId),
+    [rawData, instrumentId, syscomDeviceId]
+  );
+
   const processedData = useMemo(() => {
-    if (!rawData.length) {
+    if (!adjustedRawData.length) {
       return {
         combined: { time: [], x: [], y: [], z: [] },
         x: { time: [], values: [] },
@@ -211,7 +217,7 @@ const DynamicSeismograph: React.FC = () => {
 
     // Group data by date and hour
     const dataByDateHour = new Map<string, any[]>();
-    rawData.forEach(entry => {
+    adjustedRawData.forEach(entry => {
       const dateHourKey = getDateHourKey(entry[0]);
       if (!dataByDateHour.has(dateHourKey)) {
         dataByDateHour.set(dateHourKey, []);
@@ -295,7 +301,7 @@ const DynamicSeismograph: React.FC = () => {
         values: zDown.map(entry => parseFloat(Number(entry[3]).toFixed(3)))
       }
     };
-  }, [rawData]);
+  }, [adjustedRawData]);
 
   const fetchData = async () => {
     if (isInactive) {

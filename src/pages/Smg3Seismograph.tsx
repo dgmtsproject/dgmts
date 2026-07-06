@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
+import { applySeismographDisplayAdjustments } from '../utils/seismographDisplayAdjustments';
 
 // const MAX_POINTS = 1000;
 
@@ -170,8 +171,13 @@ const Smg3Seismograph: React.FC = () => {
     }
   };
 
+  const adjustedRawData = useMemo(
+    () => applySeismographDisplayAdjustments(rawData, '13453'),
+    [rawData]
+  );
+
   const processedData = useMemo(() => {
-    if (!rawData.length) {
+    if (!adjustedRawData.length) {
       return {
         combined: { time: [], x: [], y: [], z: [] },
         x: { time: [], values: [] },
@@ -189,7 +195,7 @@ const Smg3Seismograph: React.FC = () => {
 
     // Group data by date and hour
     const dataByDateHour = new Map<string, any[]>();
-    rawData.forEach(entry => {
+    adjustedRawData.forEach(entry => {
       const dateHourKey = getDateHourKey(entry[0]);
       if (!dataByDateHour.has(dateHourKey)) {
         dataByDateHour.set(dateHourKey, []);
@@ -276,7 +282,7 @@ const Smg3Seismograph: React.FC = () => {
       y: processAxisData(y, 2),
       z: processAxisData(z, 3)
     };
-  }, [rawData]);
+  }, [adjustedRawData]);
 
   const fetchData = async () => {
     if (!fromDate || !toDate) return;
