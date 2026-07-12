@@ -6,6 +6,7 @@ import MainContentWrapper from "../components/MainContentWrapper";
 import { useAdminContext } from '../context/AdminContext';
 import { supabase } from '../supabase';
 import { isInstrumentActive } from '../utils/instrumentActive';
+import { getInstrumentGraphRoute } from '../utils/instrumentRoutes';
 import {
   FormControl,
   InputLabel,
@@ -56,15 +57,19 @@ const ProjectGraphs: React.FC = () => {
       // Fetch all instruments with their project information
       const { data: instruments, error: instrumentsError } = await supabase
         .from('instruments')
-        .select('instrument_id, instrument_name, project_id, syscom_device_id, is_active');
+        .select('instrument_id, instrument_name, project_id, syscom_device_id, sno, is_active');
 
       if (instrumentsError) throw instrumentsError;
 
-      // Build dynamic graph options based on instruments
       const dynamicGraphs: Record<number, GraphOption[]> = {};
       
       instruments?.forEach(instrument => {
         if (!isInstrumentActive(instrument.is_active)) {
+          return;
+        }
+
+        const route = getInstrumentGraphRoute(instrument);
+        if (!route) {
           return;
         }
 
@@ -73,36 +78,12 @@ const ProjectGraphs: React.FC = () => {
           dynamicGraphs[projectId] = [];
         }
 
-        // Create graph option based on instrument type
-        let graphOption: GraphOption;
-        
-        if (instrument.syscom_device_id) {
-          // Seismograph instrument with syscom_device_id - use dynamic page
-          graphOption = {
-            name: instrument.instrument_name,
-            path: `/dynamic-seismograph?instrument=${instrument.instrument_id}`,
-            description: `${instrument.instrument_name} seismograph graphs`,
-            instrument_id: instrument.instrument_id
-          };
-        } else if (instrument.instrument_id.includes('TILT')) {
-          // Tiltmeter instrument
-          graphOption = {
-            name: instrument.instrument_name,
-            path: `/tiltmeter-${instrument.instrument_id.split('-')[1]}`,
-            description: `${instrument.instrument_name} tiltmeter graphs`,
-            instrument_id: instrument.instrument_id
-          };
-        } else {
-          // Default case
-          graphOption = {
-            name: instrument.instrument_name,
-            path: `/${instrument.instrument_id.toLowerCase()}`,
-            description: `${instrument.instrument_name} graphs`,
-            instrument_id: instrument.instrument_id
-          };
-        }
-
-        dynamicGraphs[projectId].push(graphOption);
+        dynamicGraphs[projectId].push({
+          name: instrument.instrument_name,
+          path: route,
+          description: `${instrument.instrument_name} graphs`,
+          instrument_id: instrument.instrument_id,
+        });
       });
 
       // Merge static and dynamic graphs
@@ -172,11 +153,16 @@ const ProjectGraphs: React.FC = () => {
     setGraphOptions(projectGraphs[project.id] || []);
   };
 
-  const handleGraphSelect = (path: string) => {
-    if (!permissions.view_graph) {
+  const handleGraphSelect = (graph: GraphOption) => {
+    if (!permissions.view_graph || !selectedProject) {
       return;
     }
-    navigate(path);
+    navigate(graph.path, {
+      state: {
+        project: selectedProject,
+        ...(graph.instrument_id ? { instrumentId: graph.instrument_id } : {}),
+      },
+    });
   };
 
   return (
@@ -244,7 +230,7 @@ const ProjectGraphs: React.FC = () => {
                 {graphOptions.map((graph, index) => (
                   <Card key={index} sx={{ height: '100%' }}>
                     <CardActionArea
-                      onClick={() => handleGraphSelect(graph.path)}
+                      onClick={() => handleGraphSelect(graph)}
                       sx={{ height: '100%' }}
                     >
                       <CardContent>

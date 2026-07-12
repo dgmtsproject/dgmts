@@ -36,8 +36,17 @@ import {
   getInstrumentGraphLabel,
 } from "../utils/instrumentRoutes";
 
+const LONG_BRIDGE_PROJECT_ID = 24637;
+const DGMTS_TESTING_PROJECT_ID = 20151;
 const ANC_DAR_BC_PROJECT_ID = 24429;
 const YELLOW_LINE_ANC_PROJECT_ID = 25304;
+
+const SIDEBAR_GRAPH_PROJECT_IDS = [
+  LONG_BRIDGE_PROJECT_ID,
+  DGMTS_TESTING_PROJECT_ID,
+  ANC_DAR_BC_PROJECT_ID,
+  YELLOW_LINE_ANC_PROJECT_ID,
+];
 
 interface SidebarInstrumentLink {
   instrument_id: string;
@@ -66,10 +75,15 @@ const NavSidebar: React.FC = () => {
   });
   const [projectInstrumentLinks, setProjectInstrumentLinks] = useState<
     Record<number, SidebarInstrumentLink[]>
-  >({
-    [ANC_DAR_BC_PROJECT_ID]: [],
-    [YELLOW_LINE_ANC_PROJECT_ID]: [],
-  });
+  >(
+    SIDEBAR_GRAPH_PROJECT_IDS.reduce(
+      (acc, projectId) => {
+        acc[projectId] = [];
+        return acc;
+      },
+      {} as Record<number, SidebarInstrumentLink[]>
+    )
+  );
   const { isAdmin, setIsAdmin, userEmail, permissions } = useAdminContext();
 
   useEffect(() => {
@@ -197,12 +211,9 @@ const NavSidebar: React.FC = () => {
         const { data, error } = await supabase
           .from("instruments")
           .select(
-            "instrument_id, instrument_name, project_id, syscom_device_id"
+            "instrument_id, instrument_name, project_id, syscom_device_id, sno"
           )
-          .in("project_id", [
-            ANC_DAR_BC_PROJECT_ID,
-            YELLOW_LINE_ANC_PROJECT_ID,
-          ])
+          .in("project_id", SIDEBAR_GRAPH_PROJECT_IDS)
           .order("instrument_name", { ascending: true });
 
         if (error) {
@@ -210,10 +221,14 @@ const NavSidebar: React.FC = () => {
           return;
         }
 
-        const linksByProject: Record<number, SidebarInstrumentLink[]> = {
-          [ANC_DAR_BC_PROJECT_ID]: [],
-          [YELLOW_LINE_ANC_PROJECT_ID]: [],
-        };
+        const linksByProject: Record<number, SidebarInstrumentLink[]> =
+          SIDEBAR_GRAPH_PROJECT_IDS.reduce(
+            (acc, projectId) => {
+              acc[projectId] = [];
+              return acc;
+            },
+            {} as Record<number, SidebarInstrumentLink[]>
+          );
 
         data?.forEach((instrument) => {
           const route = getInstrumentGraphRoute(instrument);
@@ -438,6 +453,10 @@ const NavSidebar: React.FC = () => {
                           >
                             <ListItemText primary="AMTS Ref" />
                           </ListItemButton>
+                          {renderProjectInstrumentLinks(
+                            LONG_BRIDGE_PROJECT_ID,
+                            projectNames.longBridge
+                          )}
                         </List>
                       </Collapse>
                     </>
@@ -466,14 +485,10 @@ const NavSidebar: React.FC = () => {
                           disablePadding
                           sx={{ bgcolor: "#002366" }}
                         >
-                          {/* Remove Seismograph link, keep only Background as Seismograph Data Graphs */}
-                          <ListItemButton
-                            component={Link}
-                            to="/background"
-                            sx={{ pl: 4 }}
-                          >
-                            <ListItemText primary="Seismograph" />
-                          </ListItemButton>
+                          {renderProjectInstrumentLinks(
+                            DGMTS_TESTING_PROJECT_ID,
+                            projectNames.dgmtsTesting
+                          )}
                         </List>
                       </Collapse>
                     </>

@@ -12,6 +12,14 @@ import { supabase } from '../supabase';
 import { useAdminContext } from '../context/AdminContext';
 import { createReferenceLinesOnly, getThresholdsFromSettings, createZeroReferenceLine } from '../utils/graphZones';
 import { useInstrumentActiveGuard } from '../hooks/useInstrumentActiveGuard';
+import { getInstrumentGraphRoute, getMicromateDeviceFolder } from '../utils/instrumentRoutes';
+
+const INSTANTEL_GRAPH_ROUTES = new Set([
+  '/instantel1-seismograph',
+  '/instantel2-seismograph',
+]);
+
+const MICROMATE_DEVICE = 'UM16368';
 
 // Utility function to format time without timezone conversion
 const formatUTCTime = (timeString: string): Date => {
@@ -73,8 +81,6 @@ interface Instrument {
 type DataType = 'ppv' | 'geophone_pvs' | 'sound_db';
 
 const Instantel2Seismograph: React.FC = () => {
-  const INSTRUMENT_ID = 'Instantel 2';
-  
   const navigate = useNavigate();
   const location = useLocation();
   const { permissions } = useAdminContext();
@@ -87,31 +93,38 @@ const Instantel2Seismograph: React.FC = () => {
   const [project, setProject] = useState<Project | null>(location.state?.project || null);
   const [availableInstruments, setAvailableInstruments] = useState<Instrument[]>([]);
   const [dataType, setDataType] = useState<DataType>('ppv');
-  const { isInactive, checking: checkingActiveStatus } = useInstrumentActiveGuard(INSTRUMENT_ID);
+  const [activeInstrumentId, setActiveInstrumentId] = useState<string>(
+    location.state?.instrumentId || 'Instantel 2'
+  );
+  const { isInactive, checking: checkingActiveStatus } = useInstrumentActiveGuard(activeInstrumentId);
 
-  // Fetch instrument settings and project info on component mount
   useEffect(() => {
-    // Check if user has permission to view graphs
     if (!permissions.view_graph) {
       navigate('/dashboard');
       return;
     }
-    
-    fetchInstrumentSettings();
-    if (!location.state?.project) {
-      fetchProjectInfo();
-    } else {
-      // If project is passed from navigation, fetch available instruments for this project
-      fetchAvailableInstruments(location.state.project.id);
-    }
-  }, [location.state?.project, permissions.view_graph, navigate]);
 
-  const fetchInstrumentSettings = async () => {
+    const instrumentIdFromNav = location.state?.instrumentId as string | undefined;
+
+    if (location.state?.project) {
+      setProject(location.state.project);
+      fetchAvailableInstruments(location.state.project.id);
+      if (instrumentIdFromNav) {
+        setActiveInstrumentId(instrumentIdFromNav);
+        fetchInstrumentSettings(instrumentIdFromNav);
+      }
+      return;
+    }
+
+    fetchProjectInfo();
+  }, [location.state?.project, location.state?.instrumentId, permissions.view_graph, navigate]);
+
+  const fetchInstrumentSettings = async (instrumentId: string) => {
     try {
       const { data, error } = await supabase
         .from('instruments')
         .select('alert_value, warning_value, shutdown_value')
-        .eq('instrument_id', 'Instantel 2')
+        .eq('instrument_id', instrumentId)
         .single();
 
       if (error) {
@@ -127,19 +140,27 @@ const Instantel2Seismograph: React.FC = () => {
 
   const fetchProjectInfo = async () => {
     try {
-      // First get the project_id for Instantel 2
-      const { data: instrumentData, error: instrumentError } = await supabase
+      const { data: instrumentRows, error: instrumentError } = await supabase
         .from('instruments')
-        .select('project_id')
-        .eq('instrument_id', 'Instantel 2')
-        .single();
+        .select('instrument_id, project_id, instrument_name, sno')
+        .or(`instrument_name.eq.${MICROMATE_DEVICE},instrument_id.eq.Instantel 2,sno.eq.${MICROMATE_DEVICE}`);
 
       if (instrumentError) {
         console.error('Error fetching instrument project:', instrumentError);
         return;
       }
 
-      // Then get the project details
+      const instrumentData = (instrumentRows ?? []).find(
+        (row) => getMicromateDeviceFolder(row) === MICROMATE_DEVICE
+      );
+
+      if (!instrumentData?.project_id) {
+        console.error('No UM16368 instrument found in database');
+        return;
+      }
+
+      setActiveInstrumentId(instrumentData.instrument_id);
+
       const { data: projectData, error: projectError } = await supabase
         .from('Projects')
         .select('id, name')
@@ -153,6 +174,7 @@ const Instantel2Seismograph: React.FC = () => {
 
       setProject(projectData);
       fetchAvailableInstruments(projectData.id);
+      fetchInstrumentSettings(instrumentData.instrument_id);
     } catch (err) {
       console.error('Error fetching project info:', err);
     }
@@ -160,12 +182,10 @@ const Instantel2Seismograph: React.FC = () => {
 
   const fetchAvailableInstruments = async (projectId: number) => {
     try {
-      // Fetch all instruments for this project that have graphs
       const { data: instrumentsData, error: instrumentsError } = await supabase
         .from('instruments')
-        .select('instrument_id, instrument_name, project_id, instrument_location')
+        .select('instrument_id, instrument_name, project_id, instrument_location, sno')
         .eq('project_id', projectId)
-        .in('instrument_id', ['Instantel 1', 'Instantel 2'])
         .order('instrument_id');
 
       if (instrumentsError) {
@@ -173,24 +193,33 @@ const Instantel2Seismograph: React.FC = () => {
         return;
       }
 
-      setAvailableInstruments(instrumentsData);
+      const instantelInstruments = (instrumentsData ?? []).filter((instrument) => {
+        const route = getInstrumentGraphRoute(instrument);
+        return route ? INSTANTEL_GRAPH_ROUTES.has(route) : false;
+      });
+
+      setAvailableInstruments(instantelInstruments);
     } catch (err) {
       console.error('Error fetching available instruments:', err);
     }
   };
 
   const handleInstrumentChange = (instrumentId: string) => {
-    switch (instrumentId) {
-      case 'Instantel 1':
-        navigate('/instantel1-seismograph', { state: { project } });
-        break;
-      case 'Instantel 2':
-        navigate('/instantel2-seismograph', { state: { project } });
-        break;
-      default:
-        break;
-    }
+    const instrument = availableInstruments.find(
+      (item) => item.instrument_id === instrumentId
+    );
+    if (!instrument || !project) return;
+
+    const route = getInstrumentGraphRoute(instrument);
+    if (!route) return;
+
+    navigate(route, { state: { project, instrumentId } });
   };
+
+  const displayInstrumentId = activeInstrumentId;
+  const activeInstrumentLocation =
+    availableInstruments.find((item) => item.instrument_id === activeInstrumentId)
+      ?.instrument_location || 'Location: None';
 
   const processedData = useMemo(() => {
     if (!rawData?.UM16368Readings?.length) {
@@ -644,14 +673,14 @@ const Instantel2Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - ${axis} Axis ${dataType === 'ppv' ? 'PPV' : 'Geophone PVS'} Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - ${axis} Axis ${dataType === 'ppv' ? 'PPV' : 'Geophone PVS'} Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -1063,14 +1092,14 @@ const Instantel2Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Sound (db) Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - Sound (db) Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -1244,14 +1273,14 @@ const Instantel2Seismograph: React.FC = () => {
         ]}
         layout={{
           title: { 
-            text: `${project?.name || 'Project'} - Combined PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`, 
+            text: `${project?.name || 'Project'} - Combined PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`, 
             font: { size: 20, weight: 700, color: '#003087' },
             x: 0.5,
             xanchor: 'center'
           },
           xaxis: {
             title: { 
-              text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`, 
+              text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`, 
               font: { size: 18, weight: 700, color: '#374151' },
               standoff: 20
             },
@@ -1346,15 +1375,13 @@ const Instantel2Seismograph: React.FC = () => {
           {project && (
             <Box mb={3} display="flex" justifyContent="center" alignItems="center" gap={3}>
               <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#003087' }}>
-                Location: {availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location 
-                  ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location 
-                  : 'None'}
+                Location: {activeInstrumentLocation === 'Location: None' ? 'None' : activeInstrumentLocation}
               </Typography>
               <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
                 <InputLabel id="instrument-select-label">Select Instrument</InputLabel>
                 <Select
                   labelId="instrument-select-label"
-                  value="Instantel 2"
+                  value={activeInstrumentId}
                   label="Select Instrument"
                   onChange={(e) => handleInstrumentChange(e.target.value as string)}
                 >
@@ -1526,14 +1553,14 @@ const Instantel2Seismograph: React.FC = () => {
                             
                             const chartLayout = {
                               title: { 
-                                text: `${project?.name || 'Project'} - Sound (db) Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                text: `${project?.name || 'Project'} - Sound (db) Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`,
                                 font: { size: 20, weight: 'bold', color: '#003087' },
                                 x: 0.5,
                                 xanchor: 'center'
                               },
                               xaxis: {
                                 title: { 
-                                  text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                  text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`,
                                   font: { size: 18, weight: 'bold', color: '#374151' },
                                   standoff: 20
                                 },
@@ -1602,7 +1629,7 @@ const Instantel2Seismograph: React.FC = () => {
                               chartData,
                               chartLayout,
                               chartConfig,
-                              availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                              availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location
                             );
                           }}
                           variant="outlined"
@@ -1678,14 +1705,14 @@ const Instantel2Seismograph: React.FC = () => {
                             
                             const chartLayout = {
                               title: { 
-                                text: `${project?.name || 'Project'} - Geophone PVS Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                text: `${project?.name || 'Project'} - Geophone PVS Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`,
                                 font: { size: 20, weight: 'bold', color: '#003087' },
                                 x: 0.5,
                                 xanchor: 'center'
                               },
                               xaxis: {
                                 title: { 
-                                  text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                  text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`,
                                   font: { size: 18, weight: 'bold', color: '#374151' },
                                   standoff: 20
                                 },
@@ -1749,7 +1776,7 @@ const Instantel2Seismograph: React.FC = () => {
                               chartData,
                               chartLayout,
                               chartConfig,
-                              availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                              availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location
                             );
                           }}
                           variant="outlined"
@@ -1826,14 +1853,14 @@ const Instantel2Seismograph: React.FC = () => {
                               
                               const chartLayout = {
                                 title: { 
-                                  text: `${project?.name || 'Project'} - X (Longitudinal) Axis PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                  text: `${project?.name || 'Project'} - X (Longitudinal) Axis PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`,
                                   font: { size: 20, weight: 'bold', color: '#003087' },
                                   x: 0.5,
                                   xanchor: 'center'
                                 },
                                 xaxis: {
                                   title: { 
-                                    text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                    text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`,
                                     font: { size: 18, weight: 'bold', color: '#374151' },
                                     standoff: 20
                                   },
@@ -1892,7 +1919,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 chartData,
                                 chartLayout,
                                 chartConfig,
-                                availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                                availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location
                               );
                             }}
                             variant="outlined"
@@ -1966,14 +1993,14 @@ const Instantel2Seismograph: React.FC = () => {
                               
                               const chartLayout = {
                                 title: { 
-                                  text: `${project?.name || 'Project'} - Y (Transverse) Axis PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                  text: `${project?.name || 'Project'} - Y (Transverse) Axis PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`,
                                   font: { size: 20, weight: 'bold', color: '#003087' },
                                   x: 0.5,
                                   xanchor: 'center'
                                 },
                                 xaxis: {
                                   title: { 
-                                    text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                    text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`,
                                     font: { size: 18, weight: 'bold', color: '#374151' },
                                     standoff: 20
                                   },
@@ -2032,7 +2059,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 chartData,
                                 chartLayout,
                                 chartConfig,
-                                availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                                availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location
                               );
                             }}
                             variant="outlined"
@@ -2106,14 +2133,14 @@ const Instantel2Seismograph: React.FC = () => {
                               
                               const chartLayout = {
                                 title: { 
-                                  text: `${project?.name || 'Project'} - Z (Vertical) Axis PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                  text: `${project?.name || 'Project'} - Z (Vertical) Axis PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`,
                                   font: { size: 20, weight: 'bold', color: '#003087' },
                                   x: 0.5,
                                   xanchor: 'center'
                                 },
                                 xaxis: {
                                   title: { 
-                                    text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                    text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`,
                                     font: { size: 18, weight: 'bold', color: '#374151' },
                                     standoff: 20
                                   },
@@ -2172,7 +2199,7 @@ const Instantel2Seismograph: React.FC = () => {
                                 chartData,
                                 chartLayout,
                                 chartConfig,
-                                availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                                availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location
                               );
                             }}
                             variant="outlined"
@@ -2262,14 +2289,14 @@ const Instantel2Seismograph: React.FC = () => {
                             
                             const chartLayout = {
                               title: { 
-                                text: `${project?.name || 'Project'} - Combined PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location : 'Location: None'}`,
+                                text: `${project?.name || 'Project'} - Combined PPV Data - ${availableInstruments.length > 0 && availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location ? availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location : 'Location: None'}`,
                                 font: { size: 20, weight: 'bold', color: '#003087' },
                                 x: 0.5,
                                 xanchor: 'center'
                               },
                               xaxis: {
                                 title: { 
-                                  text: `Time<br><span style="font-size:12px;color:#666;">${INSTRUMENT_ID}</span>`,
+                                  text: `Time<br><span style="font-size:12px;color:#666;">${displayInstrumentId}</span>`,
                                   font: { size: 18, weight: 'bold', color: '#374151' },
                                   standoff: 20
                                 },
@@ -2333,7 +2360,7 @@ const Instantel2Seismograph: React.FC = () => {
                               chartData,
                               chartLayout,
                               chartConfig,
-                              availableInstruments.find(inst => inst.instrument_id === 'Instantel 2')?.instrument_location
+                              availableInstruments.find(inst => inst.instrument_id === activeInstrumentId)?.instrument_location
                             );
                           }}
                           variant="outlined"

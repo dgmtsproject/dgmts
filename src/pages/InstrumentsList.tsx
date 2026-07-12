@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button,
   FormControl, InputLabel, Select, MenuItem,
-  Typography, Box, Chip
+  Typography, Box, Chip, Tabs, Tab
 } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -20,6 +20,11 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BackButton from '../components/Back';
 import { isInstrumentActive } from '../utils/instrumentActive';
+import {
+  canViewInstrumentGraph,
+  getInstrumentGraphRoute,
+  buildInstrumentGraphNavState,
+} from '../utils/instrumentRoutes';
 
 
 type Instrument = {
@@ -66,14 +71,19 @@ const InstrumentsList: React.FC = () => {
 
  const [openDialogId, setOpenDialogId] = useState<string | null>(null);
  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
+ const [moveDialogInstrument, setMoveDialogInstrument] = useState<Instrument | null>(null);
+ const [targetProjectId, setTargetProjectId] = useState<number | ''>('');
+ const [movingInstrumentId, setMovingInstrumentId] = useState<string | null>(null);
 
 
 
   useEffect(() => {
+    fetchProjects();
+  }, [isAdmin, userEmail]);
+
+  useEffect(() => {
     if (selectedProject) {
       fetchInstruments(selectedProject.id);
-    } else {
-      fetchProjects();
     }
   }, [selectedProject]);
 
@@ -171,6 +181,53 @@ const InstrumentsList: React.FC = () => {
   const handleProjectChange = (projectId: number) => {
     const project = projects.find(p => p.id === projectId) || null;
     setSelectedProject(project);
+  };
+
+  const handleOpenMoveDialog = (instrument: Instrument) => {
+    setMoveDialogInstrument(instrument);
+    setTargetProjectId('');
+  };
+
+  const handleCloseMoveDialog = () => {
+    setMoveDialogInstrument(null);
+    setTargetProjectId('');
+  };
+
+  const handleMoveInstrument = async () => {
+    if (!moveDialogInstrument || !targetProjectId || !selectedProject) {
+      toast.error('Please select a target project');
+      return;
+    }
+
+    if (targetProjectId === moveDialogInstrument.project_id) {
+      toast.error('Instrument is already in this project');
+      return;
+    }
+
+    setMovingInstrumentId(moveDialogInstrument.instrument_id);
+    try {
+      const { error } = await supabase
+        .from('instruments')
+        .update({ project_id: targetProjectId })
+        .eq('instrument_id', moveDialogInstrument.instrument_id);
+
+      if (error) {
+        toast.error(`Failed to move instrument: ${error.message}`);
+        return;
+      }
+
+      const targetProject = projects.find((project) => project.id === targetProjectId);
+      toast.success(
+        `Moved ${moveDialogInstrument.instrument_id} to ${targetProject?.name || 'selected project'}`
+      );
+      handleCloseMoveDialog();
+      fetchInstruments(selectedProject.id);
+    } catch (error) {
+      console.error('Error moving instrument:', error);
+      toast.error('Failed to move instrument');
+    } finally {
+      setMovingInstrumentId(null);
+    }
   };
 
   const handleEditInstrument = (instrument: Instrument) => {
@@ -379,16 +436,31 @@ const handleDeleteInstrument = async (instrumentId: string) => {
           <Button variant="contained" onClick={() => navigate('/projects-list')}>
             Back to Projects
           </Button>
-          {!location.state?.project && (
-            <Button variant="outlined" onClick={() => setSelectedProject(null)}>
-              Change Project
-            </Button>
-          )}
         </Box>
 
         <Box sx={{ fontFamily: 'Arial, sans-serif', p: 0 }}>
           <Typography variant="h5" align="center" sx={{ mt: 3, color: '#333' }}>
-            Instruments for: {selectedProject.name}
+            Instruments
+          </Typography>
+
+          {projects.length > 0 && (
+            <Box sx={{ maxWidth: '96%', mx: 'auto', mt: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs
+                value={selectedProject.id}
+                onChange={(_, projectId) => handleProjectChange(Number(projectId))}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+              >
+                {projects.map((project) => (
+                  <Tab key={project.id} label={project.name} value={project.id} />
+                ))}
+              </Tabs>
+            </Box>
+          )}
+
+          <Typography variant="subtitle1" align="center" sx={{ mt: 2, color: '#555' }}>
+            {selectedProject.name}
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <TableContainer component={Paper} sx={{ maxWidth: '96%', mt: 3, border: '1px solid #000', mb: 2 }}>
@@ -478,61 +550,36 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                 color="info"
                                 sx={{ py: 1, fontSize: 14 }}
                                 disabled={
-                                  !instrumentActive ||
-                                  !permissions.view_graph ||
-                                  !(
-                                    instrument.instrument_id === 'SMG1' ||
-                                    instrument.instrument_id === 'SMG-2' ||
-                                    instrument.instrument_id === 'SMG-3' ||
-                                    instrument.instrument_id === 'ROCKSMG-1' ||
-                                    instrument.instrument_id === 'ROCKSMG-2' ||
-                                    instrument.instrument_id === 'AMTS-1' ||
-                                    instrument.instrument_id === 'AMTS-2' ||
-                                    instrument.instrument_id === 'TILT-142939' ||
-                                    instrument.instrument_id === 'TILT-143969' ||
-                                    instrument.instrument_id === 'Instantel 1' ||
-                                    instrument.instrument_id === 'Instantel 2' ||
-                                    instrument.instrument_name === 'Tiltmeter' ||
-                                    // Enable for any seismograph instrument with syscom_device_id
-                                    instrument.syscom_device_id
-                                  )
+                                  !canViewInstrumentGraph(instrument, {
+                                    viewGraphPermission: permissions.view_graph,
+                                    isActive: instrumentActive,
+                                  })
                                 }
                                 onClick={() => {
-                                  if (instrument.instrument_id === 'SMG1') {
-                                    navigate('/background', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'SMG-2') {
-                                    navigate('/anc-seismograph', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'SMG-3') {
-                                    navigate('/smg3-seismograph', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'ROCKSMG-1') {
-                                    navigate('/rocksmg1-seismograph', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'ROCKSMG-2') {
-                                    navigate('/rocksmg2-seismograph', { state: { project: selectedProject } });
-                                  } else if (
-                                    instrument.instrument_id === 'AMTS-1' ||
-                                    instrument.instrument_id === 'AMTS-2'
-                                  ) {
-                                    navigate('/single-prism-with-time', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'TILT-142939') {
-                                    navigate('/tiltmeter-142939', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'TILT-143969') {
-                                    navigate('/tiltmeter-143969', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'Instantel 1') {
-                                    navigate('/instantel1-seismograph', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_id === 'Instantel 2') {
-                                    navigate('/instantel2-seismograph', { state: { project: selectedProject } });
-                                  } else if (instrument.instrument_name === 'Tiltmeter') {
-                                    navigate('/tiltmeter', { state: { project: selectedProject } });
-                                  } else if (instrument.syscom_device_id) {
-                                    // Route seismograph instruments with syscom_device_id to dynamic page
-                                    navigate(`/dynamic-seismograph?instrument=${instrument.instrument_id}`, { 
-                                      state: { project: selectedProject, instrumentId: instrument.instrument_id } 
-                                    });
-                                  }
+                                  if (!selectedProject) return;
+                                  const route = getInstrumentGraphRoute(instrument);
+                                  if (!route) return;
+                                  navigate(route, {
+                                    state: buildInstrumentGraphNavState(
+                                      instrument,
+                                      selectedProject
+                                    ),
+                                  });
                                 }}
                               >
                                 View
                               </Button>
+                              {isAdmin && (
+                                <Button
+                                  variant="outlined"
+                                  color="secondary"
+                                  onClick={() => handleOpenMoveDialog(instrument)}
+                                  sx={{ py: 1, fontSize: 14 }}
+                                  disabled={movingInstrumentId === instrument.instrument_id}
+                                >
+                                  Move
+                                </Button>
+                              )}
                               {isAdmin && (
                                 <Button
                                   variant="contained"
@@ -611,6 +658,56 @@ const handleDeleteInstrument = async (instrumentId: string) => {
           </Box>
         </Box>
       </MainContentWrapper>
+
+      <Dialog
+        open={!!moveDialogInstrument}
+        onClose={handleCloseMoveDialog}
+        aria-labelledby="move-instrument-dialog-title"
+      >
+        <DialogTitle id="move-instrument-dialog-title">
+          Move Instrument to Another Project
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Move{' '}
+            <strong>
+              {moveDialogInstrument?.instrument_id} ({moveDialogInstrument?.instrument_name})
+            </strong>{' '}
+            from <strong>{selectedProject?.name}</strong> to another project. The instrument
+            record, thresholds, and emails are kept — only the project assignment changes.
+          </DialogContentText>
+          <FormControl fullWidth>
+            <InputLabel id="move-target-project-label">Target Project</InputLabel>
+            <Select
+              labelId="move-target-project-label"
+              value={targetProjectId}
+              label="Target Project"
+              onChange={(e) => setTargetProjectId(Number(e.target.value))}
+            >
+              {projects
+                .filter((project) => project.id !== moveDialogInstrument?.project_id)
+                .map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseMoveDialog} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleMoveInstrument}
+            variant="contained"
+            color="primary"
+            disabled={!targetProjectId || !!movingInstrumentId}
+          >
+            {movingInstrumentId ? 'Moving...' : 'Move'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
