@@ -13,7 +13,6 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Delete as DeleteIcon } from '@mui/icons-material';
 import MainContentWrapper from '../components/MainContentWrapper';
 import { useAdminContext } from '../context/AdminContext';
 import { toast } from 'react-toastify';
@@ -69,7 +68,6 @@ const InstrumentsList: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(location.state?.project || null);
   const [loading, setLoading] = useState(false);
 
- const [openDialogId, setOpenDialogId] = useState<string | null>(null);
  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
  const [moveDialogInstrument, setMoveDialogInstrument] = useState<Instrument | null>(null);
  const [targetProjectId, setTargetProjectId] = useState<number | ''>('');
@@ -316,76 +314,6 @@ const InstrumentsList: React.FC = () => {
     };
   };
 
-const handleDeleteInstrument = async (instrumentId: string) => {
-  console.log('Deleting instrument with ID:', instrumentId);
-
-  try {
-    // Step 1: Count and delete all related records from sent_alert_logs first
-    console.log('Counting related alert logs...');
-    const { count: logsCount } = await supabase
-      .from('sent_alert_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('for_instrument', instrumentId);
-
-    console.log('Deleting related alert logs...');
-    const { error: logsError } = await supabase
-      .from('sent_alert_logs')
-      .delete()
-      .eq('for_instrument', instrumentId);
-
-    if (logsError) {
-      console.error('Error deleting alert logs:', logsError);
-      toast.error(`Failed to delete related alert logs: ${logsError.message}`);
-      setOpenDialogId(null);
-      return;
-    }
-
-    console.log(`Deleted ${logsCount || 0} alert log records`);
-
-    // Step 2: Count and delete all related records from sent_alerts (if any)
-    console.log('Counting related sent alerts...');
-    const { count: alertsCount } = await supabase
-      .from('sent_alerts')
-      .select('*', { count: 'exact', head: true })
-      .eq('instrument_id', instrumentId);
-
-    console.log('Deleting related sent alerts...');
-    const { error: alertsError } = await supabase
-      .from('sent_alerts')
-      .delete()
-      .eq('instrument_id', instrumentId);
-
-    if (alertsError) {
-      console.error('Error deleting sent alerts:', alertsError);
-      toast.error(`Failed to delete related sent alerts: ${alertsError.message}`);
-      setOpenDialogId(null);
-      return;
-    }
-
-    console.log(`Deleted ${alertsCount || 0} sent alert records`);
-
-    // Step 3: Now delete the instrument itself
-    console.log('Deleting instrument...');
-    const { error } = await supabase
-      .from('instruments')
-      .delete()
-      .eq('instrument_id', instrumentId);  
-
-    if (error) {
-      console.error('Error deleting instrument:', error);
-      toast.error(`Failed to delete instrument: ${error.message}`);
-    } else {
-      setInstrumentsData(instrumentsData.filter(instrument => instrument.instrument_id !== instrumentId));
-      toast.success(`Instrument deleted successfully. Removed ${logsCount || 0} log records and ${alertsCount || 0} alert records.`);
-    }
-  } catch (error) {
-    console.error('Unexpected error during deletion:', error);
-    toast.error(`Unexpected error: ${(error as Error).message}`);
-  }
-  
-  setOpenDialogId(null);
-}
-
   if (!selectedProject) {
     return (
       <>
@@ -606,47 +534,7 @@ const handleDeleteInstrument = async (instrumentId: string) => {
                                 </FormControl>
                               )}
                             </Box>
-                            {isAdmin && (
-                              <Button
-                                variant="contained"
-                                color="error"
-                                onClick={() => setOpenDialogId(instrument.instrument_id)}
-                                sx={{ py: 1, fontSize: 14 }}
-                              >
-                                <DeleteIcon />
-                              </Button>
-                            )}
                           </Box>
-
-                          {isAdmin && (
-                            <Dialog
-                               open={openDialogId === instrument.instrument_id}
-                              onClose={() => setOpenDialogId(null)}
-                              aria-labelledby="alert-dialog-title"
-                              aria-describedby="alert-dialog-description"
-                            >
-                              <DialogTitle id="alert-dialog-title">
-                                Confirm Deletion
-                              </DialogTitle>
-                              <DialogContent>
-                                <DialogContentText id="alert-dialog-description">
-                                  Are you sure you want to delete this instrument? This action cannot be undone.
-                                </DialogContentText>
-                              </DialogContent>
-                              <DialogActions>
-                                <Button onClick={() => setOpenDialogId(null)} color="primary">
-                                  Cancel
-                                </Button>
-                                <Button
-                                  onClick={() => handleDeleteInstrument(instrument.instrument_id)}
-                                  color="error"
-                                  autoFocus
-                                >
-                                  Delete
-                                </Button>
-                              </DialogActions>
-                            </Dialog>
-                          )}
                         </TableCell>
                       </TableRow>
                     );

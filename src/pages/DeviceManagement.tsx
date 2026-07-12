@@ -26,8 +26,20 @@ import {
   TextField,
   InputAdornment,
   Tooltip,
-  IconButton
+  IconButton,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
+import { toast } from 'react-toastify';
+import { getMicromateDeviceFolder } from '../utils/instrumentRoutes';
 import {
   Search as SearchIcon,
   DeviceHub as DeviceIcon,
@@ -64,11 +76,17 @@ interface DeviceUsage {
   instruments: Array<{
     instrumentId: string;
     instrumentName: string;
+    projectId: number;
     projectName: string;
     instrumentLocation: string;
   }>;
   deviceInfo?: SyscomDevice | InstantelDevice;
 }
+
+type Project = {
+  id: number;
+  name: string;
+};
 
 interface InstantelDevice {
   deviceId: string;
@@ -150,6 +168,11 @@ const DeviceManagement: React.FC = () => {
   const [tiltmeterDevices, setTiltmeterDevices] = useState<DeviceUsage[]>([]);
   const [instantelDevices, setInstantelDevices] = useState<DeviceUsage[]>([]);
   const [otherDevices, setOtherDevices] = useState<DeviceUsage[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [moveInstrumentId, setMoveInstrumentId] = useState<string | null>(null);
+  const [moveSourceProjectId, setMoveSourceProjectId] = useState<number | null>(null);
+  const [targetProjectId, setTargetProjectId] = useState<number | ''>('');
+  const [movingInstrumentId, setMovingInstrumentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -187,6 +210,7 @@ const DeviceManagement: React.FC = () => {
       
       // Fetch all instruments from database
       await fetchAllInstruments();
+      await fetchProjects();
       
       // Data processing will be handled by useEffect when state changes
 
@@ -244,6 +268,69 @@ const DeviceManagement: React.FC = () => {
     } catch (err) {
       console.error('Error fetching Syscom devices:', err);
       // Don't throw error, just log it and continue with other data
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Projects')
+        .select('id, name')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
+  };
+
+  const handleOpenMoveDialog = (instrumentId: string, projectId: number) => {
+    setMoveInstrumentId(instrumentId);
+    setMoveSourceProjectId(projectId);
+    setTargetProjectId('');
+  };
+
+  const handleCloseMoveDialog = () => {
+    setMoveInstrumentId(null);
+    setMoveSourceProjectId(null);
+    setTargetProjectId('');
+  };
+
+  const handleMoveInstrument = async () => {
+    if (!moveInstrumentId || !targetProjectId || !moveSourceProjectId) {
+      toast.error('Please select a target project');
+      return;
+    }
+
+    if (targetProjectId === moveSourceProjectId) {
+      toast.error('Instrument is already in this project');
+      return;
+    }
+
+    setMovingInstrumentId(moveInstrumentId);
+    try {
+      const { error } = await supabase
+        .from('instruments')
+        .update({ project_id: targetProjectId })
+        .eq('instrument_id', moveInstrumentId);
+
+      if (error) {
+        toast.error(`Failed to move instrument: ${error.message}`);
+        return;
+      }
+
+      const targetProject = projects.find((project) => project.id === targetProjectId);
+      toast.success(
+        `Moved ${moveInstrumentId} to ${targetProject?.name || 'selected project'}`
+      );
+      handleCloseMoveDialog();
+      await fetchAllInstruments();
+    } catch (err) {
+      console.error('Error moving instrument:', err);
+      toast.error('Failed to move instrument');
+    } finally {
+      setMovingInstrumentId(null);
     }
   };
 
@@ -333,19 +420,20 @@ const DeviceManagement: React.FC = () => {
 
     // Group instruments by device type
     allInstruments.forEach(instrument => {
+      const linkedInstrument = {
+        instrumentId: instrument.instrument_id,
+        instrumentName: instrument.instrument_name,
+        projectId: instrument.project_id,
+        projectName: instrument.project_name || 'Unknown Project',
+        instrumentLocation: instrument.instrument_location || 'None',
+      };
+
       if (instrument.syscom_device_id) {
-        // Syscom device - find existing device and add instrument
         const existingDevice = syscomUsage.find(d => d.deviceId === instrument.syscom_device_id);
         if (existingDevice) {
-          existingDevice.instruments.push({
-            instrumentId: instrument.instrument_id,
-            instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project',
-            instrumentLocation: instrument.instrument_location || 'None'
-          });
+          existingDevice.instruments.push(linkedInstrument);
         }
       } else if (instrument.instrument_id.includes('TILT')) {
-        // Tiltmeter device - find existing device and add instrument
         let deviceId: number;
         if (instrument.instrument_id.includes('TILT-')) {
           deviceId = parseInt(instrument.instrument_id.split('-')[1]) || 0;
@@ -354,50 +442,37 @@ const DeviceManagement: React.FC = () => {
         } else {
           deviceId = 0;
         }
-        
+
         const existingDevice = tiltmeterUsage.find(d => d.deviceId === deviceId);
         if (existingDevice) {
-          existingDevice.instruments.push({
-            instrumentId: instrument.instrument_id,
-            instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project',
-            instrumentLocation: instrument.instrument_location || 'None'
-          });
-        }
-      } else if (instrument.instrument_id.includes('INSTANTEL') || instrument.sno === 'UM15783') {
-        // Instantel device - find existing device and add instrument
-        const existingDevice = instantelUsage.find(d => d.deviceId === 'UM15783');
-        if (existingDevice) {
-          existingDevice.instruments.push({
-            instrumentId: instrument.instrument_id,
-            instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project',
-            instrumentLocation: instrument.instrument_location || 'None'
-          });
+          existingDevice.instruments.push(linkedInstrument);
         }
       } else {
-        // Other devices (using serial number or instrument ID)
+        const micromateFolder = getMicromateDeviceFolder({
+          instrument_id: instrument.instrument_id,
+          instrument_name: instrument.instrument_name,
+          sno: instrument.sno,
+        });
+
+        if (micromateFolder) {
+          const existingDevice = instantelUsage.find(d => d.deviceId === micromateFolder);
+          if (existingDevice) {
+            existingDevice.instruments.push(linkedInstrument);
+          }
+          return;
+        }
+
         const deviceId = instrument.sno ? parseInt(instrument.sno) : instrument.instrument_id.charCodeAt(0);
         const existingDevice = otherUsage.find(d => d.deviceId === deviceId);
-        
+
         if (existingDevice) {
-          existingDevice.instruments.push({
-            instrumentId: instrument.instrument_id,
-            instrumentName: instrument.instrument_name,
-            projectName: instrument.project_name || 'Unknown Project',
-            instrumentLocation: instrument.instrument_location || 'None'
-          });
+          existingDevice.instruments.push(linkedInstrument);
         } else {
           otherUsage.push({
             deviceId: deviceId,
             deviceName: instrument.instrument_name,
             deviceType: 'other',
-            instruments: [{
-              instrumentId: instrument.instrument_id,
-              instrumentName: instrument.instrument_name,
-              projectName: instrument.project_name || 'Unknown Project',
-              instrumentLocation: ''
-            }]
+            instruments: [linkedInstrument],
           });
         }
       }
@@ -458,8 +533,10 @@ const DeviceManagement: React.FC = () => {
             <TableCell>Status</TableCell>
             <TableCell>Model/Firmware</TableCell>
             <TableCell>Used By Instruments</TableCell>
+            <TableCell>Project</TableCell>
             <TableCell>Location</TableCell>
             <TableCell>Last Communication</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -530,7 +607,7 @@ const DeviceManagement: React.FC = () => {
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {device.instruments.length > 0 ? (
                     device.instruments.map((instrument, index) => (
-                      <Tooltip key={index} title={`Project: ${instrument.projectName}`}>
+                      <Tooltip key={index} title={instrument.instrumentId}>
                         <Chip
                           label={instrument.instrumentName}
                           size="small"
@@ -542,6 +619,25 @@ const DeviceManagement: React.FC = () => {
                   ) : (
                     <Typography variant="caption" color="textSecondary">
                       Not linked
+                    </Typography>
+                  )}
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {device.instruments.length > 0 ? (
+                    device.instruments.map((instrument, index) => (
+                      <Chip
+                        key={index}
+                        label={instrument.projectName}
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                      />
+                    ))
+                  ) : (
+                    <Typography variant="caption" color="textSecondary">
+                      N/A
                     </Typography>
                   )}
                 </Box>
@@ -576,6 +672,21 @@ const DeviceManagement: React.FC = () => {
                     N/A
                   </Typography>
                 )}
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  {device.instruments.map((instrument) => (
+                    <Button
+                      key={instrument.instrumentId}
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleOpenMoveDialog(instrument.instrumentId, instrument.projectId)}
+                      disabled={movingInstrumentId === instrument.instrumentId}
+                    >
+                      Move {instrument.instrumentId}
+                    </Button>
+                  ))}
+                </Box>
               </TableCell>
             </TableRow>
           ))}
@@ -804,6 +915,43 @@ const DeviceManagement: React.FC = () => {
           </Box>
         </Box>
       </MainContentWrapper>
+
+      <Dialog open={!!moveInstrumentId} onClose={handleCloseMoveDialog}>
+        <DialogTitle>Move Instrument to Another Project</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Move <strong>{moveInstrumentId}</strong> to a different project. Thresholds and email
+            settings stay on the same instrument record.
+          </DialogContentText>
+          <FormControl fullWidth>
+            <InputLabel id="device-move-target-project-label">Target Project</InputLabel>
+            <Select
+              labelId="device-move-target-project-label"
+              value={targetProjectId}
+              label="Target Project"
+              onChange={(e) => setTargetProjectId(Number(e.target.value))}
+            >
+              {projects
+                .filter((project) => project.id !== moveSourceProjectId)
+                .map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseMoveDialog}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleMoveInstrument}
+            disabled={!targetProjectId || !!movingInstrumentId}
+          >
+            {movingInstrumentId ? 'Moving...' : 'Move'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

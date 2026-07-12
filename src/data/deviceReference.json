@@ -49,6 +49,45 @@
           "status": "active",
           "lastSeen": null,
           "instruments": []
+        },
+        {
+          "deviceId": "UM16368",
+          "serialNumber": "UM16368",
+          "manufacturer": "Instantel",
+          "modelType": "Micromate_IseeStd",
+          "modelName": "MM/ISEE/S",
+          "version": "0BB",
+          "release": "11",
+          "operatorName": "Operator",
+          "calibrationDate": "2024-11-22T00:00:00+00:00",
+          "calibrationCompany": "Instantel",
+          "setupFileName": "lincolnlewis.mmb",
+          "internal_10": 381,
+          "internal_11": "OK",
+          "notes": {
+            "note1": "",
+            "note2": "",
+            "note3": "",
+            "note4": "",
+            "extendedNote1": "Extended Notes: ",
+            "extendedNote1Text": "",
+            "extendedNote2": ": "
+          },
+          "gpsLocation": {
+            "latitude": {
+              "degrees": 0,
+              "minutes": 0,
+              "direction": 24
+            },
+            "longitude": {
+              "degrees": 0,
+              "minutes": 0,
+              "direction": 24
+            }
+          },
+          "status": "active",
+          "lastSeen": null,
+          "instruments": []
         }
       ]
     },
@@ -113,16 +152,20 @@
       "UM15783": {
         "deviceType": "instantel",
         "deviceId": "UM15783"
+      },
+      "UM16368": {
+        "deviceType": "instantel",
+        "deviceId": "UM16368"
       }
     }
   },
   "metadata": {
     "lastUpdated": "2024-12-19T00:00:00Z",
     "version": "1.0",
-    "totalDevices": 4,
+    "totalDevices": 5,
     "deviceTypeCounts": {
       "syscom": 0,
-      "instantel": 1,
+      "instantel": 2,
       "tiltmeter": 3,
       "other": 0
     }
