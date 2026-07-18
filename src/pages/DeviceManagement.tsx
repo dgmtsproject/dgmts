@@ -45,6 +45,7 @@ import {
   normalizeInstrumentOwnership,
   defaultOwnershipForInstrument,
   InstrumentOwnership,
+  INSTRUMENT_OWNERSHIP_OPTIONS,
 } from '../utils/instrumentOwnership';
 import {
   Search as SearchIcon,
@@ -67,6 +68,7 @@ interface SyscomDevice {
 
 interface Instrument {
   instrument_id: string;
+  instrument_id_second?: string | null;
   instrument_name: string;
   project_id: number;
   syscom_device_id?: number;
@@ -74,6 +76,25 @@ interface Instrument {
   ownership?: string | null;
   project_name?: string;
   instrument_location?: string;
+  alert_value?: number | null;
+  warning_value?: number | null;
+  shutdown_value?: number | null;
+  alert_emails?: string[] | null;
+  warning_emails?: string[] | null;
+  shutdown_emails?: string[] | null;
+  x_y_z_alert_values?: { x: number | null; y: number | null; z: number | null } | null;
+  x_y_z_warning_values?: { x: number | null; y: number | null; z: number | null } | null;
+  x_y_z_shutdown_values?: { x: number | null; y: number | null; z: number | null } | null;
+  duration_seconds?: number | null;
+  duration_alert_value?: number | null;
+  duration_warning_value?: number | null;
+  duration_shutdown_value?: number | null;
+  duration_alert_emails?: string[] | null;
+  duration_warning_emails?: string[] | null;
+  duration_shutdown_emails?: string[] | null;
+  x_y_z_duration_alert_values?: { x: number | null; y: number | null; z: number | null } | null;
+  x_y_z_duration_warning_values?: { x: number | null; y: number | null; z: number | null } | null;
+  x_y_z_duration_shutdown_values?: { x: number | null; y: number | null; z: number | null } | null;
 }
 
 interface DeviceUsage {
@@ -186,6 +207,7 @@ const DeviceManagement: React.FC = () => {
   const [moveSourceProjectId, setMoveSourceProjectId] = useState<number | null>(null);
   const [targetProjectId, setTargetProjectId] = useState<number | ''>('');
   const [movingInstrumentId, setMovingInstrumentId] = useState<string | null>(null);
+  const [updatingOwnershipId, setUpdatingOwnershipId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -304,6 +326,60 @@ const DeviceManagement: React.FC = () => {
     setTargetProjectId('');
   };
 
+  const handleEditInstrument = (instrumentId: string) => {
+    const instrument = allInstruments.find((item) => item.instrument_id === instrumentId);
+    if (!instrument) {
+      toast.error('Instrument not found');
+      return;
+    }
+
+    if (
+      instrument.instrument_id === 'TILT-142939' ||
+      instrument.instrument_id === 'TILT-143969' ||
+      instrument.instrument_id.includes('TILT')
+    ) {
+      navigate('/edit-tiltmeter-instrument', { state: { instrument } });
+    } else {
+      navigate('/edit-instrument', { state: { instrument } });
+    }
+  };
+
+  const handleOwnershipChange = async (
+    instrumentId: string,
+    ownership: InstrumentOwnership
+  ) => {
+    setUpdatingOwnershipId(instrumentId);
+    try {
+      const { error } = await supabase
+        .from('instruments')
+        .update({ ownership })
+        .eq('instrument_id', instrumentId);
+
+      if (error) {
+        if (error.message.includes('ownership')) {
+          toast.error(
+            'Ownership column missing. Run supabase/add_instrument_ownership.sql in Supabase first.'
+          );
+        } else {
+          toast.error(`Failed to update status: ${error.message}`);
+        }
+        return;
+      }
+
+      setAllInstruments((prev) =>
+        prev.map((item) =>
+          item.instrument_id === instrumentId ? { ...item, ownership } : item
+        )
+      );
+      toast.success(`Instrument marked as ${getOwnershipLabel(ownership)}`);
+    } catch (err) {
+      console.error('Error updating instrument ownership:', err);
+      toast.error('Failed to update instrument status');
+    } finally {
+      setUpdatingOwnershipId(null);
+    }
+  };
+
   const handleCloseMoveDialog = () => {
     setMoveInstrumentId(null);
     setMoveSourceProjectId(null);
@@ -352,13 +428,33 @@ const DeviceManagement: React.FC = () => {
       const { data: instruments, error } = await supabase
         .from('instruments')
         .select(`
-          instrument_id, 
+          instrument_id,
+          instrument_id_second,
           instrument_name, 
           project_id, 
           syscom_device_id,
           sno,
           ownership,
           instrument_location,
+          alert_value,
+          warning_value,
+          shutdown_value,
+          alert_emails,
+          warning_emails,
+          shutdown_emails,
+          x_y_z_alert_values,
+          x_y_z_warning_values,
+          x_y_z_shutdown_values,
+          duration_seconds,
+          duration_alert_value,
+          duration_warning_value,
+          duration_shutdown_value,
+          duration_alert_emails,
+          duration_warning_emails,
+          duration_shutdown_emails,
+          x_y_z_duration_alert_values,
+          x_y_z_duration_warning_values,
+          x_y_z_duration_shutdown_values,
           Projects(name)
         `);
 
@@ -720,18 +816,66 @@ const DeviceManagement: React.FC = () => {
                 )}
               </TableCell>
               <TableCell>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                  {device.instruments.map((instrument) => (
-                    <Button
-                      key={instrument.instrumentId}
-                      size="small"
-                      variant="outlined"
-                      onClick={() => handleOpenMoveDialog(instrument.instrumentId, instrument.projectId)}
-                      disabled={movingInstrumentId === instrument.instrumentId}
-                    >
-                      Move {instrument.serialNumber || instrument.instrumentId}
-                    </Button>
-                  ))}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {device.instruments.length === 0 ? (
+                    <Typography variant="caption" color="textSecondary">
+                      N/A
+                    </Typography>
+                  ) : (
+                    device.instruments.map((instrument) => (
+                      <Box
+                        key={instrument.instrumentId}
+                        sx={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 0.5,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleEditInstrument(instrument.instrumentId)}
+                        >
+                          Edit
+                        </Button>
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                          <Select
+                            value={instrument.ownership}
+                            onChange={(e) =>
+                              handleOwnershipChange(
+                                instrument.instrumentId,
+                                e.target.value as InstrumentOwnership
+                              )
+                            }
+                            disabled={updatingOwnershipId === instrument.instrumentId}
+                            sx={{ fontSize: 13, height: 32 }}
+                          >
+                            {INSTRUMENT_OWNERSHIP_OPTIONS.map((option) => (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                          onClick={() =>
+                            handleOpenMoveDialog(
+                              instrument.instrumentId,
+                              instrument.projectId
+                            )
+                          }
+                          disabled={movingInstrumentId === instrument.instrumentId}
+                        >
+                          Move
+                        </Button>
+                      </Box>
+                    ))
+                  )}
                 </Box>
               </TableCell>
             </TableRow>
