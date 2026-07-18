@@ -41,6 +41,12 @@ import {
 import { toast } from 'react-toastify';
 import { getMicromateDeviceFolder } from '../utils/instrumentRoutes';
 import {
+  getOwnershipLabel,
+  normalizeInstrumentOwnership,
+  defaultOwnershipForInstrument,
+  InstrumentOwnership,
+} from '../utils/instrumentOwnership';
+import {
   Search as SearchIcon,
   DeviceHub as DeviceIcon,
   InfoOutlined as InfoIcon,
@@ -65,17 +71,24 @@ interface Instrument {
   project_id: number;
   syscom_device_id?: number;
   sno?: string;
+  ownership?: string | null;
   project_name?: string;
   instrument_location?: string;
 }
 
 interface DeviceUsage {
   deviceId: number | string;
+  /** Preferred display identifier — unique serial number when available. */
+  serialNumber: string;
   deviceName: string;
   deviceType: 'syscom' | 'tiltmeter' | 'instantel' | 'other';
+  /** Owned / Rental from linked instrument(s). */
+  ownership: InstrumentOwnership | null;
   instruments: Array<{
     instrumentId: string;
     instrumentName: string;
+    serialNumber: string;
+    ownership: InstrumentOwnership;
     projectId: number;
     projectName: string;
     instrumentLocation: string;
@@ -344,6 +357,7 @@ const DeviceManagement: React.FC = () => {
           project_id, 
           syscom_device_id,
           sno,
+          ownership,
           instrument_location,
           Projects(name)
         `);
@@ -390,8 +404,10 @@ const DeviceManagement: React.FC = () => {
     syscomDevices.forEach(device => {
       syscomUsage.push({
         deviceId: device.id,
+        serialNumber: String(device.serialNumber ?? device.id),
         deviceName: device.name,
         deviceType: 'syscom',
+        ownership: null,
         instruments: [],
         deviceInfo: device
       });
@@ -401,8 +417,10 @@ const DeviceManagement: React.FC = () => {
     deviceReference.deviceTypes.instantel.devices.forEach(device => {
       instantelUsage.push({
         deviceId: device.deviceId,
-        deviceName: `${device.manufacturer} ${device.modelName} (${device.serialNumber})`,
+        serialNumber: device.serialNumber || device.deviceId,
+        deviceName: `${device.manufacturer} ${device.modelName}`,
         deviceType: 'instantel',
+        ownership: null,
         instruments: [],
         deviceInfo: device
       });
@@ -412,17 +430,29 @@ const DeviceManagement: React.FC = () => {
     deviceReference.deviceTypes.tiltmeter.devices.forEach(device => {
       tiltmeterUsage.push({
         deviceId: device.deviceId,
+        serialNumber: String(device.deviceId),
         deviceName: device.deviceName,
         deviceType: 'tiltmeter',
+        ownership: null,
         instruments: []
       });
     });
 
     // Group instruments by device type
     allInstruments.forEach(instrument => {
+      const ownership = normalizeInstrumentOwnership(
+        instrument.ownership ??
+          defaultOwnershipForInstrument({
+            instrument_id: instrument.instrument_id,
+            instrument_name: instrument.instrument_name,
+          })
+      );
+
       const linkedInstrument = {
         instrumentId: instrument.instrument_id,
         instrumentName: instrument.instrument_name,
+        serialNumber: instrument.sno?.trim() || instrument.instrument_id,
+        ownership,
         projectId: instrument.project_id,
         projectName: instrument.project_name || 'Unknown Project',
         instrumentLocation: instrument.instrument_location || 'None',
@@ -432,6 +462,10 @@ const DeviceManagement: React.FC = () => {
         const existingDevice = syscomUsage.find(d => d.deviceId === instrument.syscom_device_id);
         if (existingDevice) {
           existingDevice.instruments.push(linkedInstrument);
+          existingDevice.ownership = ownership;
+          if (instrument.sno?.trim()) {
+            existingDevice.serialNumber = instrument.sno.trim();
+          }
         }
       } else if (instrument.instrument_id.includes('TILT')) {
         let deviceId: number;
@@ -446,6 +480,10 @@ const DeviceManagement: React.FC = () => {
         const existingDevice = tiltmeterUsage.find(d => d.deviceId === deviceId);
         if (existingDevice) {
           existingDevice.instruments.push(linkedInstrument);
+          existingDevice.ownership = ownership;
+          if (instrument.sno?.trim()) {
+            existingDevice.serialNumber = instrument.sno.trim();
+          }
         }
       } else {
         const micromateFolder = getMicromateDeviceFolder({
@@ -458,20 +496,25 @@ const DeviceManagement: React.FC = () => {
           const existingDevice = instantelUsage.find(d => d.deviceId === micromateFolder);
           if (existingDevice) {
             existingDevice.instruments.push(linkedInstrument);
+            existingDevice.ownership = ownership;
+            existingDevice.serialNumber = micromateFolder;
           }
           return;
         }
 
-        const deviceId = instrument.sno ? parseInt(instrument.sno) : instrument.instrument_id.charCodeAt(0);
-        const existingDevice = otherUsage.find(d => d.deviceId === deviceId);
+        const serialKey = instrument.sno?.trim() || instrument.instrument_id;
+        const existingDevice = otherUsage.find(d => d.serialNumber === serialKey);
 
         if (existingDevice) {
           existingDevice.instruments.push(linkedInstrument);
+          existingDevice.ownership = ownership;
         } else {
           otherUsage.push({
-            deviceId: deviceId,
+            deviceId: serialKey,
+            serialNumber: serialKey,
             deviceName: instrument.instrument_name,
             deviceType: 'other',
+            ownership,
             instruments: [linkedInstrument],
           });
         }
@@ -489,35 +532,38 @@ const DeviceManagement: React.FC = () => {
     setOtherDevices(otherUsage);
   };
 
+  const getDeviceOwnership = (device: DeviceUsage): InstrumentOwnership | null => {
+    if (device.ownership) return device.ownership;
+    if (device.instruments.length > 0) return device.instruments[0].ownership;
+    return null;
+  };
+
   const getDeviceStatusColor = (device: DeviceUsage) => {
-    if (device.deviceType === 'syscom' && device.deviceInfo && 'active' in device.deviceInfo) {
-      return device.deviceInfo.active ? 'success' : 'error';
-    }
-    if (device.deviceType === 'instantel' && device.deviceInfo && 'status' in device.deviceInfo) {
-      return device.deviceInfo.status === 'active' ? 'success' : 'error';
-    }
+    const ownership = getDeviceOwnership(device);
+    if (ownership === 'owned') return 'primary';
+    if (ownership === 'rental') return 'warning';
     return 'default';
   };
 
   const getDeviceStatusText = (device: DeviceUsage) => {
-    if (device.deviceType === 'syscom' && device.deviceInfo && 'active' in device.deviceInfo) {
-      return device.deviceInfo.active ? 'Active' : 'Inactive';
-    }
-    if (device.deviceType === 'instantel' && device.deviceInfo && 'status' in device.deviceInfo) {
-      return device.deviceInfo.status === 'active' ? 'Active' : 'Inactive';
-    }
-    return 'Unknown';
+    const ownership = getDeviceOwnership(device);
+    return ownership ? getOwnershipLabel(ownership) : 'Not linked';
   };
 
   const filteredDevices = (devices: DeviceUsage[]) => {
     if (!searchTerm) return devices;
     
+    const term = searchTerm.toLowerCase();
     return devices.filter(device => 
-      device.deviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.deviceName.toLowerCase().includes(term) ||
+      device.serialNumber.toLowerCase().includes(term) ||
       device.deviceId.toString().includes(searchTerm) ||
+      getDeviceStatusText(device).toLowerCase().includes(term) ||
       device.instruments.some(inst => 
-        inst.instrumentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.projectName.toLowerCase().includes(searchTerm.toLowerCase())
+        inst.instrumentName.toLowerCase().includes(term) ||
+        inst.serialNumber.toLowerCase().includes(term) ||
+        inst.projectName.toLowerCase().includes(term) ||
+        getOwnershipLabel(inst.ownership).toLowerCase().includes(term)
       )
     );
   };
@@ -527,7 +573,7 @@ const DeviceManagement: React.FC = () => {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Device ID</TableCell>
+            <TableCell>Serial Number</TableCell>
             <TableCell>Device Name</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Status</TableCell>
@@ -544,7 +590,7 @@ const DeviceManagement: React.FC = () => {
             <TableRow key={`${device.deviceType}-${device.deviceId}`}>
               <TableCell>
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  {device.deviceId}
+                  {device.serialNumber}
                 </Typography>
               </TableCell>
               <TableCell>
@@ -587,9 +633,6 @@ const DeviceManagement: React.FC = () => {
                         <Typography variant="caption" display="block">
                           Version: {device.deviceInfo.version}
                         </Typography>
-                        <Typography variant="caption" display="block">
-                          Serial: {device.deviceInfo.serialNumber}
-                        </Typography>
                       </>
                     ) : (
                       <Typography variant="caption" display="block">
@@ -607,7 +650,10 @@ const DeviceManagement: React.FC = () => {
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {device.instruments.length > 0 ? (
                     device.instruments.map((instrument, index) => (
-                      <Tooltip key={index} title={instrument.instrumentId}>
+                      <Tooltip
+                        key={index}
+                        title={`ID: ${instrument.instrumentId} | Serial: ${instrument.serialNumber}`}
+                      >
                         <Chip
                           label={instrument.instrumentName}
                           size="small"
@@ -683,7 +729,7 @@ const DeviceManagement: React.FC = () => {
                       onClick={() => handleOpenMoveDialog(instrument.instrumentId, instrument.projectId)}
                       disabled={movingInstrumentId === instrument.instrumentId}
                     >
-                      Move {instrument.instrumentId}
+                      Move {instrument.serialNumber || instrument.instrumentId}
                     </Button>
                   ))}
                 </Box>
@@ -910,7 +956,7 @@ const DeviceManagement: React.FC = () => {
               • <strong>Other Devices:</strong> Instruments that don't fall into the above categories
             </Typography>
             <Typography variant="body2" color="textSecondary">
-              • <strong>Status:</strong> Active devices are currently communicating with the system
+              • <strong>Status:</strong> Owned or Rental — from the linked instrument ownership setting
             </Typography>
           </Box>
         </Box>

@@ -180,9 +180,6 @@ const DynamicSeismograph: React.FC = () => {
         case 'TILT-143969':
           navigate('/tiltmeter-143969', { state: { project } });
           break;
-        case 'TILTMETER-30846':
-          navigate('/tiltmeter-30846', { state: { project } });
-          break;
         default:
           // For any other instruments, stay on dynamic seismograph
           navigate(`/dynamic-seismograph?instrument=${newInstrumentId}`, { 

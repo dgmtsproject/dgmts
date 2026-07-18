@@ -24,6 +24,13 @@ import {
   getInstrumentGraphRoute,
   buildInstrumentGraphNavState,
 } from '../utils/instrumentRoutes';
+import {
+  InstrumentOwnership,
+  INSTRUMENT_OWNERSHIP_OPTIONS,
+  normalizeInstrumentOwnership,
+  getOwnershipLabel,
+  defaultOwnershipForInstrument,
+} from '../utils/instrumentOwnership';
 
 
 type Instrument = {
@@ -52,6 +59,7 @@ type Instrument = {
   warning_emails?: string[];
   shutdown_emails?: string[];
   is_active?: boolean | null;
+  ownership?: string | null;
 };
 
 type Project = {
@@ -154,7 +162,8 @@ const InstrumentsList: React.FC = () => {
           x_y_z_duration_alert_values,
           x_y_z_duration_warning_values,
           x_y_z_duration_shutdown_values,
-          is_active
+          is_active,
+          ownership
         `)
         .eq('project_id', projectId)
         .order('sno', { ascending: true });
@@ -236,17 +245,22 @@ const InstrumentsList: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (instrumentId: string, makeActive: boolean) => {
+  const handleOwnershipChange = async (
+    instrumentId: string,
+    ownership: InstrumentOwnership
+  ) => {
     setTogglingStatusId(instrumentId);
     try {
       const { error } = await supabase
         .from('instruments')
-        .update({ is_active: makeActive })
+        .update({ ownership })
         .eq('instrument_id', instrumentId);
 
       if (error) {
-        if (error.message.includes('is_active')) {
-          toast.error('Status column missing. Run supabase/add_instrument_is_active.sql in Supabase first.');
+        if (error.message.includes('ownership')) {
+          toast.error(
+            'Ownership column missing. Run supabase/add_instrument_ownership.sql in Supabase first.'
+          );
         } else {
           toast.error(`Failed to update status: ${error.message}`);
         }
@@ -255,12 +269,12 @@ const InstrumentsList: React.FC = () => {
 
       setInstrumentsData((prev) =>
         prev.map((item) =>
-          item.instrument_id === instrumentId ? { ...item, is_active: makeActive } : item
+          item.instrument_id === instrumentId ? { ...item, ownership } : item
         )
       );
-      toast.success(`Instrument marked as ${makeActive ? 'Active' : 'Inactive'}`);
+      toast.success(`Instrument marked as ${getOwnershipLabel(ownership)}`);
     } catch (err) {
-      console.error('Error updating instrument status:', err);
+      console.error('Error updating instrument ownership:', err);
       toast.error('Failed to update instrument status');
     } finally {
       setTogglingStatusId(null);
@@ -395,7 +409,7 @@ const InstrumentsList: React.FC = () => {
               <Table>
                 <TableHead sx={{ backgroundColor: '#f1f1f1' }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>S.No</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Serial Number</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument ID</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Instrument Name</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', border: '1px solid black' }}>Alert Value</TableCell>
@@ -421,14 +435,11 @@ const InstrumentsList: React.FC = () => {
                   ) : (
                     instrumentsData.map((instrument) => {
                       const instrumentActive = isInstrumentActive(instrument.is_active);
+                      const ownership = normalizeInstrumentOwnership(
+                        instrument.ownership ?? defaultOwnershipForInstrument(instrument)
+                      );
                       return (
-                      <TableRow
-                        key={instrument.instrument_id}
-                        sx={{
-                          backgroundColor: instrumentActive ? '#fff' : '#f5f5f5',
-                          opacity: instrumentActive ? 1 : 0.85,
-                        }}
-                      >
+                      <TableRow key={instrument.instrument_id}>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.sno}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>{instrument.instrument_id_second || instrument.instrument_id}</TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
@@ -464,10 +475,10 @@ const InstrumentsList: React.FC = () => {
                         </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
                           <Chip
-                            label={instrumentActive ? 'Active' : 'Inactive'}
+                            label={getOwnershipLabel(ownership)}
                             size="small"
-                            color={instrumentActive ? 'success' : 'default'}
-                            variant={instrumentActive ? 'filled' : 'outlined'}
+                            color={ownership === 'owned' ? 'primary' : 'warning'}
+                            variant="filled"
                           />
                         </TableCell>
                         <TableCell sx={{ border: '1px solid black' }}>
@@ -521,15 +532,21 @@ const InstrumentsList: React.FC = () => {
                               {isAdmin && (
                                 <FormControl size="small" sx={{ minWidth: 110 }}>
                                   <Select
-                                    value={instrumentActive ? 'active' : 'inactive'}
+                                    value={ownership}
                                     onChange={(e) =>
-                                      handleStatusChange(instrument.instrument_id, e.target.value === 'active')
+                                      handleOwnershipChange(
+                                        instrument.instrument_id,
+                                        e.target.value as InstrumentOwnership
+                                      )
                                     }
                                     disabled={togglingStatusId === instrument.instrument_id}
                                     sx={{ fontSize: 14, height: 36 }}
                                   >
-                                    <MenuItem value="active">Active</MenuItem>
-                                    <MenuItem value="inactive">Inactive</MenuItem>
+                                    {INSTRUMENT_OWNERSHIP_OPTIONS.map((option) => (
+                                      <MenuItem key={option.value} value={option.value}>
+                                        {option.label}
+                                      </MenuItem>
+                                    ))}
                                   </Select>
                                 </FormControl>
                               )}

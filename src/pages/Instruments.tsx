@@ -18,6 +18,12 @@ import HeaNavLogo from '../components/HeaNavLogo';
 import { supabase } from '../supabase';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {
+  InstrumentOwnership,
+  INSTRUMENT_OWNERSHIP_OPTIONS,
+  defaultOwnershipForInstrument,
+} from '../utils/instrumentOwnership';
+
 const Instruments: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +42,7 @@ const Instruments: React.FC = () => {
   const [ShutEmailsForAlert, setShutEmailsForAlert] = React.useState<string[]>(['']);
   const [instrumentId, setInstrumentId] = React.useState('');
   const [instrumentName, setInstrumentName] = React.useState('');
+  const [ownership, setOwnership] = React.useState<InstrumentOwnership>('owned');
   const [instrumentLocation, setInstrumentLocation] = React.useState('');
   const [alertValue, setAlertValue] = React.useState<number | string>('');
   const [warningValue, setWarningValue] = React.useState<number | string>('');
@@ -116,6 +123,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     instrument_location: instrumentLocation || null,
     project_id: project.id,
     sno: instrumentSno || null,
+    ownership:
+      ownership ||
+      defaultOwnershipForInstrument({
+        instrument_id: instrumentId,
+        instrument_name: instrumentName,
+      }),
     alert_emails: filteredAlertEmails.length > 0 ? filteredAlertEmails : null,
     warning_emails: filteredWarningEmails.length > 0 ? filteredWarningEmails : null,
     shutdown_emails: filteredShutdownEmails.length > 0 ? filteredShutdownEmails : null,
@@ -309,14 +322,32 @@ const handleSubmit = async (e: React.FormEvent) => {
           label="Instrument ID"
           required
           value={instrumentId}
-          onChange={(e) => setInstrumentId(e.target.value)}
+          onChange={(e) => {
+            const nextId = e.target.value;
+            setInstrumentId(nextId);
+            setOwnership(
+              defaultOwnershipForInstrument({
+                instrument_id: nextId,
+                instrument_name: instrumentName,
+              })
+            );
+          }}
           fullWidth
         />
         <TextField
           label="Instrument Name"
           required
           value={instrumentName}
-          onChange={(e) => setInstrumentName(e.target.value)}
+          onChange={(e) => {
+            const nextName = e.target.value;
+            setInstrumentName(nextName);
+            setOwnership(
+              defaultOwnershipForInstrument({
+                instrument_id: instrumentId,
+                instrument_name: nextName,
+              })
+            );
+          }}
           fullWidth
         />
         <TextField
@@ -332,6 +363,21 @@ const handleSubmit = async (e: React.FormEvent) => {
           onChange={(e) => setInstrumentSno(e.target.value)}
           fullWidth
         />
+        <FormControl fullWidth>
+          <InputLabel id="add-ownership-status-label">Status</InputLabel>
+          <Select
+            labelId="add-ownership-status-label"
+            label="Status"
+            value={ownership}
+            onChange={(e) => setOwnership(e.target.value as InstrumentOwnership)}
+          >
+            {INSTRUMENT_OWNERSHIP_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
 
       {/* Alert Values - Optional (Only for non-tiltmeters) */}

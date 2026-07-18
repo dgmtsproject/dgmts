@@ -25,6 +25,12 @@ import { supabase } from '../supabase';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAdminContext } from '../context/AdminContext';
+import {
+  InstrumentOwnership,
+  INSTRUMENT_OWNERSHIP_OPTIONS,
+  normalizeInstrumentOwnership,
+  defaultOwnershipForInstrument,
+} from '../utils/instrumentOwnership';
 
 const EditInstrument: React.FC = () => {
     const location = useLocation();
@@ -65,6 +71,15 @@ const EditInstrument: React.FC = () => {
     const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
     const [instrumentLocation, setInstrumentLocation] = useState(instrument?.instrument_location || '');
     const [serialNumber, setSerialNumber] = useState(instrument?.sno || '');
+    const [ownership, setOwnership] = useState<InstrumentOwnership>(
+      normalizeInstrumentOwnership(
+        instrument?.ownership ??
+          defaultOwnershipForInstrument({
+            instrument_id: instrument?.instrument_id,
+            instrument_name: instrument?.instrument_name,
+          })
+      )
+    );
     const [alertValue, setAlertValue] = useState<number | string>(instrument?.alert_value || '');
     const [warningValue, setWarningValue] = useState<number | string>(instrument?.warning_value || '');
     const [shutdownValue, setShutdownValue] = useState<number | string>(instrument?.shutdown_value || '');
@@ -96,6 +111,15 @@ const EditInstrument: React.FC = () => {
             setInstrumentName(instrument.instrument_name || '');
             setInstrumentLocation(instrument.instrument_location || '');
             setSerialNumber(instrument.sno || '');
+            setOwnership(
+              normalizeInstrumentOwnership(
+                instrument.ownership ??
+                  defaultOwnershipForInstrument({
+                    instrument_id: instrument.instrument_id,
+                    instrument_name: instrument.instrument_name,
+                  })
+              )
+            );
             setAlertValue(instrument.alert_value || '');
             setWarningValue(instrument.warning_value || '');
             setShutdownValue(instrument.shutdown_value || '');
@@ -189,6 +213,7 @@ const EditInstrument: React.FC = () => {
                     instrument_name: instrumentName,
                     instrument_location: instrumentLocation || null,
                     sno: serialNumber,
+                    ownership,
                     project_id: project.id,
                     alert_emails: emailData.alert_emails,
                     warning_emails: emailData.warning_emails,
@@ -228,6 +253,7 @@ const EditInstrument: React.FC = () => {
                     instrument_id_second: instrumentIdSecond,
                     instrument_name: instrumentName,
                     sno: serialNumber,
+                    ownership,
                     alert_value: alertValue ? Number(alertValue) : null,
                     warning_value: warningValue ? Number(warningValue) : null,
                     shutdown_value: shutdownValue ? Number(shutdownValue) : null,
@@ -441,6 +467,23 @@ const EditInstrument: React.FC = () => {
                                     onChange={(e) => setSerialNumber(e.target.value)}
                                     fullWidth
                                 />
+                                <FormControl fullWidth>
+                                    <InputLabel id="ownership-status-label">Status</InputLabel>
+                                    <Select
+                                        labelId="ownership-status-label"
+                                        label="Status"
+                                        value={ownership}
+                                        onChange={(e) =>
+                                          setOwnership(e.target.value as InstrumentOwnership)
+                                        }
+                                    >
+                                        {INSTRUMENT_OWNERSHIP_OPTIONS.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
                             </Box>
 
                             <Tabs value={alertTab} onChange={(_, v) => setAlertTab(v)} sx={{ width: '100%', mb: 2 }}>

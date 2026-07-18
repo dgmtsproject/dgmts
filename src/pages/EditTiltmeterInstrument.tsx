@@ -14,7 +14,11 @@ import {
   DialogContent,
   DialogActions,
   Tabs,
-  Tab
+  Tab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import logo from '../assets/logo.jpg';
 import HeaNavLogo from '../components/HeaNavLogo';
@@ -22,6 +26,11 @@ import { supabase } from '../supabase';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAdminContext } from '../context/AdminContext';
+import {
+  InstrumentOwnership,
+  INSTRUMENT_OWNERSHIP_OPTIONS,
+  normalizeInstrumentOwnership,
+} from '../utils/instrumentOwnership';
 
 const EditTiltmeterInstrument: React.FC = () => {
   const location = useLocation();
@@ -35,6 +44,9 @@ const EditTiltmeterInstrument: React.FC = () => {
   const [instrumentName, setInstrumentName] = useState(instrument?.instrument_name || '');
   const [instrumentLocation, setInstrumentLocation] = useState(instrument?.instrument_location || '');
   const [instrumentSno, setInstrumentSno] = useState(instrument?.sno || '');
+  const [ownership, setOwnership] = useState<InstrumentOwnership>(
+    normalizeInstrumentOwnership(instrument?.ownership ?? 'rental')
+  );
   const [project, _setProject] = useState({ id: instrument?.project_id, name: instrument?.project_name || '' });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [alertTab, setAlertTab] = useState(0);
@@ -116,6 +128,7 @@ const EditTiltmeterInstrument: React.FC = () => {
       instrument_location: instrumentLocation || null,
       project_id: project.id,
       sno: instrumentSno || null,
+      ownership,
       x_y_z_alert_values: {
         x: xyzAlertValues.x ? Number(xyzAlertValues.x) : null,
         y: xyzAlertValues.y ? Number(xyzAlertValues.y) : null,
@@ -237,7 +250,7 @@ const EditTiltmeterInstrument: React.FC = () => {
               padding="20px"
               onSubmit={handleSubmit}
             >
-              <Box display="grid" gridTemplateColumns="1fr 1fr 1fr 1fr" gap={2} width="100%" mb={2}>
+              <Box display="grid" gridTemplateColumns="1fr 1fr 1fr 1fr 1fr" gap={2} width="100%" mb={2}>
                 <TextField
                   label="Instrument ID"
                   required
@@ -265,6 +278,21 @@ const EditTiltmeterInstrument: React.FC = () => {
                   onChange={(e) => setInstrumentSno(e.target.value)}
                   fullWidth
                 />
+                <FormControl fullWidth>
+                  <InputLabel id="tiltmeter-ownership-status-label">Status</InputLabel>
+                  <Select
+                    labelId="tiltmeter-ownership-status-label"
+                    label="Status"
+                    value={ownership}
+                    onChange={(e) => setOwnership(e.target.value as InstrumentOwnership)}
+                  >
+                    {INSTRUMENT_OWNERSHIP_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
               <Tabs value={alertTab} onChange={(_, v) => setAlertTab(v)} sx={{ width: '100%', mb: 2 }}>
                 <Tab label="Instant Threshold Alerts" />

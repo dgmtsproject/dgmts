@@ -174,7 +174,7 @@ const Tiltmeter142939: React.FC = () => {
         .from('instruments')
         .select('instrument_id, instrument_name, project_id, instrument_location')
         .eq('project_id', projectId)
-        .in('instrument_id', ['SMG1', 'SMG-1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969', 'TILTMETER-30846'])
+        .in('instrument_id', ['SMG1', 'SMG-1', 'SMG-2', 'SMG-3', 'TILT-142939', 'TILT-143969'])
         .order('instrument_id');
 
       if (error) {
@@ -201,8 +201,6 @@ const Tiltmeter142939: React.FC = () => {
       navigate('/tiltmeter-142939', { state: { project } });
     } else if (instrumentId === 'TILT-143969') {
       navigate('/tiltmeter-143969', { state: { project } });
-    } else if (instrumentId === 'TILTMETER-30846') {
-      navigate('/tiltmeter-30846', { state: { project } });
     }
   };
 

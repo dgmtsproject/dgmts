@@ -111,14 +111,6 @@
           "status": "active",
           "lastSeen": null,
           "instruments": []
-        },
-        {
-          "deviceId": 30846,
-          "instrumentId": "TILTMETER-30846",
-          "deviceName": "Tiltmeter 30846", 
-          "status": "active",
-          "lastSeen": null,
-          "instruments": []
         }
       ]
     },
@@ -139,10 +131,6 @@
         "deviceType": "tiltmeter", 
         "deviceId": 143969
       },
-      "TILTMETER-30846": {
-        "deviceType": "tiltmeter",
-        "deviceId": 30846
-      },
       "INSTANTEL-1": {
         "deviceType": "instantel",
         "deviceId": "UM15783"
@@ -162,11 +150,11 @@
   "metadata": {
     "lastUpdated": "2024-12-19T00:00:00Z",
     "version": "1.0",
-    "totalDevices": 5,
+    "totalDevices": 4,
     "deviceTypeCounts": {
       "syscom": 0,
       "instantel": 2,
-      "tiltmeter": 3,
+      "tiltmeter": 2,
       "other": 0
     }
   }
